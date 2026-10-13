@@ -273,7 +273,11 @@
   const keyEl = $("key"), showAllEl = $("showAll");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
 
-  KEYS.forEach((k, i) => keyEl.add(new Option(k.name, i)));
+  // Orden del selector: círculo de quintas (C G D A E B F♯ D♭ A♭ E♭ B♭ F)
+  for (let i = 0, pc = 0; i < 12; i++, pc = (pc + 7) % 12) {
+    const idx = KEYS.findIndex(k => k.pc === pc);
+    keyEl.add(new Option(KEYS[idx].name, idx));
+  }
 
   // ---- Ajustes ----
   function clampInput(el) {
