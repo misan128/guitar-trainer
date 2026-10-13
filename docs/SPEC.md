@@ -81,7 +81,7 @@ LICENSE
 Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it offline.
 
 ### 6.1 Manifest
-- `name` and `short_name`: **Scale Trainer** (same in every language).
+- `name` and `short_name`: **Scale Trainer** (same in every language). iOS may truncate it under the icon; that is accepted.
 - `display: standalone`, `start_url: "./"` and `scope: "./"`. All paths must be **relative**, because the site is served from a subdirectory (`/scale-trainer/`).
 - `background_color` and `theme_color`: the app background (`#1d1613`).
 - Icons at 192, 512 and 512 *maskable*.
@@ -100,10 +100,11 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 - Precaches `index.html`, `strings.js`, the manifest and the icons.
 - Caches Google Fonts on first use, so they work offline.
 - The cache name is versioned (`scale-trainer-v1`, etc.). Old caches are deleted on activate. **Every published change bumps the version.**
-- Strategy for `index.html`: network first, falling back to cache, so updates arrive without reinstalling.
+- Strategy for app files (`index.html`, `strings.js`, …): network first, falling back to cache, so updates arrive without reinstalling.
 
 ### 6.5 Mobile behavior
 - **Wake Lock:** keep the screen on while practice is running. Released on stop, and requested again if the page returns to the foreground with practice running. If the API does not exist, it is silently ignored.
+- **Background:** if the app goes to the background while running, nothing special happens; the system suspends it.
 - **iOS silent switch:** **respected**. Nothing should be done to bypass it.
 
 ## 7. Deployment
@@ -121,9 +122,7 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 
 ## 9. Pending confirmation from the user
 
-Ask before implementing anything that depends on these:
-- What to do if the app goes to the background while practice is running: stop it or let the system suspend it.
-- `short_name`: "Scale Trainer" may be truncated under the icon on iOS. Confirm whether that is acceptable or a shorter one is preferred.
+Nothing pending right now. Add here anything that comes up and needs the user's decision.
 
 ## 10. Acceptance criteria
 
