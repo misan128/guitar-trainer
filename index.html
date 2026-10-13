@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recorrido en C — práctica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wood: #1d1613;
+    --wood-2: #2a201b;
+    --bone: #ede3d1;
+    --muted: #8c7b6c;
+    --brass: #d1a65a;
+    --wire: #5a4c42;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--wood);
+    color: var(--bone);
+    font-family: "Instrument Sans", system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-rows: 1fr auto auto;
+    gap: 2rem;
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem 2rem;
+  }
+
+  /* Nota */
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 40vh;
+  }
+  #note {
+    font-family: "Young Serif", Georgia, serif;
+    font-size: clamp(9rem, 38vw, 17rem);
+    line-height: 1;
+    color: var(--bone);
+    transition: color .15s;
+  }
+  #note.idle { color: var(--wire); }
+  #phase {
+    margin-top: .75rem;
+    color: var(--muted);
+    font-size: 1.05rem;
+    min-height: 1.5em;
+  }
+
+  /* Línea de ticks de la ronda */
+  #track {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 64px;
+    overflow-x: auto;
+  }
+  #track span {
+    flex: 1 1 0;
+    min-width: 6px;
+    background: var(--wire);
+    border-radius: 2px;
+  }
+  #track span.walk { background: #7d6655; }
+  #track span.on { background: var(--brass); }
+
+  /* Controles */
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem 1.25rem;
+    align-items: end;
+  }
+  .field label {
+    display: block;
+    color: var(--muted);
+    font-size: .9rem;
+    margin-bottom: .4rem;
+  }
+  .stepper {
+    display: flex;
+    align-items: center;
+    background: var(--wood-2);
+    border-radius: 10px;
+  }
+  .stepper button {
+    background: none;
+    border: 0;
+    color: var(--bone);
+    font-size: 1.3rem;
+    width: 2.6rem;
+    height: 2.8rem;
+    cursor: pointer;
+    border-radius: 10px;
+  }
+  .stepper input {
+    width: 100%;
+    min-width: 0;
+    background: none;
+    border: 0;
+    color: var(--bone);
+    font: 600 1.35rem "Instrument Sans", system-ui, sans-serif;
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .stepper input::-webkit-inner-spin-button,
+  .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  #bpmRange {
+    grid-column: 1 / -1;
+    width: 100%;
+    accent-color: var(--brass);
+  }
+  #toggle {
+    grid-column: 1 / -1;
+    height: 3.4rem;
+    border: 0;
+    border-radius: 12px;
+    background: var(--brass);
+    color: var(--wood);
+    font: 600 1.15rem "Instrument Sans", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  #toggle.running { background: var(--bone); }
+  .hint { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; text-align: center; margin: 0; }
+
+  button:focus-visible, input:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 2px;
+  }
+  @media (max-width: 480px) {
+    .controls { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <section class="stage" aria-live="polite">
+    <div id="note" class="idle">C</div>
+    <div id="phase">Pulsa Empezar</div>
+  </section>
+
+  <div id="track" aria-hidden="true"></div>
+
+  <section class="controls">
+    <div class="field">
+      <label for="bpm">BPM</label>
+      <div class="stepper">
+        <button data-target="bpm" data-delta="-1" aria-label="Bajar BPM">−</button>
+        <input id="bpm" type="number" min="30" max="300" value="60">
+        <button data-target="bpm" data-delta="1" aria-label="Subir BPM">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="prep">Ticks antes del recorrido</label>
+      <div class="stepper">
+        <button data-target="prep" data-delta="-1" aria-label="Menos ticks de preparación">−</button>
+        <input id="prep" type="number" min="1" max="16" value="4">
+        <button data-target="prep" data-delta="1" aria-label="Más ticks de preparación">+</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="wait">Ticks después del recorrido</label>
+      <div class="stepper">
+        <button data-target="wait" data-delta="-1" aria-label="Menos ticks de espera">−</button>
+        <input id="wait" type="number" min="0" max="16" value="4">
+        <button data-target="wait" data-delta="1" aria-label="Más ticks de espera">+</button>
+      </div>
+    </div>
+    <input id="bpmRange" type="range" min="30" max="300" value="60" aria-label="BPM">
+    <button id="toggle">Empezar</button>
+    <p class="hint">Espacio para empezar o parar · ↑ ↓ cambian el BPM</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const NOTES = ["C", "D", "E", "F", "G", "A", "B"];
+  const WALK = 15;                 // 8 subiendo + 7 bajando
+  const LOOKAHEAD_MS = 25;
+  const SCHEDULE_AHEAD = 0.1;
+
+  const $ = id => document.getElementById(id);
+  const noteEl = $("note"), phaseEl = $("phase"), trackEl = $("track");
+  const inputs = { bpm: $("bpm"), prep: $("prep"), wait: $("wait") };
+  const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
+
+  // ---- Ajustes ----
+  function clampInput(el) {
+    const v = Math.round(Number(el.value));
+    const min = Number(el.min), max = Number(el.max);
+    el.value = Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : min;
+    return Number(el.value);
+  }
+  function save() {
+    try {
+      localStorage.setItem("scaleWalkLight", JSON.stringify({
+        bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value
+      }));
+    } catch (e) {}
+  }
+  try {
+    const s = JSON.parse(localStorage.getItem("scaleWalkLight") || "null");
+    if (s) for (const k of ["bpm", "prep", "wait"]) if (s[k] != null) inputs[k].value = s[k];
+  } catch (e) {}
+  for (const k in inputs) clampInput(inputs[k]);
+  bpmRange.value = inputs.bpm.value;
+
+  function setBpm(v) {
+    inputs.bpm.value = v;
+    bpmRange.value = clampInput(inputs.bpm);
+    save();
+  }
+  document.querySelectorAll(".stepper button").forEach(b => {
+    b.addEventListener("click", () => {
+      const el = inputs[b.dataset.target];
+      el.value = Number(el.value) + Number(b.dataset.delta);
+      clampInput(el);
+      if (el === inputs.bpm) bpmRange.value = el.value;
+      save();
+      if (!running) drawTrack(-1);
+    });
+  });
+  for (const k in inputs) inputs[k].addEventListener("change", () => {
+    clampInput(inputs[k]);
+    if (k === "bpm") bpmRange.value = inputs.bpm.value;
+    save();
+    if (!running) drawTrack(-1);
+  });
+  bpmRange.addEventListener("input", () => setBpm(bpmRange.value));
+
+  // ---- Audio ----
+  let ctx = null;
+  function click(time, accent) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = accent ? 1600 : 1000;
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.exponentialRampToValueAtTime(accent ? 0.9 : 0.6, time + 0.001);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.04);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(time);
+    osc.stop(time + 0.05);
+  }
+
+  // ---- Planificador con lookahead ----
+  let running = false, timerId = null;
+  let nextTime = 0, step = 0;
+  let round = null;            // { note, prep, wait, total }
+  let lastNote = null;
+  const queue = [];            // ticks pendientes de pintar
+
+  function newRound() {
+    let note;
+    do { note = NOTES[Math.floor(Math.random() * NOTES.length)]; } while (note === lastNote);
+    lastNote = note;
+    const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
+    return { note, prep, wait, total: prep + WALK + wait };
+  }
+
+  function scheduler() {
+    while (nextTime < ctx.currentTime + SCHEDULE_AHEAD) {
+      if (step === 0) round = newRound();
+      const accent = step === round.prep;          // primer tick del recorrido
+      click(nextTime, accent);
+      queue.push({ time: nextTime, step, round });
+      nextTime += 60 / Number(inputs.bpm.value);
+      step = (step + 1) % round.total;
+    }
+    timerId = setTimeout(scheduler, LOOKAHEAD_MS);
+  }
+
+  // ---- Pintado sincronizado con lo audible ----
+  let shownRound = null;
+  function draw() {
+    if (!running) return;
+    const now = ctx.currentTime - (ctx.outputLatency || 0);
+    let current = null;
+    while (queue.length && queue[0].time <= now) current = queue.shift();
+    if (current) render(current);
+    requestAnimationFrame(draw);
+  }
+
+  function render({ step, round }) {
+    if (round !== shownRound) {
+      shownRound = round;
+      noteEl.textContent = round.note;
+      noteEl.classList.remove("idle");
+      buildTrack(round.prep, round.wait);
+    }
+    if (step < round.prep) {
+      phaseEl.textContent = `Prepárate · ${round.prep - step}`;
+    } else if (step < round.prep + WALK) {
+      const i = step - round.prep;
+      phaseEl.textContent = i < 8 ? "Subiendo" : "Bajando";
+    } else {
+      phaseEl.textContent = `Siguiente nota en ${round.total - step}`;
+    }
+    drawTrack(step);
+  }
+
+  // Barras: planas en preparación y espera; suben y bajan en el recorrido
+  function buildTrack(prep, wait) {
+    trackEl.innerHTML = "";
+    const add = (h, walk) => {
+      const s = document.createElement("span");
+      s.style.height = h + "%";
+      if (walk) s.className = "walk";
+      trackEl.appendChild(s);
+    };
+    for (let i = 0; i < prep; i++) add(14, false);
+    for (let i = 0; i < WALK; i++) {
+      const lvl = i < 8 ? i : 14 - i;              // 0..7..0
+      add(24 + lvl * 10.8, true);
+    }
+    for (let i = 0; i < wait; i++) add(14, false);
+  }
+  function drawTrack(step) {
+    if (step < 0) buildTrack(Number(inputs.prep.value), Number(inputs.wait.value));
+    [...trackEl.children].forEach((s, i) => s.classList.toggle("on", i === step));
+  }
+
+  // ---- Start / stop ----
+  function start() {
+    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === "suspended") ctx.resume();
+    for (const k in inputs) clampInput(inputs[k]);
+    running = true;
+    step = 0;
+    queue.length = 0;
+    shownRound = null;
+    nextTime = ctx.currentTime + 0.1;
+    scheduler();
+    requestAnimationFrame(draw);
+    toggleBtn.textContent = "Parar";
+    toggleBtn.classList.add("running");
+  }
+  function stop() {
+    running = false;
+    clearTimeout(timerId);
+    queue.length = 0;
+    noteEl.classList.add("idle");
+    phaseEl.textContent = "Pulsa Empezar";
+    drawTrack(-1);
+    toggleBtn.textContent = "Empezar";
+    toggleBtn.classList.remove("running");
+  }
+  toggleBtn.addEventListener("click", () => running ? stop() : start());
+
+  document.addEventListener("keydown", e => {
+    if (e.target.tagName === "INPUT" && e.target.type === "number") return;
+    if (e.code === "Space") { e.preventDefault(); running ? stop() : start(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); setBpm(Number(inputs.bpm.value) + (e.shiftKey ? 5 : 1)); }
+    if (e.key === "ArrowDown") { e.preventDefault(); setBpm(Number(inputs.bpm.value) - (e.shiftKey ? 5 : 1)); }
+  });
+
+  drawTrack(-1);
+})();
+</script>
+</body>
+</html>
