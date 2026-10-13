@@ -192,9 +192,10 @@
   }
   select:disabled { opacity: .5; cursor: not-allowed; }
   #bpmRange {
+    grid-column: 1 / -1;
     display: block;
     width: 100%;
-    margin: .9rem 0 0;
+    margin: 0;
     accent-color: var(--brass);
   }
 
@@ -248,7 +249,9 @@
     main { gap: .8rem; padding-top: .75rem; }
     #track { height: 44px; }
     .controls { grid-template-columns: 1fr 1fr; gap: .7rem .75rem; }
-    #bpmRange { margin-top: .6rem; }
+    /* Slider right under the BPM stepper */
+    .field.bpm { order: -2; }
+    #bpmRange { order: -1; margin-top: -.1rem; }
     .actions { padding-bottom: calc(.75rem + env(safe-area-inset-bottom, 0px)); }
     .field.bpm { grid-column: 1 / -1; }
     .stepper, select { height: 3rem; }
@@ -291,7 +294,6 @@
         <input id="bpm" type="number" inputmode="numeric" min="30" max="300" value="60">
         <button data-target="bpm" data-delta="1" data-i18n-aria="bpmUp">+</button>
       </div>
-      <input id="bpmRange" type="range" min="30" max="300" value="60" data-i18n-aria="bpm">
     </div>
     <div class="field">
       <label for="prep" data-i18n="prep"></label>
@@ -309,6 +311,7 @@
         <button data-target="wait" data-delta="1" data-i18n-aria="waitMore">+</button>
       </div>
     </div>
+    <input id="bpmRange" type="range" min="30" max="300" value="60" data-i18n-aria="bpm">
     <p class="hint" data-i18n="hint"></p>
   </section>
 
