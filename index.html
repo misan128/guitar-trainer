@@ -443,7 +443,7 @@
     if (round !== shownRound) {
       shownRound = round;
       buildTrack(round.prep, round.wait);
-      pickEl.hidden = true;
+      pickEl.setAttribute("hidden", "");
       noteEl.hidden = false;
     }
     const w = step - round.prep;
@@ -500,7 +500,7 @@
     queue.length = 0;
     keyEl.disabled = false;
     noteEl.hidden = true;
-    pickEl.hidden = false;
+    pickEl.removeAttribute("hidden");
     phaseEl.textContent = "Elige tonalidad y pulsa Empezar";
     drawTrack(-1);
     toggleBtn.textContent = "Empezar";
