@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Recorrido en C — práctica</title>
+<title>Recorrido de escala — práctica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
@@ -39,7 +39,7 @@
     padding: 1.5rem 1.25rem 2rem;
   }
 
-  /* Nota */
+  /* Escenario: púa en reposo, nota en marcha */
   .stage {
     display: flex;
     flex-direction: column;
@@ -47,14 +47,29 @@
     justify-content: center;
     min-height: 40vh;
   }
+  .display {
+    height: clamp(9rem, 38vw, 17rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   #note {
     font-family: "Young Serif", Georgia, serif;
     font-size: clamp(9rem, 38vw, 17rem);
     line-height: 1;
-    color: var(--bone);
-    transition: color .15s;
+    white-space: nowrap;
   }
-  #note.idle { color: var(--wire); }
+  #pick {
+    height: 72%;
+    width: auto;
+    animation: breathe 3.2s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: rotate(-8deg) scale(1); }
+    50% { transform: rotate(-8deg) scale(1.04); }
+  }
+  @media (prefers-reduced-motion: reduce) { #pick { animation: none; transform: rotate(-8deg); } }
+  [hidden] { display: none !important; }
   #phase {
     margin-top: .75rem;
     color: var(--muted);
@@ -62,7 +77,7 @@
     min-height: 1.5em;
   }
 
-  /* Línea de ticks de la ronda */
+  /* Ticks de la ronda */
   #track {
     display: flex;
     align-items: flex-end;
@@ -86,17 +101,18 @@
     gap: 1rem 1.25rem;
     align-items: end;
   }
-  .field label {
+  .field label, .field .lbl {
     display: block;
     color: var(--muted);
     font-size: .9rem;
     margin-bottom: .4rem;
   }
-  .stepper {
+  .stepper, select {
     display: flex;
     align-items: center;
     background: var(--wood-2);
     border-radius: 10px;
+    height: 2.8rem;
   }
   .stepper button {
     background: none;
@@ -104,7 +120,7 @@
     color: var(--bone);
     font-size: 1.3rem;
     width: 2.6rem;
-    height: 2.8rem;
+    height: 100%;
     cursor: pointer;
     border-radius: 10px;
   }
@@ -120,6 +136,25 @@
   }
   .stepper input::-webkit-inner-spin-button,
   .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  select {
+    width: 100%;
+    border: 0;
+    color: var(--bone);
+    font: 600 1.2rem "Instrument Sans", system-ui, sans-serif;
+    padding: 0 .9rem;
+    cursor: pointer;
+  }
+  select:disabled { opacity: .5; cursor: not-allowed; }
+  .check {
+    grid-column: span 2;
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    height: 2.8rem;
+    cursor: pointer;
+    font-size: 1.05rem;
+  }
+  .check input { width: 1.3rem; height: 1.3rem; accent-color: var(--brass); margin: 0; }
   #bpmRange {
     grid-column: 1 / -1;
     width: 100%;
@@ -138,20 +173,28 @@
   #toggle.running { background: var(--bone); }
   .hint { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; text-align: center; margin: 0; }
 
-  button:focus-visible, input:focus-visible {
+  button:focus-visible, input:focus-visible, select:focus-visible {
     outline: 2px solid var(--brass);
     outline-offset: 2px;
   }
   @media (max-width: 480px) {
     .controls { grid-template-columns: 1fr; }
+    .check { grid-column: auto; }
   }
 </style>
 </head>
 <body>
 <main>
   <section class="stage" aria-live="polite">
-    <div id="note" class="idle">C</div>
-    <div id="phase">Pulsa Empezar</div>
+    <div class="display">
+      <svg id="pick" viewBox="0 0 100 112" aria-label="En reposo" role="img">
+        <path d="M50 108 C34 96 6 60 7 32 C8 11 28 4 50 4 C72 4 92 11 93 32 C94 60 66 96 50 108 Z" fill="#d1a65a"/>
+        <path d="M24 26 C30 16 40 13 50 13" fill="none" stroke="#ede3d1" stroke-opacity=".45" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="50" cy="44" r="9" fill="#1d1613" fill-opacity=".18"/>
+      </svg>
+      <div id="note" hidden></div>
+    </div>
+    <div id="phase">Elige tonalidad y pulsa Empezar</div>
   </section>
 
   <div id="track" aria-hidden="true"></div>
@@ -181,23 +224,56 @@
         <button data-target="wait" data-delta="1" aria-label="Más ticks de espera">+</button>
       </div>
     </div>
+    <div class="field">
+      <label for="key">Tonalidad (mayor)</label>
+      <select id="key"></select>
+    </div>
+    <label class="check">
+      <input id="showAll" type="checkbox">
+      Mostrar todas las notas del recorrido
+    </label>
     <input id="bpmRange" type="range" min="30" max="300" value="60" aria-label="BPM">
     <button id="toggle">Empezar</button>
-    <p class="hint">Espacio para empezar o parar · ↑ ↓ cambian el BPM</p>
+    <p class="hint">Espacio para empezar o parar · ↑ ↓ cambian el BPM · La tonalidad se cambia con la práctica parada</p>
   </section>
 </main>
 
 <script>
 (() => {
-  const NOTES = ["C", "D", "E", "F", "G", "A", "B"];
   const WALK = 15;                 // 8 subiendo + 7 bajando
   const LOOKAHEAD_MS = 25;
   const SCHEDULE_AHEAD = 0.1;
+  const BASE_MIDI = 48;            // nota de inicio siempre en octava 3 (C3–B3)
+
+  // ---- Teoría: escala mayor con la grafía de su armadura ----
+  const LETTERS = ["C", "D", "E", "F", "G", "A", "B"];
+  const LETTER_PC = [0, 2, 4, 5, 7, 9, 11];
+  const MAJOR = [0, 2, 4, 5, 7, 9, 11];
+  const KEYS = [
+    { name: "C", pc: 0, letter: 0 },  { name: "D♭", pc: 1, letter: 1 },
+    { name: "D", pc: 2, letter: 1 },  { name: "E♭", pc: 3, letter: 2 },
+    { name: "E", pc: 4, letter: 2 },  { name: "F", pc: 5, letter: 3 },
+    { name: "F♯", pc: 6, letter: 3 }, { name: "G", pc: 7, letter: 4 },
+    { name: "A♭", pc: 8, letter: 5 }, { name: "A", pc: 9, letter: 5 },
+    { name: "B♭", pc: 10, letter: 6 },{ name: "B", pc: 11, letter: 6 },
+  ];
+  function scaleNames(key) {
+    return MAJOR.map((iv, d) => {
+      const l = (key.letter + d) % 7;
+      const pc = (key.pc + iv) % 12;
+      const diff = ((pc - LETTER_PC[l] + 18) % 12) - 6;   // −1, 0, +1
+      return LETTERS[l] + (diff > 0 ? "♯" : diff < 0 ? "♭" : "");
+    });
+  }
+  const semis = d => MAJOR[d % 7] + 12 * Math.floor(d / 7);
 
   const $ = id => document.getElementById(id);
-  const noteEl = $("note"), phaseEl = $("phase"), trackEl = $("track");
+  const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
   const inputs = { bpm: $("bpm"), prep: $("prep"), wait: $("wait") };
+  const keyEl = $("key"), showAllEl = $("showAll");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
+
+  KEYS.forEach((k, i) => keyEl.add(new Option(k.name, i)));
 
   // ---- Ajustes ----
   function clampInput(el) {
@@ -209,13 +285,18 @@
   function save() {
     try {
       localStorage.setItem("scaleWalkLight", JSON.stringify({
-        bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value
+        bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
+        key: keyEl.value, showAll: showAllEl.checked
       }));
     } catch (e) {}
   }
   try {
     const s = JSON.parse(localStorage.getItem("scaleWalkLight") || "null");
-    if (s) for (const k of ["bpm", "prep", "wait"]) if (s[k] != null) inputs[k].value = s[k];
+    if (s) {
+      for (const k of ["bpm", "prep", "wait"]) if (s[k] != null) inputs[k].value = s[k];
+      if (s.key != null && KEYS[s.key]) keyEl.value = s.key;
+      showAllEl.checked = !!s.showAll;
+    }
   } catch (e) {}
   for (const k in inputs) clampInput(inputs[k]);
   bpmRange.value = inputs.bpm.value;
@@ -242,6 +323,8 @@
     if (!running) drawTrack(-1);
   });
   bpmRange.addEventListener("input", () => setBpm(bpmRange.value));
+  keyEl.addEventListener("change", save);
+  showAllEl.addEventListener("change", save);
 
   // ---- Audio ----
   let ctx = null;
@@ -259,7 +342,6 @@
   }
 
   // Cuerda pulsada (Karplus-Strong) con retardo fraccional para afinar exacto.
-  // Un buffer por nota MIDI, calculado una vez y reutilizado.
   const pluckCache = new Map();
   function pluckBuffer(midi) {
     if (pluckCache.has(midi)) return pluckCache.get(midi);
@@ -272,16 +354,13 @@
     const seed = i0 + 2;
     let prev = 0;
     for (let n = 0; n < seed; n++) {    // ráfaga de ruido suavizada
-      const r = Math.random() * 2 - 1;
-      prev = 0.6 * r + 0.4 * prev;
+      prev = 0.6 * (Math.random() * 2 - 1) + 0.4 * prev;
       y[n] = prev;
     }
     const decay = 0.996;
     const at = n => (1 - fr) * y[n - i0] + fr * y[n - i0 - 1];
-    for (let n = seed; n < len; n++) {
-      y[n] = decay * 0.5 * (at(n) + at(n - 1));
-    }
-    const fade = Math.floor(sr * 0.05);  // cierre sin chasquido
+    for (let n = seed; n < len; n++) y[n] = decay * 0.5 * (at(n) + at(n - 1));
+    const fade = Math.floor(sr * 0.05);
     for (let n = 0; n < fade; n++) y[len - 1 - n] *= n / fade;
     const buf = ctx.createBuffer(1, len, sr);
     buf.copyToChannel(y, 0);
@@ -305,23 +384,23 @@
   // ---- Planificador con lookahead ----
   let running = false, timerId = null;
   let nextTime = 0, step = 0;
-  let round = null;            // { note, prep, wait, total }
-  let lastNote = null;
-  const queue = [];            // ticks pendientes de pintar
-
-  const SEMITONES = [0, 2, 4, 5, 7, 9, 11];   // C mayor
-  const BASE_MIDI = 48;                        // C3: nota de inicio en octava 3
+  let round = null;
+  let session = null;                  // tonalidad fija durante la sesión
+  let lastDeg = null;
+  const queue = [];
 
   function newRound() {
-    let idx;
-    do { idx = Math.floor(Math.random() * NOTES.length); } while (NOTES[idx] === lastNote);
-    const note = NOTES[idx];
-    lastNote = note;
-    const midiOf = k => BASE_MIDI + 12 * Math.floor((idx + k) / 7) + SEMITONES[(idx + k) % 7];
-    const up = Array.from({ length: 8 }, (_, k) => midiOf(k));
-    const walk = up.concat(up.slice(0, 7).reverse());   // 8 subiendo + 7 bajando
+    let deg;
+    do { deg = Math.floor(Math.random() * 7); } while (deg === lastDeg);
+    lastDeg = deg;
+    const start = BASE_MIDI + (session.key.pc + MAJOR[deg]) % 12;
+    const up = Array.from({ length: 8 }, (_, k) => ({
+      midi: start + semis(deg + k) - semis(deg),
+      name: session.names[(deg + k) % 7],
+    }));
+    const walk = up.concat(up.slice(0, 7).reverse());
     const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
-    return { note, walk, prep, wait, total: prep + WALK + wait };
+    return { walk, prep, wait, total: prep + WALK + wait };
   }
 
   function scheduler() {
@@ -329,12 +408,12 @@
       const beat = 60 / Number(inputs.bpm.value);
       if (step === 0) {
         round = newRound();
-        playNote(round.walk[0], nextTime);       // referencia al anunciar
+        playNote(round.walk[0].midi, nextTime);   // referencia al anunciar
       }
       const w = step - round.prep;
       if (w >= 0 && w < WALK) {
         click(nextTime, w === 0, true);          // click leve
-        playNote(round.walk[w], nextTime, beat);
+        playNote(round.walk[w].midi, nextTime, beat);
       } else {
         click(nextTime, false, false);
       }
@@ -359,18 +438,18 @@
   function render({ step, round }) {
     if (round !== shownRound) {
       shownRound = round;
-      noteEl.textContent = round.note;
-      noteEl.classList.remove("idle");
       buildTrack(round.prep, round.wait);
+      pickEl.hidden = true;
+      noteEl.hidden = false;
     }
-    if (step < round.prep) {
-      phaseEl.textContent = `Prepárate · ${round.prep - step}`;
-    } else if (step < round.prep + WALK) {
-      const i = step - round.prep;
-      phaseEl.textContent = i < 8 ? "Subiendo" : "Bajando";
-    } else {
-      phaseEl.textContent = `Siguiente nota en ${round.total - step}`;
-    }
+    const w = step - round.prep;
+    const inWalk = w >= 0 && w < WALK;
+    noteEl.textContent = (inWalk && showAllEl.checked ? round.walk[w] : round.walk[0]).name;
+
+    const k = session.key.name + " mayor";
+    if (step < round.prep) phaseEl.textContent = `${k} · Prepárate · ${round.prep - step}`;
+    else if (inWalk) phaseEl.textContent = `${k} · ${w < 8 ? "Subiendo" : "Bajando"}`;
+    else phaseEl.textContent = `${k} · Siguiente nota en ${round.total - step}`;
     drawTrack(step);
   }
 
@@ -384,10 +463,7 @@
       trackEl.appendChild(s);
     };
     for (let i = 0; i < prep; i++) add(14, false);
-    for (let i = 0; i < WALK; i++) {
-      const lvl = i < 8 ? i : 14 - i;              // 0..7..0
-      add(24 + lvl * 10.8, true);
-    }
+    for (let i = 0; i < WALK; i++) add(24 + (i < 8 ? i : 14 - i) * 10.8, true);
     for (let i = 0; i < wait; i++) add(14, false);
   }
   function drawTrack(step) {
@@ -400,8 +476,12 @@
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === "suspended") ctx.resume();
     for (const k in inputs) clampInput(inputs[k]);
+    const key = KEYS[keyEl.value];
+    session = { key, names: scaleNames(key) };
+    keyEl.disabled = true;
     running = true;
     step = 0;
+    lastDeg = null;
     queue.length = 0;
     shownRound = null;
     nextTime = ctx.currentTime + 0.1;
@@ -414,8 +494,10 @@
     running = false;
     clearTimeout(timerId);
     queue.length = 0;
-    noteEl.classList.add("idle");
-    phaseEl.textContent = "Pulsa Empezar";
+    keyEl.disabled = false;
+    noteEl.hidden = true;
+    pickEl.hidden = false;
+    phaseEl.textContent = "Elige tonalidad y pulsa Empezar";
     drawTrack(-1);
     toggleBtn.textContent = "Empezar";
     toggleBtn.classList.remove("running");
@@ -424,6 +506,7 @@
 
   document.addEventListener("keydown", e => {
     if (e.target.tagName === "INPUT" && e.target.type === "number") return;
+    if (e.target.tagName === "SELECT") return;
     if (e.code === "Space") { e.preventDefault(); running ? stop() : start(); }
     if (e.key === "ArrowUp") { e.preventDefault(); setBpm(Number(inputs.bpm.value) + (e.shiftKey ? 5 : 1)); }
     if (e.key === "ArrowDown") { e.preventDefault(); setBpm(Number(inputs.bpm.value) - (e.shiftKey ? 5 : 1)); }
