@@ -24,45 +24,48 @@
     --wire: #5a4c42;
     box-sizing: border-box;
     padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   *, *::before, *::after { box-sizing: inherit; }
-  html, body { height: 100%; margin: 0; }
+  html, body { margin: 0; }
   body {
+    min-height: 100vh;
+    min-height: 100dvh;
     background: var(--wood);
     color: var(--bone);
     font-family: "Instrument Sans", system-ui, sans-serif;
     display: flex;
     flex-direction: column;
+    -webkit-tap-highlight-color: transparent;
   }
   main {
     flex: 1;
-    display: grid;
-    grid-template-rows: 1fr auto auto;
-    gap: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
     width: 100%;
     max-width: 720px;
     margin: 0 auto;
-    padding: 1.5rem 1.25rem 2rem;
+    padding: 1.25rem 1.25rem 0;
+    --note: clamp(5rem, min(38vw, 20dvh), 17rem);
   }
 
   /* Stage: pick while idle, note while running */
   .stage {
+    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 40vh;
   }
   .display {
-    height: clamp(9rem, 38vw, 17rem);
+    height: var(--note);
     display: flex;
     align-items: center;
     justify-content: center;
   }
   #note {
     font-family: "Young Serif", Georgia, serif;
-    font-size: clamp(9rem, 38vw, 17rem);
+    font-size: var(--note);
     line-height: 1;
     white-space: nowrap;
     color: var(--brass);
@@ -83,6 +86,7 @@
     color: var(--muted);
     font-size: 1.05rem;
     min-height: 1.5em;
+    text-align: center;
   }
 
   /* Round ticks */
@@ -90,12 +94,12 @@
     display: flex;
     align-items: flex-end;
     gap: 3px;
-    height: 64px;
-    overflow-x: auto;
+    height: 56px;
+    flex: none;
   }
   #track span {
     flex: 1 1 0;
-    min-width: 6px;
+    min-width: 0;
     background: var(--wire);
     border-radius: 2px;
   }
@@ -107,13 +111,16 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 1rem 1.25rem;
-    align-items: end;
+    align-items: start;
   }
-  .field label, .field .lbl {
+  .field label {
     display: block;
     color: var(--muted);
     font-size: .9rem;
     margin-bottom: .4rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .stepper, select {
     display: flex;
@@ -122,16 +129,19 @@
     border-radius: 10px;
     height: 2.8rem;
   }
+  button { touch-action: manipulation; }
   .stepper button {
+    flex: none;
     background: none;
     border: 0;
     color: var(--bone);
-    font-size: 1.3rem;
-    width: 2.6rem;
+    font-size: 1.4rem;
+    width: 2.8rem;
     height: 100%;
     cursor: pointer;
     border-radius: 10px;
   }
+  .stepper button:active { background: var(--wire); }
   .stepper input {
     width: 100%;
     min-width: 0;
@@ -148,9 +158,15 @@
     width: 100%;
     border: 0;
     color: var(--bone);
-    font: 600 1.2rem "Instrument Sans", system-ui, sans-serif;
+    font: 600 1.1rem "Instrument Sans", system-ui, sans-serif;
     padding: 0 .9rem;
     cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%238c7b6c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-size: 12px 8px;
+    background-position: right .9rem center;
+    background-repeat: no-repeat;
   }
   select:disabled { opacity: .5; cursor: not-allowed; }
   .check {
@@ -158,35 +174,58 @@
     align-items: center;
     gap: .7rem;
     min-height: 2.8rem;
+    margin-top: 1.3rem;
     cursor: pointer;
-    font-size: 1.05rem;
+    font-size: 1rem;
   }
-  .check input { width: 1.3rem; height: 1.3rem; accent-color: var(--brass); margin: 0; }
+  .check input { flex: none; width: 1.3rem; height: 1.3rem; accent-color: var(--brass); margin: 0; }
   #bpmRange {
-    grid-column: 1 / -1;
+    display: block;
     width: 100%;
+    margin: .9rem 0 0;
     accent-color: var(--brass);
   }
+  .hint { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; text-align: center; margin: 0; }
+
+  /* Start/stop stays reachable at the bottom */
+  .actions {
+    position: sticky;
+    bottom: 0;
+    padding: .5rem 0 calc(1rem + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(transparent, var(--wood) .5rem);
+  }
   #toggle {
-    grid-column: 1 / -1;
-    height: 3.4rem;
+    width: 100%;
+    height: 3.6rem;
     border: 0;
-    border-radius: 12px;
+    border-radius: 14px;
     background: var(--brass);
     color: var(--wood);
-    font: 600 1.15rem "Instrument Sans", system-ui, sans-serif;
+    font: 600 1.2rem "Instrument Sans", system-ui, sans-serif;
     cursor: pointer;
   }
   #toggle.running { background: var(--bone); }
-  .hint { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; text-align: center; margin: 0; }
 
   button:focus-visible, input:focus-visible, select:focus-visible {
     outline: 2px solid var(--brass);
     outline-offset: 2px;
   }
-  @media (max-width: 480px) {
-    .controls { grid-template-columns: 1fr; }
+
+  /* Phones: two columns, BPM and checkbox full width */
+  @media (max-width: 600px) {
+    main { gap: .8rem; padding-top: .75rem; }
+    #track { height: 44px; }
+    .controls { grid-template-columns: 1fr 1fr; gap: .7rem .75rem; }
+    #bpmRange { margin-top: .6rem; }
+    .actions { padding-bottom: calc(.75rem + env(safe-area-inset-bottom, 0px)); }
+    .field.bpm, .check { grid-column: 1 / -1; }
+    .check { margin-top: 0; min-height: 2.2rem; }
+    .stepper, select { height: 3rem; }
+    .field.bpm .stepper input { font-size: 1.7rem; }
+    .hint { display: none; }
   }
+  /* Touch screens have no keyboard shortcuts */
+  @media (hover: none) and (pointer: coarse) { .hint { display: none; } }
 </style>
 </head>
 <body>
@@ -206,19 +245,20 @@
   <div id="track" aria-hidden="true"></div>
 
   <section class="controls">
-    <div class="field">
+    <div class="field bpm">
       <label for="bpm" data-i18n="bpm"></label>
       <div class="stepper">
         <button data-target="bpm" data-delta="-1" data-i18n-aria="bpmDown">−</button>
-        <input id="bpm" type="number" min="30" max="300" value="60">
+        <input id="bpm" type="number" inputmode="numeric" min="30" max="300" value="60">
         <button data-target="bpm" data-delta="1" data-i18n-aria="bpmUp">+</button>
       </div>
+      <input id="bpmRange" type="range" min="30" max="300" value="60" data-i18n-aria="bpm">
     </div>
     <div class="field">
       <label for="prep" data-i18n="prep"></label>
       <div class="stepper">
         <button data-target="prep" data-delta="-1" data-i18n-aria="prepLess">−</button>
-        <input id="prep" type="number" min="1" max="16" value="4">
+        <input id="prep" type="number" inputmode="numeric" min="1" max="16" value="4">
         <button data-target="prep" data-delta="1" data-i18n-aria="prepMore">+</button>
       </div>
     </div>
@@ -226,7 +266,7 @@
       <label for="wait" data-i18n="wait"></label>
       <div class="stepper">
         <button data-target="wait" data-delta="-1" data-i18n-aria="waitLess">−</button>
-        <input id="wait" type="number" min="0" max="16" value="4">
+        <input id="wait" type="number" inputmode="numeric" min="0" max="16" value="4">
         <button data-target="wait" data-delta="1" data-i18n-aria="waitMore">+</button>
       </div>
     </div>
@@ -242,10 +282,12 @@
       <input id="showAll" type="checkbox">
       <span data-i18n="showAll"></span>
     </label>
-    <input id="bpmRange" type="range" min="30" max="300" value="60" data-i18n-aria="bpm">
-    <button id="toggle"></button>
     <p class="hint" data-i18n="hint"></p>
   </section>
+
+  <div class="actions">
+    <button id="toggle"></button>
+  </div>
 </main>
 
 <script src="strings.js"></script>
