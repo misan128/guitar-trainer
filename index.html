@@ -245,16 +245,61 @@
 
   // ---- Audio ----
   let ctx = null;
-  function click(time, accent) {
+  function click(time, accent, soft) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.frequency.value = accent ? 1600 : 1000;
+    const peak = soft ? (accent ? 0.3 : 0.18) : (accent ? 0.9 : 0.6);
     gain.gain.setValueAtTime(0.0001, time);
-    gain.gain.exponentialRampToValueAtTime(accent ? 0.9 : 0.6, time + 0.001);
+    gain.gain.exponentialRampToValueAtTime(peak, time + 0.001);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.04);
     osc.connect(gain).connect(ctx.destination);
     osc.start(time);
     osc.stop(time + 0.05);
+  }
+
+  // Cuerda pulsada (Karplus-Strong) con retardo fraccional para afinar exacto.
+  // Un buffer por nota MIDI, calculado una vez y reutilizado.
+  const pluckCache = new Map();
+  function pluckBuffer(midi) {
+    if (pluckCache.has(midi)) return pluckCache.get(midi);
+    const sr = ctx.sampleRate;
+    const freq = 440 * Math.pow(2, (midi - 69) / 12);
+    const len = Math.floor(sr * 1.6);
+    const y = new Float32Array(len);
+    const P = sr / freq - 0.5;          // el promediado añade medio sample de retardo
+    const i0 = Math.floor(P), fr = P - i0;
+    const seed = i0 + 2;
+    let prev = 0;
+    for (let n = 0; n < seed; n++) {    // ráfaga de ruido suavizada
+      const r = Math.random() * 2 - 1;
+      prev = 0.6 * r + 0.4 * prev;
+      y[n] = prev;
+    }
+    const decay = 0.996;
+    const at = n => (1 - fr) * y[n - i0] + fr * y[n - i0 - 1];
+    for (let n = seed; n < len; n++) {
+      y[n] = decay * 0.5 * (at(n) + at(n - 1));
+    }
+    const fade = Math.floor(sr * 0.05);  // cierre sin chasquido
+    for (let n = 0; n < fade; n++) y[len - 1 - n] *= n / fade;
+    const buf = ctx.createBuffer(1, len, sr);
+    buf.copyToChannel(y, 0);
+    pluckCache.set(midi, buf);
+    return buf;
+  }
+  function playNote(midi, time, duration) {
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    src.buffer = pluckBuffer(midi);
+    gain.gain.setValueAtTime(0.7, time);
+    if (duration) {                      // apagar al llegar la siguiente nota
+      gain.gain.setValueAtTime(0.7, time + duration * 0.92);
+      gain.gain.linearRampToValueAtTime(0.0001, time + duration);
+    }
+    src.connect(gain).connect(ctx.destination);
+    src.start(time);
+    src.stop(time + (duration || src.buffer.duration));
   }
 
   // ---- Planificador con lookahead ----
@@ -264,21 +309,37 @@
   let lastNote = null;
   const queue = [];            // ticks pendientes de pintar
 
+  const SEMITONES = [0, 2, 4, 5, 7, 9, 11];   // C mayor
+  const BASE_MIDI = 48;                        // C3: nota de inicio en octava 3
+
   function newRound() {
-    let note;
-    do { note = NOTES[Math.floor(Math.random() * NOTES.length)]; } while (note === lastNote);
+    let idx;
+    do { idx = Math.floor(Math.random() * NOTES.length); } while (NOTES[idx] === lastNote);
+    const note = NOTES[idx];
     lastNote = note;
+    const midiOf = k => BASE_MIDI + 12 * Math.floor((idx + k) / 7) + SEMITONES[(idx + k) % 7];
+    const up = Array.from({ length: 8 }, (_, k) => midiOf(k));
+    const walk = up.concat(up.slice(0, 7).reverse());   // 8 subiendo + 7 bajando
     const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
-    return { note, prep, wait, total: prep + WALK + wait };
+    return { note, walk, prep, wait, total: prep + WALK + wait };
   }
 
   function scheduler() {
     while (nextTime < ctx.currentTime + SCHEDULE_AHEAD) {
-      if (step === 0) round = newRound();
-      const accent = step === round.prep;          // primer tick del recorrido
-      click(nextTime, accent);
+      const beat = 60 / Number(inputs.bpm.value);
+      if (step === 0) {
+        round = newRound();
+        playNote(round.walk[0], nextTime);       // referencia al anunciar
+      }
+      const w = step - round.prep;
+      if (w >= 0 && w < WALK) {
+        click(nextTime, w === 0, true);          // click leve
+        playNote(round.walk[w], nextTime, beat);
+      } else {
+        click(nextTime, false, false);
+      }
       queue.push({ time: nextTime, step, round });
-      nextTime += 60 / Number(inputs.bpm.value);
+      nextTime += beat;
       step = (step + 1) % round.total;
     }
     timerId = setTimeout(scheduler, LOOKAHEAD_MS);
