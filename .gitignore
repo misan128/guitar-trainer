@@ -1,0 +1,71 @@
+# ---- Sistema operativo ----
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---- Editores e IDEs ----
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+
+# ---- Dependencias ----
+node_modules/
+.pnpm-store/
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+
+# ---- Build y caché (Vite) ----
+dist/
+dist-ssr/
+build/
+.vite/
+.cache/
+*.tsbuildinfo
+
+# ---- Tests (Vitest) ----
+coverage/
+.nyc_output/
+
+# ---- Variables de entorno ----
+.env
+.env.*
+!.env.example
+
+# ---- Logs ----
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Temporales y archivos sueltos ----
+tmp/
+.tmp/
+temp/
+*.tmp
+*.zip
+
+# ---- Agentes de IA ----
+.claude/
+.aider*
+.cursor/
+.windsurf/
+.codex/
+.gemini/
+.continue/
+.cline/
+.roo/
