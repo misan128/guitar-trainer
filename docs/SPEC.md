@@ -26,8 +26,8 @@ This section is for understanding the code and checking that nothing breaks.
 **Settings:**
 - BPM from 30 to 300 (default 60).
 - Ticks before and after the walk.
-- Key: the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped.
-- "Show every note of the walk" checkbox: unchecked, only the start note is shown; checked, each note's name is shown on its tick.
+- Key: the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped. The selector sits small and subtle in the top-left corner, showing the key name ("C major").
+- "Show every note of the walk": off, only the start note is shown; on, each note's name is shown on its tick. It is a subtle, unlabeled eye toggle under the key selector in the top-left corner (closed = off, open = on), usable while running.
 - Settings are saved in `localStorage` under the key `scaleWalkLight`. **Keep that key** so the user's settings are not lost.
 
 **Screen:**
@@ -71,7 +71,7 @@ LICENSE
 - **Code in English:** comments, identifiers and commit messages.
 - **UI texts centralized in `strings.js`:** one object per language (`en`, `es`) with the same keys. Covers everything visible or read by screen readers: labels, buttons, phases, shortcut hint, `aria-label` and `<title>`. Note and key names (C, D♭, F♯…) are not translatable text.
 - Loaded with `<script>` before the app code. No build, no `fetch`.
-- **Language selector** in settings: English / Español. Saved in `localStorage` inside `scaleWalkLight` (new `lang` field), without breaking previously saved settings.
+- **Language selector:** small and subtle in the top-right corner, showing the language code (EN / ES). Saved in `localStorage` inside `scaleWalkLight` (new `lang` field), without breaking previously saved settings.
 - Adding a language = adding an object to `strings.js` with the same keys, without touching the rest of the code.
 - **Default language** when nothing is saved: the browser's (`es*` → Spanish; anything else → English).
 - The language **can be changed while practice is running** and applies immediately.
