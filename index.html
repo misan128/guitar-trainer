@@ -23,13 +23,16 @@
     --brass: #d1a65a;
     --wire: #5a4c42;
     box-sizing: border-box;
-    padding-top: env(safe-area-inset-top, 0px);
   }
   *, *::before, *::after { box-sizing: inherit; }
   html, body { margin: 0; }
+  /* No rubber-band bounce revealing a different background */
+  html { background: var(--wood); overscroll-behavior: none; }
   body {
+    /* Safe-area padding lives inside the 100dvh, so the page fits the screen exactly */
     min-height: 100vh;
     min-height: 100dvh;
+    padding-top: env(safe-area-inset-top, 0px);
     background: var(--wood);
     color: var(--bone);
     font-family: "Instrument Sans", system-ui, sans-serif;
