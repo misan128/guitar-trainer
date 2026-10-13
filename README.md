@@ -1,5 +1,7 @@
 # Scale Trainer
 
+[![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-misan128-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/misan128)
+
 Guitar scale trainer: metronome-driven scale walks from a random note, in any major key. Static web app, no dependencies.
 
 **Use it:** https://misan128.github.io/scale-trainer/
