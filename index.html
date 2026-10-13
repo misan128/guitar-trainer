@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Recorrido de escala — práctica</title>
+<title>Scale walk — practice</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
@@ -39,7 +39,7 @@
     padding: 1.5rem 1.25rem 2rem;
   }
 
-  /* Escenario: púa en reposo, nota en marcha */
+  /* Stage: pick while idle, note while running */
   .stage {
     display: flex;
     flex-direction: column;
@@ -78,7 +78,7 @@
     min-height: 1.5em;
   }
 
-  /* Ticks de la ronda */
+  /* Round ticks */
   #track {
     display: flex;
     align-items: flex-end;
@@ -95,7 +95,7 @@
   #track span.walk { background: #7d6655; }
   #track span.on { background: var(--brass); }
 
-  /* Controles */
+  /* Controls */
   .controls {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -147,11 +147,10 @@
   }
   select:disabled { opacity: .5; cursor: not-allowed; }
   .check {
-    grid-column: span 2;
     display: flex;
     align-items: center;
     gap: .7rem;
-    height: 2.8rem;
+    min-height: 2.8rem;
     cursor: pointer;
     font-size: 1.05rem;
   }
@@ -180,7 +179,6 @@
   }
   @media (max-width: 480px) {
     .controls { grid-template-columns: 1fr; }
-    .check { grid-column: auto; }
   }
 </style>
 </head>
@@ -188,65 +186,70 @@
 <main>
   <section class="stage" aria-live="polite">
     <div class="display">
-      <svg id="pick" viewBox="0 0 100 112" aria-label="En reposo" role="img">
+      <svg id="pick" viewBox="0 0 100 112" data-i18n-aria="pickAria" role="img">
         <path d="M50 108 C34 96 6 60 7 32 C8 11 28 4 50 4 C72 4 92 11 93 32 C94 60 66 96 50 108 Z" fill="#d1a65a"/>
         <path d="M24 26 C30 16 40 13 50 13" fill="none" stroke="#ede3d1" stroke-opacity=".45" stroke-width="5" stroke-linecap="round"/>
         <circle cx="50" cy="44" r="9" fill="#1d1613" fill-opacity=".18"/>
       </svg>
       <div id="note" hidden></div>
     </div>
-    <div id="phase">Elige tonalidad y pulsa Empezar</div>
+    <div id="phase"></div>
   </section>
 
   <div id="track" aria-hidden="true"></div>
 
   <section class="controls">
     <div class="field">
-      <label for="bpm">BPM</label>
+      <label for="bpm" data-i18n="bpm"></label>
       <div class="stepper">
-        <button data-target="bpm" data-delta="-1" aria-label="Bajar BPM">−</button>
+        <button data-target="bpm" data-delta="-1" data-i18n-aria="bpmDown">−</button>
         <input id="bpm" type="number" min="30" max="300" value="60">
-        <button data-target="bpm" data-delta="1" aria-label="Subir BPM">+</button>
+        <button data-target="bpm" data-delta="1" data-i18n-aria="bpmUp">+</button>
       </div>
     </div>
     <div class="field">
-      <label for="prep">Ticks antes del recorrido</label>
+      <label for="prep" data-i18n="prep"></label>
       <div class="stepper">
-        <button data-target="prep" data-delta="-1" aria-label="Menos ticks de preparación">−</button>
+        <button data-target="prep" data-delta="-1" data-i18n-aria="prepLess">−</button>
         <input id="prep" type="number" min="1" max="16" value="4">
-        <button data-target="prep" data-delta="1" aria-label="Más ticks de preparación">+</button>
+        <button data-target="prep" data-delta="1" data-i18n-aria="prepMore">+</button>
       </div>
     </div>
     <div class="field">
-      <label for="wait">Ticks después del recorrido</label>
+      <label for="wait" data-i18n="wait"></label>
       <div class="stepper">
-        <button data-target="wait" data-delta="-1" aria-label="Menos ticks de espera">−</button>
+        <button data-target="wait" data-delta="-1" data-i18n-aria="waitLess">−</button>
         <input id="wait" type="number" min="0" max="16" value="4">
-        <button data-target="wait" data-delta="1" aria-label="Más ticks de espera">+</button>
+        <button data-target="wait" data-delta="1" data-i18n-aria="waitMore">+</button>
       </div>
     </div>
     <div class="field">
-      <label for="key">Tonalidad (mayor)</label>
+      <label for="key" data-i18n="key"></label>
       <select id="key"></select>
+    </div>
+    <div class="field">
+      <label for="lang" data-i18n="lang"></label>
+      <select id="lang"></select>
     </div>
     <label class="check">
       <input id="showAll" type="checkbox">
-      Mostrar todas las notas del recorrido
+      <span data-i18n="showAll"></span>
     </label>
-    <input id="bpmRange" type="range" min="30" max="300" value="60" aria-label="BPM">
-    <button id="toggle">Empezar</button>
-    <p class="hint">Espacio para empezar o parar · ↑ ↓ cambian el BPM · La tonalidad se cambia con la práctica parada</p>
+    <input id="bpmRange" type="range" min="30" max="300" value="60" data-i18n-aria="bpm">
+    <button id="toggle"></button>
+    <p class="hint" data-i18n="hint"></p>
   </section>
 </main>
 
+<script src="strings.js"></script>
 <script>
 (() => {
-  const WALK = 15;                 // 8 subiendo + 7 bajando
+  const WALK = 15;                 // 8 up + 7 down
   const LOOKAHEAD_MS = 25;
   const SCHEDULE_AHEAD = 0.1;
-  const BASE_MIDI = 48;            // nota de inicio siempre en octava 3 (C3–B3)
+  const BASE_MIDI = 48;            // start note always in octave 3 (C3–B3)
 
-  // ---- Teoría: escala mayor con la grafía de su armadura ----
+  // ---- Theory: major scale spelled after its key signature ----
   const LETTERS = ["C", "D", "E", "F", "G", "A", "B"];
   const LETTER_PC = [0, 2, 4, 5, 7, 9, 11];
   const MAJOR = [0, 2, 4, 5, 7, 9, 11];
@@ -271,16 +274,39 @@
   const $ = id => document.getElementById(id);
   const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
   const inputs = { bpm: $("bpm"), prep: $("prep"), wait: $("wait") };
-  const keyEl = $("key"), showAllEl = $("showAll");
+  const keyEl = $("key"), langEl = $("lang"), showAllEl = $("showAll");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
 
-  // Orden del selector: círculo de quintas (C G D A E B F♯ D♭ A♭ E♭ B♭ F)
+  // Selector order: circle of fifths (C G D A E B F♯ D♭ A♭ E♭ B♭ F)
   for (let i = 0, pc = 0; i < 12; i++, pc = (pc + 7) % 12) {
     const idx = KEYS.findIndex(k => k.pc === pc);
     keyEl.add(new Option(KEYS[idx].name, idx));
   }
+  for (const code in STRINGS) langEl.add(new Option(STRINGS[code].langName, code));
 
-  // ---- Ajustes ----
+  // ---- Language ----
+  let T = STRINGS.en;
+  function browserLang() {
+    const prefs = navigator.languages || [navigator.language || ""];
+    for (const l of prefs) {
+      const code = String(l).toLowerCase().split("-")[0];
+      if (STRINGS[code]) return code;
+    }
+    return "en";
+  }
+  function applyLang() {
+    T = STRINGS[langEl.value];
+    document.documentElement.lang = langEl.value;
+    document.title = T.title;
+    document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = T[el.dataset.i18n]; });
+    document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", T[el.dataset.i18nAria]));
+    toggleBtn.textContent = running ? T.stop : T.start;
+    if (running && lastShown) render(lastShown);
+    else if (!running) phaseEl.textContent = T.idle;
+  }
+
+  // ---- Settings ----
+  langEl.value = browserLang();       // overridden by saved settings
   function clampInput(el) {
     const v = Math.round(Number(el.value));
     const min = Number(el.min), max = Number(el.max);
@@ -291,7 +317,7 @@
     try {
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
-        key: keyEl.value, showAll: showAllEl.checked
+        key: keyEl.value, showAll: showAllEl.checked, lang: langEl.value
       }));
     } catch (e) {}
   }
@@ -301,6 +327,7 @@
       for (const k of ["bpm", "prep", "wait"]) if (s[k] != null) inputs[k].value = s[k];
       if (s.key != null && KEYS[s.key]) keyEl.value = s.key;
       showAllEl.checked = !!s.showAll;
+      if (STRINGS[s.lang]) langEl.value = s.lang;
     }
   } catch (e) {}
   for (const k in inputs) clampInput(inputs[k]);
@@ -330,6 +357,7 @@
   bpmRange.addEventListener("input", () => setBpm(bpmRange.value));
   keyEl.addEventListener("change", save);
   showAllEl.addEventListener("change", save);
+  langEl.addEventListener("change", () => { applyLang(); save(); });
 
   // ---- Audio ----
   let ctx = null;
@@ -346,7 +374,7 @@
     osc.stop(time + 0.05);
   }
 
-  // Cuerda pulsada (Karplus-Strong) con retardo fraccional para afinar exacto.
+  // Plucked string (Karplus-Strong) with fractional delay for exact tuning.
   const pluckCache = new Map();
   function pluckBuffer(midi) {
     if (pluckCache.has(midi)) return pluckCache.get(midi);
@@ -354,11 +382,11 @@
     const freq = 440 * Math.pow(2, (midi - 69) / 12);
     const len = Math.floor(sr * 1.6);
     const y = new Float32Array(len);
-    const P = sr / freq - 0.5;          // el promediado añade medio sample de retardo
+    const P = sr / freq - 0.5;          // averaging adds half a sample of delay
     const i0 = Math.floor(P), fr = P - i0;
     const seed = i0 + 2;
     let prev = 0;
-    for (let n = 0; n < seed; n++) {    // ráfaga de ruido suavizada
+    for (let n = 0; n < seed; n++) {    // smoothed noise burst
       prev = 0.6 * (Math.random() * 2 - 1) + 0.4 * prev;
       y[n] = prev;
     }
@@ -377,7 +405,7 @@
     const gain = ctx.createGain();
     src.buffer = pluckBuffer(midi);
     gain.gain.setValueAtTime(0.7, time);
-    if (duration) {                      // apagar al llegar la siguiente nota
+    if (duration) {                      // mute when the next note arrives
       gain.gain.setValueAtTime(0.7, time + duration * 0.92);
       gain.gain.linearRampToValueAtTime(0.0001, time + duration);
     }
@@ -386,11 +414,11 @@
     src.stop(time + (duration || src.buffer.duration));
   }
 
-  // ---- Planificador con lookahead ----
+  // ---- Lookahead scheduler ----
   let running = false, timerId = null;
   let nextTime = 0, step = 0;
   let round = null;
-  let session = null;                  // tonalidad fija durante la sesión
+  let session = null;                  // key is fixed for the whole session
   let lastDeg = null;
   const queue = [];
 
@@ -413,11 +441,11 @@
       const beat = 60 / Number(inputs.bpm.value);
       if (step === 0) {
         round = newRound();
-        playNote(round.walk[0].midi, nextTime);   // referencia al anunciar
+        playNote(round.walk[0].midi, nextTime);   // reference pitch on announce
       }
       const w = step - round.prep;
       if (w >= 0 && w < WALK) {
-        click(nextTime, w === 0, true);          // click leve
+        click(nextTime, w === 0, true);          // soft click
         playNote(round.walk[w].midi, nextTime, beat);
       } else {
         click(nextTime, false, false);
@@ -429,8 +457,8 @@
     timerId = setTimeout(scheduler, LOOKAHEAD_MS);
   }
 
-  // ---- Pintado sincronizado con lo audible ----
-  let shownRound = null;
+  // ---- Drawing synced to what is audible ----
+  let shownRound = null, lastShown = null;
   function draw() {
     if (!running) return;
     const now = ctx.currentTime - (ctx.outputLatency || 0);
@@ -440,7 +468,9 @@
     requestAnimationFrame(draw);
   }
 
-  function render({ step, round }) {
+  function render(tick) {
+    const { step, round } = tick;
+    lastShown = tick;
     if (round !== shownRound) {
       shownRound = round;
       buildTrack(round.prep, round.wait);
@@ -451,14 +481,14 @@
     const inWalk = w >= 0 && w < WALK;
     noteEl.textContent = (inWalk && showAllEl.checked ? round.walk[w] : round.walk[0]).name;
 
-    const k = session.key.name + " mayor";
-    if (step < round.prep) phaseEl.textContent = `${k} · Prepárate · ${round.prep - step}`;
-    else if (inWalk) phaseEl.textContent = `${k} · ${w < 8 ? "Subiendo" : "Bajando"}`;
-    else phaseEl.textContent = `${k} · Siguiente nota en ${round.total - step}`;
+    const k = T.keyName(session.key.name);
+    if (step < round.prep) phaseEl.textContent = `${k} · ${T.phasePrep(round.prep - step)}`;
+    else if (inWalk) phaseEl.textContent = `${k} · ${w < 8 ? T.phaseUp : T.phaseDown}`;
+    else phaseEl.textContent = `${k} · ${T.phaseNext(round.total - step)}`;
     drawTrack(step);
   }
 
-  // Barras: planas en preparación y espera; suben y bajan en el recorrido
+  // Bars: flat for prep and wait; rise and fall during the walk
   function buildTrack(prep, wait) {
     trackEl.innerHTML = "";
     const add = (h, walk) => {
@@ -489,10 +519,11 @@
     lastDeg = null;
     queue.length = 0;
     shownRound = null;
+    lastShown = null;
     nextTime = ctx.currentTime + 0.1;
     scheduler();
     requestAnimationFrame(draw);
-    toggleBtn.textContent = "Parar";
+    toggleBtn.textContent = T.stop;
     toggleBtn.classList.add("running");
   }
   function stop() {
@@ -502,9 +533,9 @@
     keyEl.disabled = false;
     noteEl.hidden = true;
     pickEl.removeAttribute("hidden");
-    phaseEl.textContent = "Elige tonalidad y pulsa Empezar";
+    phaseEl.textContent = T.idle;
     drawTrack(-1);
-    toggleBtn.textContent = "Empezar";
+    toggleBtn.textContent = T.start;
     toggleBtn.classList.remove("running");
   }
   toggleBtn.addEventListener("click", () => running ? stop() : start());
@@ -517,6 +548,7 @@
     if (e.key === "ArrowDown") { e.preventDefault(); setBpm(Number(inputs.bpm.value) - (e.shiftKey ? 5 : 1)); }
   });
 
+  applyLang();
   drawTrack(-1);
 })();
 </script>
