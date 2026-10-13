@@ -513,6 +513,26 @@
     [...trackEl.children].forEach((s, i) => s.classList.toggle("on", i === step));
   }
 
+  // ---- Wake Lock: keep the screen on while running ----
+  let wakeLock = null;
+  async function lockScreen() {
+    if (!("wakeLock" in navigator) || wakeLock) return;
+    try {
+      const lock = await navigator.wakeLock.request("screen");
+      if (!running) { lock.release(); return; }
+      wakeLock = lock;
+      lock.addEventListener("release", () => { if (wakeLock === lock) wakeLock = null; });
+    } catch (e) {}
+  }
+  function unlockScreen() {
+    if (wakeLock) wakeLock.release().catch(() => {});
+    wakeLock = null;
+  }
+  // The system drops the lock when the page is hidden; ask again on return.
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && running) lockScreen();
+  });
+
   // ---- Start / stop ----
   function start() {
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -530,12 +550,14 @@
     nextTime = ctx.currentTime + 0.1;
     scheduler();
     requestAnimationFrame(draw);
+    lockScreen();
     toggleBtn.textContent = T.stop;
     toggleBtn.classList.add("running");
   }
   function stop() {
     running = false;
     clearTimeout(timerId);
+    unlockScreen();
     queue.length = 0;
     keyEl.disabled = false;
     noteEl.hidden = true;
