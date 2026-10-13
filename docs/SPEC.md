@@ -61,7 +61,7 @@ LICENSE
 ```
 
 - **`.gitignore`:** system files, editors, `node_modules/`, logs, `*.zip`, AI agent directories and the loose versions folder (`.tmp/`).
-- **`LICENSE`:** MIT.
+- **`LICENSE`:** MIT, held by Michael Sandoval.
 - **`README.md`:** in English. Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on an iPhone and a link to the published site. No roadmap or promises.
 - **`docs/SPEC.md`:** this document. Describes state and decisions, not one-off steps.
 - **Repo description** (GitHub "About" field, set by the user): *Guitar scale trainer: metronome-driven scale walks from a random note, in any major key. Static web app, no dependencies.*
@@ -109,7 +109,7 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 ## 7. Deployment
 
 - **GitHub Pages**, **public** repository, publishing from `main` / root.
-- Expected URL: `https://<user>.github.io/scale-trainer/`.
+- URL: `https://misan128.github.io/scale-trainer/`.
 - No GitHub Actions, no build step.
 
 ## 8. Work order
@@ -122,8 +122,6 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 ## 9. Pending confirmation from the user
 
 Ask before implementing anything that depends on these:
-- GitHub username and repo name (`scale-trainer` assumed).
-- Holder name for the `LICENSE`.
 - What to do if the app goes to the background while practice is running: stop it or let the system suspend it.
 - `short_name`: "Scale Trainer" may be truncated under the icon on iOS. Confirm whether that is acceptable or a shorter one is preferred.
 
