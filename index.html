@@ -81,6 +81,28 @@
   }
   @media (prefers-reduced-motion: reduce) { #pick { animation: none; transform: rotate(-8deg); } }
   [hidden] { display: none !important; }
+
+  /* Show-all toggle: a quiet eye under the key selector */
+  #showAll {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 2.7rem);
+    left: .95rem;
+    z-index: 1;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: .4rem;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--wire);
+    cursor: pointer;
+    transition: color .2s;
+  }
+  #showAll:hover { color: var(--muted); }
+  #showAll svg { display: block; width: 100%; height: 100%; }
+  #showAll .lid-open { display: none; }
+  #showAll[aria-pressed="true"] .lid-open { display: inline; }
+  #showAll[aria-pressed="true"] .lid-closed { display: none; }
   #phase {
     margin-top: .75rem;
     color: var(--muted);
@@ -169,22 +191,32 @@
     background-repeat: no-repeat;
   }
   select:disabled { opacity: .5; cursor: not-allowed; }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: .7rem;
-    min-height: 2.8rem;
-    margin-top: 1.3rem;
-    cursor: pointer;
-    font-size: 1rem;
-  }
-  .check input { flex: none; width: 1.3rem; height: 1.3rem; accent-color: var(--brass); margin: 0; }
   #bpmRange {
     display: block;
     width: 100%;
     margin: .9rem 0 0;
     accent-color: var(--brass);
   }
+
+  /* Key and language: small and quiet in the top corners */
+  select.corner {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + .6rem);
+    z-index: 1;
+    width: auto;
+    height: 2rem;
+    padding: 0 1.4rem 0 .6rem;
+    background-color: transparent;
+    background-size: 9px 6px;
+    background-position: right .5rem center;
+    color: var(--muted);
+    font: 600 .8rem "Instrument Sans", system-ui, sans-serif;
+    opacity: .7;
+  }
+  select.corner.left { left: .75rem; }
+  select.corner.right { right: .75rem; letter-spacing: .06em; }
+  select.corner:hover, select.corner:focus-visible { opacity: 1; }
+  select.corner:disabled { opacity: .35; }
   .hint { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; text-align: center; margin: 0; }
 
   /* Start/stop stays reachable at the bottom */
@@ -211,15 +243,14 @@
     outline-offset: 2px;
   }
 
-  /* Phones: two columns, BPM and checkbox full width */
+  /* Phones: two columns, BPM full width */
   @media (max-width: 600px) {
     main { gap: .8rem; padding-top: .75rem; }
     #track { height: 44px; }
     .controls { grid-template-columns: 1fr 1fr; gap: .7rem .75rem; }
     #bpmRange { margin-top: .6rem; }
     .actions { padding-bottom: calc(.75rem + env(safe-area-inset-bottom, 0px)); }
-    .field.bpm, .check { grid-column: 1 / -1; }
-    .check { margin-top: 0; min-height: 2.2rem; }
+    .field.bpm { grid-column: 1 / -1; }
     .stepper, select { height: 3rem; }
     .field.bpm .stepper input { font-size: 1.7rem; }
     .hint { display: none; }
@@ -229,6 +260,14 @@
 </style>
 </head>
 <body>
+<select id="key" class="corner left" data-i18n-aria="key"></select>
+<select id="lang" class="corner right" data-i18n-aria="lang"></select>
+<button id="showAll" aria-pressed="false" data-i18n-aria="showAll">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <g class="lid-open"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8" fill="currentColor" stroke="none"/></g>
+    <g class="lid-closed"><path d="M2 10.5c2.6 3.6 6 5.5 10 5.5s7.4-1.9 10-5.5"/><path d="M5.6 14l-1.5 2.2M12 16v2.6M18.4 14l1.5 2.2"/></g>
+  </svg>
+</button>
 <main>
   <section class="stage" aria-live="polite">
     <div class="display">
@@ -270,18 +309,6 @@
         <button data-target="wait" data-delta="1" data-i18n-aria="waitMore">+</button>
       </div>
     </div>
-    <div class="field">
-      <label for="key" data-i18n="key"></label>
-      <select id="key"></select>
-    </div>
-    <div class="field">
-      <label for="lang" data-i18n="lang"></label>
-      <select id="lang"></select>
-    </div>
-    <label class="check">
-      <input id="showAll" type="checkbox">
-      <span data-i18n="showAll"></span>
-    </label>
     <p class="hint" data-i18n="hint"></p>
   </section>
 
@@ -331,7 +358,7 @@
     const idx = KEYS.findIndex(k => k.pc === pc);
     keyEl.add(new Option(KEYS[idx].name, idx));
   }
-  for (const code in STRINGS) langEl.add(new Option(STRINGS[code].langName, code));
+  for (const code in STRINGS) langEl.add(new Option(code.toUpperCase(), code));
 
   // ---- Language ----
   let T = STRINGS.en;
@@ -347,6 +374,7 @@
     T = STRINGS[langEl.value];
     document.documentElement.lang = langEl.value;
     document.title = T.title;
+    [...keyEl.options].forEach(o => { o.textContent = T.keyName(KEYS[o.value].name); });
     document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = T[el.dataset.i18n]; });
     document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", T[el.dataset.i18nAria]));
     toggleBtn.textContent = running ? T.stop : T.start;
@@ -355,6 +383,11 @@
   }
 
   // ---- Settings ----
+  let showAll = false;
+  function setShowAll(v) {
+    showAll = v;
+    showAllEl.setAttribute("aria-pressed", String(v));
+  }
   langEl.value = browserLang();       // overridden by saved settings
   function clampInput(el) {
     const v = Math.round(Number(el.value));
@@ -366,7 +399,7 @@
     try {
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
-        key: keyEl.value, showAll: showAllEl.checked, lang: langEl.value
+        key: keyEl.value, showAll: showAll, lang: langEl.value
       }));
     } catch (e) {}
   }
@@ -375,7 +408,7 @@
     if (s) {
       for (const k of ["bpm", "prep", "wait"]) if (s[k] != null) inputs[k].value = s[k];
       if (s.key != null && KEYS[s.key]) keyEl.value = s.key;
-      showAllEl.checked = !!s.showAll;
+      setShowAll(!!s.showAll);
       if (STRINGS[s.lang]) langEl.value = s.lang;
     }
   } catch (e) {}
@@ -405,7 +438,11 @@
   });
   bpmRange.addEventListener("input", () => setBpm(bpmRange.value));
   keyEl.addEventListener("change", save);
-  showAllEl.addEventListener("change", save);
+  showAllEl.addEventListener("click", () => {
+    setShowAll(!showAll);
+    save();
+    if (running && lastShown) render(lastShown);
+  });
   langEl.addEventListener("change", () => { applyLang(); save(); });
 
   // ---- Audio ----
@@ -528,7 +565,7 @@
     }
     const w = step - round.prep;
     const inWalk = w >= 0 && w < WALK;
-    noteEl.textContent = (inWalk && showAllEl.checked ? round.walk[w] : round.walk[0]).name;
+    noteEl.textContent = (inWalk && showAll ? round.walk[w] : round.walk[0]).name;
 
     const k = T.keyName(session.key.name);
     if (step < round.prep) phaseEl.textContent = `${k} · ${T.phasePrep(round.prep - step)}`;

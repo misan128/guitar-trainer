@@ -2,7 +2,6 @@
 // To add a language, add an object here; nothing else needs to change.
 window.STRINGS = {
   en: {
-    langName: "English",
     title: "Scale walk — practice",
     idle: "Choose a key and press Start",
     pickAria: "Idle",
@@ -28,7 +27,6 @@ window.STRINGS = {
     phaseNext: n => `Next note in ${n}`,
   },
   es: {
-    langName: "Español",
     title: "Recorrido de escala — práctica",
     idle: "Elige tonalidad y pulsa Empezar",
     pickAria: "En reposo",
