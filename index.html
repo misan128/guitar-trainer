@@ -85,23 +85,22 @@
   @media (prefers-reduced-motion: reduce) { #pick { animation: none; transform: rotate(-8deg); } }
   [hidden] { display: none !important; }
 
-  /* Show-all toggle: a quiet eye under the key selector */
+  /* Show-all toggle: an eye beside the key; a brass tile when on */
   #showAll {
-    position: absolute;
-    top: calc(env(safe-area-inset-top, 0px) + 2.7rem);
-    left: .95rem;
-    z-index: 1;
-    width: 2.25rem;
-    height: 2.25rem;
-    padding: .4rem;
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: .6rem;
     border: 0;
-    border-radius: 50%;
-    background: none;
-    color: var(--wire);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    opacity: .7;
     cursor: pointer;
-    transition: color .2s;
+    transition: background-color .2s, color .2s, opacity .2s;
   }
-  #showAll:hover { color: var(--muted); }
+  #showAll:hover { opacity: 1; }
+  #showAll[aria-pressed="true"] { background: rgba(209, 166, 90, .16); color: var(--brass); opacity: 1; }
   #showAll svg { display: block; width: 100%; height: 100%; }
   #showAll .lid-open { display: none; }
   #showAll[aria-pressed="true"] .lid-open { display: inline; }
@@ -202,11 +201,19 @@
     accent-color: var(--brass);
   }
 
-  /* Key and language: small and quiet in the top corners */
-  select.corner {
+  /* Top corners: key + eye on the left, language on the right */
+  .corner {
     position: absolute;
-    top: calc(env(safe-area-inset-top, 0px) + .6rem);
+    top: calc(env(safe-area-inset-top, 0px) + .5rem);
     z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    height: 2.5rem;
+  }
+  .corner.left { left: .75rem; }
+  .corner.right { right: .75rem; }
+  select.quiet {
     width: auto;
     height: 2rem;
     padding: 0 1.4rem 0 .6rem;
@@ -217,10 +224,18 @@
     font: 600 .8rem "Instrument Sans", system-ui, sans-serif;
     opacity: .7;
   }
-  select.corner.left { left: .75rem; }
-  select.corner.right { right: .75rem; letter-spacing: .06em; }
-  select.corner:hover, select.corner:focus-visible { opacity: 1; }
-  select.corner:disabled { opacity: .35; }
+  select.quiet:hover, select.quiet:focus-visible { opacity: 1; }
+  select.quiet:disabled { opacity: .35; }
+  #lang { letter-spacing: .06em; }
+  #key {
+    height: 2.5rem;
+    color: var(--brass);
+    font-size: 1rem;
+    opacity: .9;
+    background-size: 10px 7px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23d1a65a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+  #key:disabled { opacity: .35; }
   .hint { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; text-align: center; margin: 0; }
 
   /* Start/stop stays reachable at the bottom */
@@ -266,14 +281,18 @@
 </style>
 </head>
 <body>
-<select id="key" class="corner left" data-i18n-aria="key"></select>
-<select id="lang" class="corner right" data-i18n-aria="lang"></select>
-<button id="showAll" aria-pressed="false" data-i18n-aria="showAll">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <g class="lid-open"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8" fill="currentColor" stroke="none"/></g>
-    <g class="lid-closed"><path d="M2 10.5c2.6 3.6 6 5.5 10 5.5s7.4-1.9 10-5.5"/><path d="M5.6 14l-1.5 2.2M12 16v2.6M18.4 14l1.5 2.2"/></g>
-  </svg>
-</button>
+<div class="corner left">
+  <select id="key" class="quiet" data-i18n-aria="key"></select>
+  <button id="showAll" aria-pressed="false" data-i18n-aria="showAll">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <g class="lid-open"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></g>
+      <g class="lid-closed"><path d="M2 10.5c2.6 3.6 6 5.5 10 5.5s7.4-1.9 10-5.5"/><path d="M5.6 14l-1.5 2.2M12 16v2.6M18.4 14l1.5 2.2"/></g>
+    </svg>
+  </button>
+</div>
+<div class="corner right">
+  <select id="lang" class="quiet" data-i18n-aria="lang"></select>
+</div>
 <main>
   <section class="stage" aria-live="polite">
     <div class="display">
