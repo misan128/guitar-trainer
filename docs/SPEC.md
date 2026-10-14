@@ -26,8 +26,8 @@ This section is for understanding the code and checking that nothing breaks.
 **Settings:**
 - BPM from 30 to 300 (default 60).
 - Ticks before and after the walk.
-- Key: the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped. The selector sits small and subtle in the top-left corner, showing the key name ("C major").
-- "Show every note of the walk": off, only the start note is shown; on, each note's name is shown on its tick. It is a subtle, unlabeled eye toggle under the key selector in the top-left corner (closed = off, open = on), usable while running.
+- Key: the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped. The selector sits in the top-left corner in brass, showing the key name ("C major").
+- "Show every note of the walk": off, only the start note is shown; on, each note's name is shown on its tick. It is an unlabeled eye toggle to the right of the key selector, on the same line (closed and muted = off; open on a brass-tinted tile = on), usable while running.
 - Settings are saved in `localStorage` under the key `scaleWalkLight`. **Keep that key** so the user's settings are not lost.
 
 **Screen:**
