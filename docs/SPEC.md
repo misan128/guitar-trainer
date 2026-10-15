@@ -9,7 +9,7 @@ A small tool to practice guitar scales **now**, while a much larger project is d
 ## 2. Starting point
 
 - The functional reference is `index.html` at commit `2e9a486` (`style: color note letter brass`), equivalent to v5. The `main` history already covers the v1–v5 evolution.
-- Its behavior (§3) **does not change** except where §5 and §6 explicitly say so.
+- Its behavior (§3) **does not change** except where §5, §6 and §12 explicitly say so.
 - No migration to frameworks, bundlers or TypeScript. It stays HTML + CSS + JS with no build step.
 
 ## 3. Current app behavior (do not change)
@@ -17,7 +17,7 @@ A small tool to practice guitar scales **now**, while a much larger project is d
 This section is for understanding the code and checking that nothing breaks.
 
 **Round:**
-1. **Announce:** a random note from the selected key, different from the previous round's. It is shown on screen and played once as a reference.
+1. **Announce:** a random note from the round's key (see §12), different from the previous round's. It is shown on screen and played once as a reference.
 2. **Prep:** *n* normal clicks (1–16, default 4).
 3. **Walk:** 15 ticks, one note per tick: 8 notes up to the octave and 7 back down. Each tick plays the note (Karplus-Strong) with a soft click. The first walk tick has an accented (soft) click, and each note is muted when the next one arrives.
 4. **Wait:** *m* normal clicks (0–16, default 4). Then a new round starts.
@@ -26,9 +26,10 @@ This section is for understanding the code and checking that nothing breaks.
 **Settings:**
 - BPM from 30 to 300 (default 60).
 - Ticks before and after the walk.
-- Key: the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped. The selector sits in the top-left corner in brass, showing the key name ("C major").
+- Keys: one or more of the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped. The selector sits in the top-left corner in brass (see §12).
 - "Show every note of the walk": off, only the start note is shown; on, each note's name is shown on its tick. It is an unlabeled eye toggle to the right of the key selector, on the same line (closed and muted = off; open on a brass-tinted tile = on), usable while running.
 - Settings are saved in `localStorage` under the key `scaleWalkLight`. **Keep that key** so the user's settings are not lost.
+- With a single key selected, everything in this section behaves exactly as before §12.
 
 **Screen:**
 - While idle, an animated SVG pick is shown. On start it disappears and the note appears centered, in brass. On stop the pick comes back.
@@ -134,7 +135,40 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 6. While practice is running, the screen does not turn off.
 7. After publishing a change and bumping the cache version, the installed app picks it up when reopened.
 8. Settings saved with v5 are preserved.
+9. With one key selected, practice looks and sounds as before §12; with several, every point of §12 holds.
 
 ## 11. Out of scope
 
-New practice features, other scales or modes, tuner, accounts, analytics, frameworks, build, and anything from the larger project.
+New practice features beyond §12, other scales or modes, tuner, accounts, analytics, frameworks, build, and anything from the larger project.
+
+## 12. Multi-key practice
+
+Asked for by the user's guitar teacher: practice switching between keys, not just walking within one.
+
+**Selection panel** (replaces the native key `<select>`):
+- The brass button in the top-left corner opens a dark panel; it follows the app's look, not the browser's.
+- 12 toggle tiles in a 3×4 grid, circle-of-fifths order (C G D / A E B / F♯ D♭ A♭ / E♭ B♭ F). Selected tiles are brass with a check mark. A counter shows "n of 12".
+- Every tap applies at once; there is no Apply button.
+- Quick actions: **All** (left) and **Clear** (right); each is disabled when it would change nothing.
+- The selection may be empty: the button then reads "Choose keys" and Start is disabled. An empty selection is not restored on reload; it falls back to C.
+- **Round order:** *Random* (default) or *In order*.
+- Closes on tapping outside, on `Esc` or on the button again. Focus moves into the panel and returns to the button on close. Tiles are buttons with `aria-pressed`.
+- The button is disabled while practice is running, like the old selector.
+- While the panel is open, the keyboard shortcuts (§3) are off.
+
+**Button label:** none → "Choose keys"; one key → "C major"; two → "C, G" (circle-of-fifths order); three or more → "n keys".
+
+**Round order:**
+- *Random:* shuffle-bag. All selected keys are shuffled into a block and played once each before reshuffling. The first key of a new block is never the last key of the previous one (with two keys this alternates them).
+- *In order:* the selected keys in circle-of-fifths order, cycling.
+- The key changes only between rounds, at the announce. Practice is endless, as before; there is no round counter.
+
+**Screen while running (several keys selected):**
+- The round's key is shown as a label right above the note, smaller than the note. The note stays the dominant element; the eye toggle works as before.
+- During the wait ticks, the phase line announces the next key: "Next: D major · 3", so there is time to move on the fretboard.
+- With one key selected, the screen is unchanged.
+
+**Storage:** `scaleWalkLight` gains `keys` (array of key indices) and `order` (`"random"` | `"sequential"`). A saved single `key` is migrated to `keys: [key]`.
+
+**Texts:** new keys in `strings.js` for every language: the "n keys" summary, "Choose keys", panel title, "n of 12" counter, "All", "Clear", round order and its two options, and "Next: …". Counts are functions (like `keyName`) so each language builds its own plural.
+
