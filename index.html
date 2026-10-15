@@ -255,8 +255,8 @@
   #keyBtn[aria-expanded="true"] { background-color: var(--wood-2); }
   #keyBtn:disabled { opacity: .35; cursor: not-allowed; }
 
-  /* Key panel: multi-select, opens under the key button */
-  #keyPanel {
+  /* Panels (keys, fretboard): open under the top-left buttons */
+  #keyPanel, #boardPanel {
     position: absolute;
     top: calc(env(safe-area-inset-top, 0px) + 3.25rem);
     left: .75rem;
@@ -296,6 +296,89 @@
   .kp-order legend { float: left; width: 100%; padding: .75rem 0 .5rem; color: var(--muted); font-size: .9rem; }
   .kp-order label { clear: both; display: flex; align-items: center; gap: .6rem; padding: .35rem 0; cursor: pointer; }
   .kp-order input { width: 1.1rem; height: 1.1rem; margin: 0; accent-color: var(--brass); }
+
+  /* Fretboard toggle: muted when off, a brass tile when on */
+  #boardBtn {
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: .55rem;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--muted);
+    opacity: .7;
+    cursor: pointer;
+    transition: background-color .2s, color .2s, opacity .2s;
+  }
+  #boardBtn:hover, #boardBtn[aria-expanded="true"] { opacity: 1; }
+  #boardBtn[aria-expanded="true"] { box-shadow: inset 0 0 0 1.5px var(--brass); color: var(--brass); }
+  #boardBtn.on { background: var(--brass); color: var(--wood); opacity: 1; }
+  #boardBtn:disabled { opacity: .35; cursor: not-allowed; }
+  #boardBtn.on:disabled { opacity: .5; }
+  #boardBtn svg { display: block; width: 100%; height: 100%; }
+
+  /* Fretboard panel */
+  .bp-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: .9rem; border-bottom: 1px solid var(--wire); }
+  .bp-head span { font-weight: 600; font-size: 1.05rem; }
+  #boardSwitch {
+    position: relative;
+    width: 3.1rem;
+    height: 1.8rem;
+    border: 0;
+    border-radius: 1rem;
+    background: var(--wire);
+    cursor: pointer;
+    transition: background-color .2s;
+  }
+  #boardSwitch::after {
+    content: "";
+    position: absolute;
+    top: .2rem;
+    left: .2rem;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: var(--bone);
+    transition: transform .2s;
+  }
+  #boardSwitch[aria-checked="true"] { background: var(--brass); }
+  #boardSwitch[aria-checked="true"]::after { transform: translateX(1.3rem); }
+  .bp-title { margin: .9rem 0 .6rem; font-weight: 600; }
+  .bp-frets { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+  .bp-frets select { background-color: #3a2d26; }
+  .bp-hint { margin: .75rem 0 0; color: var(--muted); font-size: .85rem; }
+  #boardDone {
+    width: 100%;
+    height: 2.75rem;
+    margin-top: 1rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--brass);
+    color: var(--wood);
+    font: 600 1rem "Instrument Sans", system-ui, sans-serif;
+    cursor: pointer;
+  }
+
+  /* Fretboard: the walk's path, current position in brass */
+  #board { display: block; width: 100%; max-width: 30rem; margin-top: .9rem; overflow: visible; }
+  #board .str { stroke: #6b5a4d; }
+  #board .fret { stroke: var(--wire); stroke-width: 2; }
+  #board .nut { stroke: var(--bone); stroke-width: 4; opacity: .6; }
+  #board .edge { stroke: var(--brass); stroke-width: 2; opacity: .55; }
+  #board text { font: 600 10px "Instrument Sans", system-ui, sans-serif; fill: var(--muted); text-anchor: middle; }
+  #board .scale circle { fill: var(--wire); opacity: .6; }
+  #board .path line { stroke: var(--brass); stroke-opacity: .5; stroke-width: 2.2; stroke-linecap: round; }
+  #board .path line.cross { stroke-opacity: .28; stroke-width: 1.4; stroke-dasharray: 3 4; }
+  #board .path circle { fill: #4a3a2f; stroke: var(--brass); stroke-opacity: .55; stroke-width: 1.5; }
+  #board .cur circle { fill: var(--brass); }
+  #board .cur text { fill: var(--wood); font-size: 9.5px; dominant-baseline: central; }
+  #board .cur.anim { transition: transform .16s ease-out; }
+  @media (prefers-reduced-motion: reduce) { #board .cur.anim { transition: none; } }
+  /* The note shrinks so note, fretboard and controls fit together */
+  main.with-board { --note: clamp(3.5rem, min(24vw, 11dvh), 10rem); padding-top: 3.25rem; }
+  main.with-board #phase { margin-top: .4rem; }
+  main.with-board #board { margin-top: .5rem; }
 
   /* Round key, above the note, without moving it */
   .display { position: relative; }
@@ -364,6 +447,27 @@
       <g class="lid-closed"><path d="M2 10.5c2.6 3.6 6 5.5 10 5.5s7.4-1.9 10-5.5"/><path d="M5.6 14l-1.5 2.2M12 16v2.6M18.4 14l1.5 2.2"/></g>
     </svg>
   </button>
+  <button id="boardBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="boardPanel" data-i18n-aria="board">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12.4 11.6 19.6 4.4M18.2 3l2.8 2.8"/>
+      <path d="M11.3 9.4c-1.3-.9-3.1-.8-4.2.3-.7.7-1 1.7-.9 2.6-1.1.1-2.1.6-2.8 1.5-1.4 1.8-1 4.6 1 6.1 2 1.6 4.8 1.6 6.3-.2.7-.8 1-1.8 1-2.8.9 0 1.8-.4 2.4-1.1 1.1-1.1 1.2-2.9.3-4.2"/>
+      <circle cx="10" cy="14" r="1.4"/>
+      <path d="M6.6 16.6l1.8 1.8"/>
+    </svg>
+  </button>
+</div>
+<div id="boardPanel" role="dialog" data-i18n-aria="board" hidden>
+  <div class="bp-head">
+    <span data-i18n="board"></span>
+    <button id="boardSwitch" role="switch" aria-checked="false" data-i18n-aria="board"></button>
+  </div>
+  <div class="bp-title" data-i18n="boardZone"></div>
+  <div class="bp-frets">
+    <div class="field"><label for="fretFrom" data-i18n="fretFrom"></label><select id="fretFrom"></select></div>
+    <div class="field"><label for="fretTo" data-i18n="fretTo"></label><select id="fretTo"></select></div>
+  </div>
+  <p class="bp-hint" data-i18n="boardHint"></p>
+  <button id="boardDone" data-i18n="boardDone"></button>
 </div>
 <div id="keyPanel" role="dialog" data-i18n-aria="keysTitle" hidden>
   <div class="kp-head"><span data-i18n="keysTitle"></span><span id="keyCount"></span></div>
@@ -393,6 +497,7 @@
       <div id="note" hidden></div>
     </div>
     <div id="phase"></div>
+    <svg id="board" role="img" hidden></svg>
   </section>
 
   <div id="track" aria-hidden="true"></div>
@@ -469,6 +574,8 @@
   const keyCount = $("keyCount"), keysAllBtn = $("keysAll"), keysClearBtn = $("keysClear");
   const roundKeyEl = $("roundKey");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
+  const boardBtn = $("boardBtn"), boardPanel = $("boardPanel"), boardSwitch = $("boardSwitch");
+  const fretFromEl = $("fretFrom"), fretToEl = $("fretTo"), boardEl = $("board"), mainEl = document.querySelector("main");
 
   // Panel order: circle of fifths (C G D A E B F♯ D♭ A♭ E♭ B♭ F)
   const FIFTHS = [];
@@ -508,11 +615,19 @@
   let showAll = false;
   let keys = [0];                      // selected key indices, circle-of-fifths order; may be empty
   let order = "random";                // "random" | "sequential"
+  // Fretboard (SPEC §13): off by default; a zone spans at least ZONE_MIN frets
+  const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
+  let board = false, fretFrom = 5, fretTo = 9;
   function setShowAll(v) {
     showAll = v;
     showAllEl.setAttribute("aria-pressed", String(v));
   }
   langEl.value = browserLang();       // overridden by saved settings
+  // Keeps the zone valid: first fret 0–15, last fret up to 19, at least ZONE_MIN frets
+  function setZone(from, to) {
+    fretFrom = Number.isInteger(from) ? Math.min(FRET_FIRST_MAX, Math.max(0, from)) : 5;
+    fretTo = Number.isInteger(to) ? Math.min(FRET_LAST_MAX, Math.max(fretFrom + ZONE_MIN - 1, to)) : fretFrom + ZONE_MIN - 1;
+  }
   function clampInput(el) {
     const v = Math.round(Number(el.value));
     const min = Number(el.min), max = Number(el.max);
@@ -523,7 +638,8 @@
     try {
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
-        keys, order, key: keys[0], showAll: showAll, lang: langEl.value
+        keys, order, key: keys[0], showAll: showAll, lang: langEl.value,
+        board, fretFrom, fretTo
       }));
     } catch (e) {}
   }
@@ -537,6 +653,8 @@
       if (s.order === "sequential") order = s.order;
       setShowAll(!!s.showAll);
       if (STRINGS[s.lang]) langEl.value = s.lang;
+      board = s.board === true;
+      setZone(Number(s.fretFrom), Number(s.fretTo));
     }
   } catch (e) {}
   for (const k in inputs) clampInput(inputs[k]);
@@ -584,6 +702,7 @@
     save();
   }
   function openPanel() {
+    closeBoard(false);
     keyPanel.hidden = false;
     keyBtn.setAttribute("aria-expanded", "true");
     (keyGrid.querySelector("[aria-pressed=true]") || keyGrid.firstChild).focus();
@@ -612,6 +731,37 @@
   document.addEventListener("pointerdown", e => {
     if (!keyPanel.hidden && !keyPanel.contains(e.target) && !keyBtn.contains(e.target)) closePanel(false);
   });
+  // ---- Fretboard panel ----
+  for (let f = 0; f <= FRET_FIRST_MAX; f++) fretFromEl.add(new Option(f, f));
+  function renderBoardPanel() {
+    boardBtn.classList.toggle("on", board);
+    boardSwitch.setAttribute("aria-checked", String(board));
+    fretFromEl.value = fretFrom;
+    fretToEl.length = 0;
+    for (let f = fretFrom + ZONE_MIN - 1; f <= FRET_LAST_MAX; f++) fretToEl.add(new Option(f, f));
+    fretToEl.value = fretTo;
+  }
+  function openBoard() {
+    closePanel(false);
+    boardPanel.hidden = false;
+    boardBtn.setAttribute("aria-expanded", "true");
+    boardSwitch.focus();
+  }
+  function closeBoard(refocus) {
+    if (boardPanel.hidden) return;
+    boardPanel.hidden = true;
+    boardBtn.setAttribute("aria-expanded", "false");
+    if (refocus) boardBtn.focus();
+  }
+  boardBtn.addEventListener("click", () => boardPanel.hidden ? openBoard() : closeBoard(true));
+  boardSwitch.addEventListener("click", () => { board = !board; renderBoardPanel(); save(); });
+  fretFromEl.addEventListener("change", () => { setZone(Number(fretFromEl.value), fretTo); renderBoardPanel(); save(); });
+  fretToEl.addEventListener("change", () => { setZone(fretFrom, Number(fretToEl.value)); renderBoardPanel(); save(); });
+  $("boardDone").addEventListener("click", () => closeBoard(true));
+  document.addEventListener("pointerdown", e => {
+    if (!boardPanel.hidden && !boardPanel.contains(e.target) && !boardBtn.contains(e.target)) closeBoard(false);
+  });
+
   showAllEl.addEventListener("click", () => {
     setShowAll(!showAll);
     save();
@@ -675,6 +825,63 @@
     src.stop(time + (duration || src.buffer.duration));
   }
 
+  // ---- Fretboard walks (SPEC §13.3) ----
+  const OPEN_MIDI = [40, 45, 50, 55, 59, 64];   // standard tuning, low E to high e
+  const STRING_NAMES = ["E", "A", "D", "G", "B", "e"];
+  // Every fingering of the pitches inside [a, b] that never moves to a lower string
+  function fingerings(pitches, a, b) {
+    const out = [], acc = [];
+    (function rec(i, minS) {
+      if (i === pitches.length) return out.push(acc.slice());
+      for (let st = minS; st < 6; st++) {
+        const f = pitches[i] - OPEN_MIDI[st];
+        if (f >= a && f <= b) { acc.push([st, f]); rec(i + 1, st); acc.pop(); }
+      }
+    })(0, 0);
+    return out;
+  }
+  // Ranked in order: hand span, total fret movement, string changes, start on the lowest string
+  function fingeringCost(p) {
+    const frets = p.map(x => x[1]);
+    let move = 0, changes = 0;
+    for (let i = 1; i < p.length; i++) {
+      move += Math.abs(p[i][1] - p[i - 1][1]);
+      if (p[i][0] !== p[i - 1][0]) changes++;
+    }
+    return [Math.max(...frets) - Math.min(...frets), move, changes, p[0][0]];
+  }
+  const cheaper = (x, y) => { for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] < y[i]; return false; };
+  const walkCache = new Map();
+  // One octave up from degree `deg` of the key, or null if it cannot be played inside the zone.
+  // Octave 3 first; otherwise the octave whose start is closest to it.
+  function boardWalk(keyPc, deg, a, b) {
+    const id = `${keyPc}/${deg}/${a}/${b}`;
+    if (walkCache.has(id)) return walkCache.get(id);
+    const pc = (keyPc + MAJOR[deg]) % 12, starts = [];
+    for (let m = OPEN_MIDI[0]; m <= OPEN_MIDI[5] + FRET_LAST_MAX; m++) if (m % 12 === pc) starts.push(m);
+    starts.sort((x, y) => Math.abs(x - 53.5) - Math.abs(y - 53.5));
+    let found = null;
+    for (const start of starts) {
+      const pitches = Array.from({ length: 8 }, (_, k) => start + semis(deg + k) - semis(deg));
+      let best = null, bestCost = null;
+      for (const f of fingerings(pitches, a, b)) {
+        const c = fingeringCost(f);
+        if (!best || cheaper(c, bestCost)) { best = f; bestCost = c; }
+      }
+      if (best) { found = { pitches, pos: best }; break; }
+    }
+    walkCache.set(id, found);
+    return found;
+  }
+  // Scale notes inside the zone, shown faintly behind the walk
+  function scaleDots(keyPc, a, b) {
+    const dots = [];
+    for (let st = 0; st < 6; st++) for (let f = a; f <= b; f++) {
+      if (MAJOR.includes((OPEN_MIDI[st] + f - keyPc + 120) % 12)) dots.push([st, f]);
+    }
+    return dots;
+  }
+
   // ---- Lookahead scheduler ----
   let running = false, timerId = null;
   let nextTime = 0, step = 0;
@@ -707,17 +914,28 @@
     session.upcoming = pickKey();
     const key = KEYS[keyIdx];
     const names = session.names[keyIdx] ??= scaleNames(key);
-    let deg;
-    do { deg = Math.floor(Math.random() * 7); } while (deg === lastDeg);
+    // Fretboard: only degrees with a walk inside the zone (all of them with ≥5 frets).
+    // If none fits, the round is played without the fretboard rather than with a wrong fingering.
+    const zone = session.board;
+    const fits = zone ? [0, 1, 2, 3, 4, 5, 6].filter(d => d !== lastDeg && boardWalk(key.pc, d, zone.from, zone.to)) : [];
+    let deg, up;
+    if (fits.length) {
+      deg = fits[Math.floor(Math.random() * fits.length)];
+      const bw = boardWalk(key.pc, deg, zone.from, zone.to);
+      up = bw.pos.map(([st, f], k) => ({ midi: bw.pitches[k], name: names[(deg + k) % 7], st, f }));
+    } else {
+      do { deg = Math.floor(Math.random() * 7); } while (deg === lastDeg);
+      const start = BASE_MIDI + (key.pc + MAJOR[deg]) % 12;
+      up = Array.from({ length: 8 }, (_, k) => ({
+        midi: start + semis(deg + k) - semis(deg),
+        name: names[(deg + k) % 7],
+      }));
+    }
     lastDeg = deg;
-    const start = BASE_MIDI + (key.pc + MAJOR[deg]) % 12;
-    const up = Array.from({ length: 8 }, (_, k) => ({
-      midi: start + semis(deg + k) - semis(deg),
-      name: names[(deg + k) % 7],
-    }));
     const walk = up.concat(up.slice(0, 7).reverse());
     const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
-    return { walk, prep, wait, total: prep + WALK + wait, key, next: KEYS[session.upcoming] };
+    const boardInfo = fits.length ? { from: zone.from, to: zone.to, dots: scaleDots(key.pc, zone.from, zone.to) } : null;
+    return { walk, prep, wait, total: prep + WALK + wait, key, next: KEYS[session.upcoming], board: boardInfo };
   }
 
   function scheduler() {
@@ -778,7 +996,76 @@
       else if (inWalk) phaseEl.textContent = `${k} · ${w < 8 ? T.phaseUp : T.phaseDown}`;
       else phaseEl.textContent = `${k} · ${T.phaseNext(left)}`;
     }
+    if (round.board) {
+      if (round !== boardRound) buildBoard(round);
+      drawBoard(round, inWalk ? w : -1);
+    } else if (!boardEl.hasAttribute("hidden")) hideBoard();
     drawTrack(step);
+  }
+
+  // ---- Fretboard drawing (SPEC §13.4) ----
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const FW = 54, SS = 16, LM = 18, TM = 8;     // fret width, string spacing, left and top margins
+  let boardRound = null, boardParts = null;
+  function el(tag, attrs, parent) {
+    const n = document.createElementNS(SVG_NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  const bx = (round, f) => LM + (f - round.board.from + .5) * FW;
+  const by = st => TM + (5 - st) * SS;        // high e on top
+  function buildBoard(round) {
+    boardRound = round;
+    const { from, to, dots } = round.board, n = to - from + 1;
+    const w = LM + n * FW + 4, bottom = TM + 5 * SS;
+    boardEl.setAttribute("viewBox", `0 0 ${w} ${bottom + 22}`);
+    boardEl.textContent = "";
+    for (let st = 0; st < 6; st++) {
+      el("line", { class: "str", x1: LM, x2: w - 4, y1: by(st), y2: by(st), "stroke-width": 1.8 - st * .2 }, boardEl);
+      el("text", { x: LM / 2 - 2, y: by(st) + 3.5 }, boardEl).textContent = STRING_NAMES[st];
+    }
+    // Fret wires sit on column edges; with fret 0 the first column is the open strings, left of the nut
+    for (let i = 0; i <= n; i++) {
+      const cls = from === 0 ? (i === 1 ? "nut" : i === 0 ? null : "fret") : (i === 0 ? "edge" : "fret");
+      if (cls) el("line", { class: cls, x1: LM + i * FW, x2: LM + i * FW, y1: by(5) - 2, y2: bottom + 2 }, boardEl);
+    }
+    for (let f = from; f <= to; f++) el("text", { x: bx(round, f), y: bottom + 18 }, boardEl).textContent = f;
+    const scale = el("g", { class: "scale" }, boardEl);
+    for (const [st, f] of dots) el("circle", { cx: bx(round, f), cy: by(st), r: 4 }, scale);
+    const path = el("g", { class: "path" }, boardEl);
+    const up = round.walk.slice(0, 8);
+    // Moves along a string are solid; string changes are dashed and fainter
+    for (let i = 1; i < up.length; i++) {
+      const a = up[i - 1], b = up[i];
+      el("line", { class: a.st === b.st ? "same" : "cross", x1: bx(round, a.f), y1: by(a.st), x2: bx(round, b.f), y2: by(b.st) }, path);
+    }
+    for (const p of up) el("circle", { cx: bx(round, p.f), cy: by(p.st), r: 6 }, path);
+    const cur = el("g", { class: "cur" }, boardEl);
+    el("circle", { r: 9 }, cur);
+    const label = el("text", {}, cur);
+    boardParts = { scale, path, cur, label, placed: false };
+    boardEl.removeAttribute("hidden");   // SVG has no .hidden property
+    mainEl.classList.add("with-board");
+  }
+  // w: walk index, or -1 during prep and wait (the start position)
+  function drawBoard(round, w) {
+    const { scale, path, cur, label } = boardParts;
+    scale.style.display = path.style.display = showAll ? "" : "none";
+    const p = showAll && w >= 0 ? round.walk[w] : round.walk[0];   // eye closed: start position only
+    cur.style.transform = `translate(${bx(round, p.f)}px, ${by(p.st)}px)`;
+    label.textContent = p.name;
+    if (!boardParts.placed) {                 // no slide in from the corner on the first draw
+      boardParts.placed = true;
+      cur.getBoundingClientRect();
+      cur.classList.add("anim");
+    }
+    boardEl.setAttribute("aria-label", T.boardAria(round.board.from, round.board.to));
+  }
+  function hideBoard() {
+    boardEl.setAttribute("hidden", "");
+    boardRound = null;
+    mainEl.classList.remove("with-board");
   }
 
   // Bars: flat for prep and wait; rise and fall during the walk
@@ -832,8 +1119,11 @@
     const resumed = ctx.state === "running" ? null : ctx.resume();
     for (const k in inputs) clampInput(inputs[k]);
     closePanel(false);
-    session = { keys: keys.slice(), order, names: {}, bag: [], pos: 0, last: null, upcoming: null };
+    closeBoard(false);
+    session = { keys: keys.slice(), order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
+                board: board ? { from: fretFrom, to: fretTo } : null };
     keyBtn.disabled = true;
+    boardBtn.disabled = true;
     running = true;
     const id = ++runId;
     toggleBtn.textContent = T.stop;
@@ -867,6 +1157,8 @@
     unlockScreen();
     queue.length = 0;
     keyBtn.disabled = false;
+    boardBtn.disabled = false;
+    hideBoard();
     roundKeyEl.hidden = true;
     noteEl.hidden = true;
     pickEl.removeAttribute("hidden");
@@ -880,8 +1172,8 @@
   document.addEventListener("keydown", e => {
     if (e.target.tagName === "INPUT" && e.target.type === "number") return;
     if (e.target.tagName === "SELECT") return;
-    if (!keyPanel.hidden) {             // shortcuts are off while the panel is open
-      if (e.key === "Escape") closePanel(true);
+    if (!keyPanel.hidden || !boardPanel.hidden) {   // shortcuts are off while a panel is open
+      if (e.key === "Escape") { closePanel(true); closeBoard(true); }
       return;
     }
     if (e.code === "Space") { e.preventDefault(); if (!e.repeat) running ? stop() : start(); }
@@ -889,6 +1181,7 @@
     if (e.key === "ArrowDown") { e.preventDefault(); setBpm(Number(inputs.bpm.value) - (e.shiftKey ? 5 : 1)); }
   });
 
+  renderBoardPanel();
   applyLang();
   drawTrack(-1);
 
