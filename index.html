@@ -177,7 +177,8 @@
     cursor: pointer;
     border-radius: 10px;
   }
-  .stepper button:active { background: var(--wire); }
+  .stepper button { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .stepper button:active, .stepper button.held { background: var(--wire); }
   .stepper input {
     width: 100%;
     min-width: 0;
@@ -205,13 +206,50 @@
     background-repeat: no-repeat;
   }
   select:disabled { opacity: .5; cursor: not-allowed; }
+  /* BPM slider: 48px touch area around a 7px bar and a 27px thumb */
   #bpmRange {
+    --fill: 0%;
     grid-column: 1 / -1;
     display: block;
     width: 100%;
-    margin: 0;
-    accent-color: var(--brass);
+    height: 48px;
+    margin: -8px 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: none;                /* horizontal drags never scroll the page */
   }
+  #bpmRange:focus-visible { outline: none; }   /* the thumb shows focus instead */
+  #bpmRange::-webkit-slider-runnable-track {
+    height: 7px;
+    border-radius: 4px;
+    background: linear-gradient(to right, var(--brass) var(--fill), #3d322b var(--fill));
+  }
+  #bpmRange::-moz-range-track { height: 7px; border-radius: 4px; background: #3d322b; }
+  #bpmRange::-moz-range-progress { height: 7px; border-radius: 4px; background: var(--brass); }
+  #bpmRange::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 27px;
+    height: 27px;
+    margin-top: -10px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--brass);
+    transition: box-shadow .15s, transform .15s;
+  }
+  #bpmRange::-moz-range-thumb {
+    width: 27px;
+    height: 27px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--brass);
+    transition: box-shadow .15s, transform .15s;
+  }
+  #bpmRange:hover::-webkit-slider-thumb, #bpmRange:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 6px rgba(209, 166, 90, .18); }
+  #bpmRange:hover::-moz-range-thumb, #bpmRange:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 6px rgba(209, 166, 90, .18); }
+  #bpmRange.dragging::-webkit-slider-thumb { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(209, 166, 90, .24); }
+  #bpmRange.dragging::-moz-range-thumb { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(209, 166, 90, .24); }
 
   /* Top corners: key + eye on the left, language on the right */
   .corner {
@@ -427,7 +465,7 @@
     .controls { grid-template-columns: 1fr 1fr; gap: .7rem .75rem; }
     /* Slider right under the BPM stepper */
     .field.bpm { order: -2; }
-    #bpmRange { order: -1; margin-top: -.1rem; }
+    #bpmRange { order: -1; margin: -10px 0 -8px; }
     .actions { padding-bottom: calc(.75rem + env(safe-area-inset-bottom, 0px)); }
     .field.bpm { grid-column: 1 / -1; }
     .stepper, select { height: 3rem; }
@@ -659,30 +697,87 @@
     }
   } catch (e) {}
   for (const k in inputs) clampInput(inputs[k]);
-  bpmRange.value = inputs.bpm.value;
 
+  // Slider follows the BPM field; the gold fill is drawn in CSS from --fill
+  function syncRange() {
+    bpmRange.value = inputs.bpm.value;
+    const min = Number(bpmRange.min), max = Number(bpmRange.max);
+    bpmRange.style.setProperty("--fill", `${(bpmRange.value - min) / (max - min) * 100}%`);
+  }
+  syncRange();
   function setBpm(v) {
     inputs.bpm.value = v;
-    bpmRange.value = clampInput(inputs.bpm);
+    clampInput(inputs.bpm);
+    syncRange();
     save();
   }
+
+  // − / +: a press steps once; holding repeats until release (mouse and touch).
+  // The click that follows a pointer press is ignored, so a tap never counts twice.
+  function stepInput(b) {
+    const el = inputs[b.dataset.target], before = el.value;
+    el.value = Number(el.value) + Number(b.dataset.delta);
+    clampInput(el);
+    if (el.value === before) return false;   // at the limit
+    if (el === inputs.bpm) syncRange();
+    save();
+    if (!running) drawTrack(-1);
+    return true;
+  }
+  let repeatTimer = null, heldBtn = null;
+  function stopRepeat() {
+    clearTimeout(repeatTimer);
+    const b = heldBtn;
+    if (b) {                               // skip the one click this press leaves behind
+      b.classList.remove("held");
+      b.skipClick = true;
+      setTimeout(() => { b.skipClick = false; }, 500);
+    }
+    repeatTimer = heldBtn = null;
+  }
   document.querySelectorAll(".stepper button").forEach(b => {
-    b.addEventListener("click", () => {
-      const el = inputs[b.dataset.target];
-      el.value = Number(el.value) + Number(b.dataset.delta);
-      clampInput(el);
-      if (el === inputs.bpm) bpmRange.value = el.value;
-      save();
-      if (!running) drawTrack(-1);
+    b.addEventListener("pointerdown", e => {
+      if (e.button !== 0) return;
+      e.preventDefault();                  // no text selection or long-press menu
+      stopRepeat();
+      b.setPointerCapture(e.pointerId);
+      heldBtn = b;
+      b.classList.add("held");
+      if (!stepInput(b)) return;
+      const repeat = delay => { repeatTimer = setTimeout(() => stepInput(b) ? repeat(70) : stopRepeat(), delay); };
+      repeat(400);
     });
+    for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) b.addEventListener(ev, stopRepeat);
+    // Keyboard activation (Enter/Space) only: browsers differ in how they mark the click after a tap
+    b.addEventListener("click", () => { if (b.skipClick) b.skipClick = false; else stepInput(b); });
   });
+  window.addEventListener("blur", stopRepeat);
   for (const k in inputs) inputs[k].addEventListener("change", () => {
     clampInput(inputs[k]);
-    if (k === "bpm") bpmRange.value = inputs.bpm.value;
+    if (k === "bpm") syncRange();
     save();
     if (!running) drawTrack(-1);
   });
-  bpmRange.addEventListener("input", () => setBpm(bpmRange.value));
+
+  // Slider: tap anywhere to jump there, then drag. Handled here because iOS only moves the thumb natively.
+  const THUMB = 27;
+  function rangeFromPointer(e) {
+    const r = bpmRange.getBoundingClientRect();
+    const t = Math.min(1, Math.max(0, (e.clientX - r.left - THUMB / 2) / (r.width - THUMB)));
+    const min = Number(bpmRange.min), max = Number(bpmRange.max), v = Math.round(min + t * (max - min));
+    if (v !== Number(inputs.bpm.value)) setBpm(v);
+  }
+  bpmRange.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    bpmRange.setPointerCapture(e.pointerId);
+    bpmRange.classList.add("dragging");
+    bpmRange.focus({ preventScroll: true });
+    rangeFromPointer(e);
+  });
+  bpmRange.addEventListener("pointermove", e => { if (bpmRange.hasPointerCapture(e.pointerId)) rangeFromPointer(e); });
+  bpmRange.addEventListener("lostpointercapture", () => bpmRange.classList.remove("dragging"));
+  bpmRange.addEventListener("input", () => setBpm(bpmRange.value));   // keyboard on the slider
 
   // ---- Key panel ----
   function renderKeys() {
