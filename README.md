@@ -8,10 +8,12 @@ Guitar scale trainer: metronome-driven scale walks from a random note, in any ma
 
 ## How a round works
 
-1. **Announce** — a random note from the selected key is shown and played once as a reference. It is never the same as the previous round's.
+1. **Announce** — a random note from the round's key is shown and played once as a reference. It is never the same as the previous round's.
 2. **Prep** — a few metronome clicks to get ready.
 3. **Walk** — 15 ticks, one note per tick: 8 notes up to the octave and 7 back down. Each note is played with a plucked-string sound.
 4. **Wait** — a few more clicks, then the next round starts.
+
+With several keys selected, each round uses one of them; the key is shown above the note, and the wait ticks announce the next one.
 
 Practice keeps going until you stop it.
 
@@ -19,8 +21,8 @@ Practice keeps going until you stop it.
 
 - **BPM**: 30–300.
 - **Ticks before / after the walk**: 1–16 and 0–16.
-- **Key** (top-left): the 12 major keys, ordered by the circle of fifths. Can only be changed while stopped.
-- **Show every note of the walk** (eye under the key): closed shows only the start note; open shows each note as it is played.
+- **Keys** (top-left): pick one or more of the 12 major keys, ordered by the circle of fifths. With several, rounds go in random order (each key once before any repeats) or in circle-of-fifths order. Can only be changed while stopped.
+- **Show every note of the walk** (eye beside the keys): closed shows only the start note; open shows each note as it is played.
 - **Language** (top-right): English, Spanish or Basque.
 
 Settings are saved in the browser.

@@ -239,15 +239,77 @@
   select.quiet:hover, select.quiet:focus-visible { opacity: 1; }
   select.quiet:disabled { opacity: .35; }
   #lang { letter-spacing: .06em; }
-  #key {
+  #keyBtn {
     height: 2.5rem;
+    padding: 0 1.5rem 0 .6rem;
+    border: 0;
+    border-radius: 10px;
     color: var(--brass);
-    font-size: 1rem;
+    font: 600 1rem "Instrument Sans", system-ui, sans-serif;
+    white-space: nowrap;
     opacity: .9;
-    background-size: 10px 7px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23d1a65a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    cursor: pointer;
+    background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23d1a65a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right .5rem center / 10px 7px;
   }
-  #key:disabled { opacity: .35; }
+  #keyBtn:hover, #keyBtn[aria-expanded="true"] { opacity: 1; }
+  #keyBtn[aria-expanded="true"] { background-color: var(--wood-2); }
+  #keyBtn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* Key panel: multi-select, opens under the key button */
+  #keyPanel {
+    position: absolute;
+    top: calc(env(safe-area-inset-top, 0px) + 3.25rem);
+    left: .75rem;
+    z-index: 2;
+    width: min(24rem, calc(100vw - 1.5rem));
+    padding: 1rem;
+    border-radius: 14px;
+    background: var(--wood-2);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
+  }
+  .kp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .75rem; }
+  .kp-head span:first-child { font-weight: 600; }
+  #keyCount { color: var(--brass); font-size: .85rem; font-weight: 600; }
+  #keyGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+  #keyGrid button {
+    height: 2.75rem;
+    border: 0;
+    border-radius: 10px;
+    background: #3a2d26;
+    color: var(--muted);
+    font: 600 1rem "Instrument Sans", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  #keyGrid button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+  #keyGrid button[aria-pressed="true"]::before { content: "✓ "; font-size: .8em; }
+  .kp-actions { display: flex; justify-content: space-between; margin-top: .6rem; }
+  .kp-actions button {
+    padding: .4rem .2rem;
+    border: 0;
+    background: none;
+    color: var(--bone);
+    font: 600 .9rem "Instrument Sans", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .kp-actions button:disabled { opacity: .35; cursor: default; }
+  .kp-order { margin: .6rem 0 0; padding: .75rem 0 0; border: 0; border-top: 1px solid var(--wire); }
+  .kp-order legend { float: left; width: 100%; padding: .75rem 0 .5rem; color: var(--muted); font-size: .9rem; }
+  .kp-order label { clear: both; display: flex; align-items: center; gap: .6rem; padding: .35rem 0; cursor: pointer; }
+  .kp-order input { width: 1.1rem; height: 1.1rem; margin: 0; accent-color: var(--brass); }
+
+  /* Round key, above the note, without moving it */
+  .display { position: relative; }
+  #roundKey {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    color: var(--brass);
+    opacity: .8;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
   .hint { grid-column: 1 / -1; color: var(--muted); font-size: .85rem; text-align: center; margin: 0; }
 
   /* Start/stop stays reachable at the bottom */
@@ -268,6 +330,7 @@
     cursor: pointer;
   }
   #toggle.running { background: var(--bone); }
+  #toggle:disabled { opacity: .4; cursor: not-allowed; }
 
   button:focus-visible, input:focus-visible, select:focus-visible {
     outline: 2px solid var(--brass);
@@ -294,7 +357,7 @@
 </head>
 <body>
 <div class="corner left">
-  <select id="key" class="quiet" data-i18n-aria="key"></select>
+  <button id="keyBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="keyPanel"></button>
   <button id="showAll" aria-pressed="false" data-i18n-aria="showAll">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <g class="lid-open"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></g>
@@ -302,12 +365,26 @@
     </svg>
   </button>
 </div>
+<div id="keyPanel" role="dialog" data-i18n-aria="keysTitle" hidden>
+  <div class="kp-head"><span data-i18n="keysTitle"></span><span id="keyCount"></span></div>
+  <div id="keyGrid"></div>
+  <div class="kp-actions">
+    <button id="keysAll" data-i18n="keysAll"></button>
+    <button id="keysClear" data-i18n="keysClear"></button>
+  </div>
+  <fieldset class="kp-order">
+    <legend data-i18n="order"></legend>
+    <label><input type="radio" name="order" value="random"><span data-i18n="orderRandom"></span></label>
+    <label><input type="radio" name="order" value="sequential"><span data-i18n="orderSequential"></span></label>
+  </fieldset>
+</div>
 <div class="corner right">
   <select id="lang" class="quiet" data-i18n-aria="lang"></select>
 </div>
 <main>
   <section class="stage">
     <div class="display">
+      <div id="roundKey" hidden></div>
       <svg id="pick" viewBox="0 0 100 112" data-i18n-aria="pickAria" role="img">
         <path d="M50 108 C34 96 6 60 7 32 C8 11 28 4 50 4 C72 4 92 11 93 32 C94 60 66 96 50 108 Z" fill="#d1a65a"/>
         <path d="M24 26 C30 16 40 13 50 13" fill="none" stroke="#ede3d1" stroke-opacity=".45" stroke-width="5" stroke-linecap="round"/>
@@ -387,13 +464,21 @@
   const $ = id => document.getElementById(id);
   const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
   const inputs = { bpm: $("bpm"), prep: $("prep"), wait: $("wait") };
-  const keyEl = $("key"), langEl = $("lang"), showAllEl = $("showAll");
+  const langEl = $("lang"), showAllEl = $("showAll");
+  const keyBtn = $("keyBtn"), keyPanel = $("keyPanel"), keyGrid = $("keyGrid");
+  const keyCount = $("keyCount"), keysAllBtn = $("keysAll"), keysClearBtn = $("keysClear");
+  const roundKeyEl = $("roundKey");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
 
-  // Selector order: circle of fifths (C G D A E B F♯ D♭ A♭ E♭ B♭ F)
+  // Panel order: circle of fifths (C G D A E B F♯ D♭ A♭ E♭ B♭ F)
+  const FIFTHS = [];
   for (let i = 0, pc = 0; i < 12; i++, pc = (pc + 7) % 12) {
     const idx = KEYS.findIndex(k => k.pc === pc);
-    keyEl.add(new Option(KEYS[idx].name, idx));
+    FIFTHS.push(idx);
+    const b = document.createElement("button");
+    b.textContent = KEYS[idx].name;
+    b.dataset.key = idx;
+    keyGrid.appendChild(b);
   }
   for (const code in STRINGS) langEl.add(new Option(code.toUpperCase(), code));
 
@@ -411,16 +496,18 @@
     T = STRINGS[langEl.value];
     document.documentElement.lang = langEl.value;
     document.title = T.title;
-    [...keyEl.options].forEach(o => { o.textContent = T.keyName(KEYS[o.value].name); });
     document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = T[el.dataset.i18n]; });
     document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", T[el.dataset.i18nAria]));
     toggleBtn.textContent = running ? T.stop : T.start;
+    renderKeys();
     if (running && lastShown) render(lastShown);
     else if (!running) phaseEl.textContent = T.idle;
   }
 
   // ---- Settings ----
   let showAll = false;
+  let keys = [0];                      // selected key indices, circle-of-fifths order; may be empty
+  let order = "random";                // "random" | "sequential"
   function setShowAll(v) {
     showAll = v;
     showAllEl.setAttribute("aria-pressed", String(v));
@@ -436,7 +523,7 @@
     try {
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
-        key: keyEl.value, showAll: showAll, lang: langEl.value
+        keys, order, key: keys[0], showAll: showAll, lang: langEl.value
       }));
     } catch (e) {}
   }
@@ -444,7 +531,10 @@
     const s = JSON.parse(localStorage.getItem("scaleWalkLight") || "null");
     if (s) {
       for (const k of ["bpm", "prep", "wait"]) if (s[k] != null) inputs[k].value = s[k];
-      if (s.key != null && KEYS[s.key]) keyEl.value = s.key;
+      const saved = Array.isArray(s.keys) ? s.keys : s.key != null ? [s.key] : [];
+      const valid = FIFTHS.filter(i => saved.map(Number).includes(i));
+      if (valid.length) keys = valid;
+      if (s.order === "sequential") order = s.order;
       setShowAll(!!s.showAll);
       if (STRINGS[s.lang]) langEl.value = s.lang;
     }
@@ -474,7 +564,54 @@
     if (!running) drawTrack(-1);
   });
   bpmRange.addEventListener("input", () => setBpm(bpmRange.value));
-  keyEl.addEventListener("change", save);
+
+  // ---- Key panel ----
+  function renderKeys() {
+    const names = keys.map(i => KEYS[i].name);
+    keyBtn.textContent = !keys.length ? T.keysNone : keys.length === 1 ? T.keyName(names[0])
+      : keys.length === 2 ? names.join(", ") : T.keysSummary(keys.length);
+    keyBtn.setAttribute("aria-label", `${T.key}: ${keyBtn.textContent}`);
+    for (const b of keyGrid.children) b.setAttribute("aria-pressed", String(keys.includes(Number(b.dataset.key))));
+    keyCount.textContent = T.keysCount(keys.length, KEYS.length);
+    keysAllBtn.disabled = keys.length === KEYS.length;
+    keysClearBtn.disabled = !keys.length;
+    toggleBtn.disabled = !running && !keys.length;   // nothing to practice
+    for (const r of keyPanel.querySelectorAll("input[name=order]")) r.checked = r.value === order;
+  }
+  function setKeys(next) {
+    keys = FIFTHS.filter(i => next.includes(i));
+    renderKeys();
+    save();
+  }
+  function openPanel() {
+    keyPanel.hidden = false;
+    keyBtn.setAttribute("aria-expanded", "true");
+    (keyGrid.querySelector("[aria-pressed=true]") || keyGrid.firstChild).focus();
+  }
+  function closePanel(refocus) {
+    if (keyPanel.hidden) return;
+    keyPanel.hidden = true;
+    keyBtn.setAttribute("aria-expanded", "false");
+    if (refocus) keyBtn.focus();
+  }
+  keyBtn.addEventListener("click", () => keyPanel.hidden ? openPanel() : closePanel(true));
+  keyGrid.addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    const k = Number(b.dataset.key);
+    setKeys(keys.includes(k) ? keys.filter(i => i !== k) : keys.concat(k));
+  });
+  keysAllBtn.addEventListener("click", () => setKeys(FIFTHS));
+  keysClearBtn.addEventListener("click", () => setKeys([]));
+  keyPanel.addEventListener("change", e => {
+    if (e.target.name !== "order") return;
+    order = e.target.value;
+    save();
+  });
+  // Tapping outside closes the panel
+  document.addEventListener("pointerdown", e => {
+    if (!keyPanel.hidden && !keyPanel.contains(e.target) && !keyBtn.contains(e.target)) closePanel(false);
+  });
   showAllEl.addEventListener("click", () => {
     setShowAll(!showAll);
     save();
@@ -542,22 +679,45 @@
   let running = false, timerId = null;
   let nextTime = 0, step = 0;
   let round = null;
-  let session = null;                  // key is fixed for the whole session
+  let session = null;                  // keys and order are fixed for the whole session
   let lastDeg = null;
   const queue = [];
 
+  // Key sequence. Random: shuffle-bag, never the same key twice in a row.
+  function pickKey() {
+    const { keys } = session;
+    if (keys.length === 1) return keys[0];
+    if (session.order === "sequential") return keys[session.pos++ % keys.length];
+    if (!session.bag.length) {
+      const bag = keys.slice();
+      for (let i = bag.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [bag[i], bag[j]] = [bag[j], bag[i]];
+      }
+      // pop() takes from the end: keep the block's first key off the last one played
+      if (bag[bag.length - 1] === session.last) [bag[0], bag[bag.length - 1]] = [bag[bag.length - 1], bag[0]];
+      session.bag = bag;
+    }
+    return session.last = session.bag.pop();
+  }
+
   function newRound() {
+    // The next key is drawn one round early so the wait ticks can announce it
+    const keyIdx = session.upcoming ?? pickKey();
+    session.upcoming = pickKey();
+    const key = KEYS[keyIdx];
+    const names = session.names[keyIdx] ??= scaleNames(key);
     let deg;
     do { deg = Math.floor(Math.random() * 7); } while (deg === lastDeg);
     lastDeg = deg;
-    const start = BASE_MIDI + (session.key.pc + MAJOR[deg]) % 12;
+    const start = BASE_MIDI + (key.pc + MAJOR[deg]) % 12;
     const up = Array.from({ length: 8 }, (_, k) => ({
       midi: start + semis(deg + k) - semis(deg),
-      name: session.names[(deg + k) % 7],
+      name: names[(deg + k) % 7],
     }));
     const walk = up.concat(up.slice(0, 7).reverse());
     const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
-    return { walk, prep, wait, total: prep + WALK + wait };
+    return { walk, prep, wait, total: prep + WALK + wait, key, next: KEYS[session.upcoming] };
   }
 
   function scheduler() {
@@ -605,10 +765,19 @@
     const inWalk = w >= 0 && w < WALK;
     noteEl.textContent = (inWalk && showAll ? round.walk[w] : round.walk[0]).name;
 
-    const k = T.keyName(session.key.name);
-    if (step < round.prep) phaseEl.textContent = `${k} · ${T.phasePrep(round.prep - step)}`;
-    else if (inWalk) phaseEl.textContent = `${k} · ${w < 8 ? T.phaseUp : T.phaseDown}`;
-    else phaseEl.textContent = `${k} · ${T.phaseNext(round.total - step)}`;
+    const k = T.keyName(round.key.name);
+    const left = round.total - step;
+    if (session.keys.length > 1) {      // key sits above the note; phase line drops it
+      roundKeyEl.textContent = k;
+      roundKeyEl.hidden = false;
+      if (step < round.prep) phaseEl.textContent = T.phasePrep(round.prep - step);
+      else if (inWalk) phaseEl.textContent = w < 8 ? T.phaseUp : T.phaseDown;
+      else phaseEl.textContent = T.phaseNextKey(T.keyName(round.next.name), left);
+    } else {
+      if (step < round.prep) phaseEl.textContent = `${k} · ${T.phasePrep(round.prep - step)}`;
+      else if (inWalk) phaseEl.textContent = `${k} · ${w < 8 ? T.phaseUp : T.phaseDown}`;
+      else phaseEl.textContent = `${k} · ${T.phaseNext(left)}`;
+    }
     drawTrack(step);
   }
 
@@ -653,6 +822,7 @@
   // ---- Start / stop ----
   let runId = 0;
   async function start() {
+    if (!keys.length) return;
     if (!ctx) {
       // iOS: play through the silent switch like a media app (Safari 17+)
       if (navigator.audioSession) navigator.audioSession.type = "playback";
@@ -661,9 +831,9 @@
     // resume() must be called inside the gesture; awaiting it is fine
     const resumed = ctx.state === "running" ? null : ctx.resume();
     for (const k in inputs) clampInput(inputs[k]);
-    const key = KEYS[keyEl.value];
-    session = { key, names: scaleNames(key) };
-    keyEl.disabled = true;
+    closePanel(false);
+    session = { keys: keys.slice(), order, names: {}, bag: [], pos: 0, last: null, upcoming: null };
+    keyBtn.disabled = true;
     running = true;
     const id = ++runId;
     toggleBtn.textContent = T.stop;
@@ -696,7 +866,8 @@
     }
     unlockScreen();
     queue.length = 0;
-    keyEl.disabled = false;
+    keyBtn.disabled = false;
+    roundKeyEl.hidden = true;
     noteEl.hidden = true;
     pickEl.removeAttribute("hidden");
     phaseEl.textContent = T.idle;
@@ -709,6 +880,10 @@
   document.addEventListener("keydown", e => {
     if (e.target.tagName === "INPUT" && e.target.type === "number") return;
     if (e.target.tagName === "SELECT") return;
+    if (!keyPanel.hidden) {             // shortcuts are off while the panel is open
+      if (e.key === "Escape") closePanel(true);
+      return;
+    }
     if (e.code === "Space") { e.preventDefault(); if (!e.repeat) running ? stop() : start(); }
     if (e.key === "ArrowUp") { e.preventDefault(); setBpm(Number(inputs.bpm.value) + (e.shiftKey ? 5 : 1)); }
     if (e.key === "ArrowDown") { e.preventDefault(); setBpm(Number(inputs.bpm.value) - (e.shiftKey ? 5 : 1)); }
