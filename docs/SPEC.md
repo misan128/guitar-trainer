@@ -105,7 +105,7 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 ### 6.5 Mobile behavior
 - **Wake Lock:** keep the screen on while practice is running. Released on stop, and requested again if the page returns to the foreground with practice running. If the API does not exist, it is silently ignored.
 - **Background:** if the app goes to the background while running, nothing special happens; the system suspends it.
-- **iOS silent switch:** **respected**. Nothing should be done to bypass it.
+- **iOS silent switch:** **ignored**. The app is a practice tool, so it plays like a media app: `navigator.audioSession.type = "playback"` is set before creating the audio context (Safari 17+; ignored where the API does not exist).
 
 ## 7. Deployment
 

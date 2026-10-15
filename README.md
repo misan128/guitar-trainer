@@ -39,7 +39,7 @@ Settings are saved in the browser.
 2. Tap **Share → Add to Home Screen**.
 3. Open it from the home screen icon. It runs full screen and works offline after the first load.
 
-The screen stays on while practice is running. The silent switch is respected: with the phone on silent, there is no sound.
+The screen stays on while practice is running. It plays even with the phone on silent (iOS 17 or later).
 
 ## Running it locally
 
