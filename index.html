@@ -472,6 +472,7 @@
 
   // ---- Audio ----
   let ctx = null;
+  let master = null;                   // per-session bus, faded out on stop
   function click(time, accent, soft) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -480,7 +481,7 @@
     gain.gain.setValueAtTime(0.0001, time);
     gain.gain.exponentialRampToValueAtTime(peak, time + 0.001);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.04);
-    osc.connect(gain).connect(ctx.destination);
+    osc.connect(gain).connect(master);
     osc.start(time);
     osc.stop(time + 0.05);
   }
@@ -520,7 +521,7 @@
       gain.gain.setValueAtTime(0.7, time + duration * 0.92);
       gain.gain.linearRampToValueAtTime(0.0001, time + duration);
     }
-    src.connect(gain).connect(ctx.destination);
+    src.connect(gain).connect(master);
     src.start(time);
     src.stop(time + (duration || src.buffer.duration));
   }
@@ -638,14 +639,30 @@
   });
 
   // ---- Start / stop ----
-  function start() {
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === "suspended") ctx.resume();
+  let runId = 0;
+  async function start() {
+    if (!ctx) {
+      // iOS: play through the silent switch like a media app (Safari 17+)
+      if (navigator.audioSession) navigator.audioSession.type = "playback";
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    // resume() must be called inside the gesture; awaiting it is fine
+    const resumed = ctx.state === "running" ? null : ctx.resume();
     for (const k in inputs) clampInput(inputs[k]);
     const key = KEYS[keyEl.value];
     session = { key, names: scaleNames(key) };
     keyEl.disabled = true;
     running = true;
+    const id = ++runId;
+    toggleBtn.textContent = T.stop;
+    toggleBtn.classList.add("running");
+    lockScreen();
+    if (resumed) {
+      try { await resumed; } catch (e) {}
+      if (!running || id !== runId) return;   // stopped or restarted meanwhile
+    }
+    master = ctx.createGain();
+    master.connect(ctx.destination);
     step = 0;
     lastDeg = null;
     queue.length = 0;
@@ -654,14 +671,17 @@
     nextTime = ctx.currentTime + 0.1;
     scheduler();
     rafId = requestAnimationFrame(draw);
-    lockScreen();
-    toggleBtn.textContent = T.stop;
-    toggleBtn.classList.add("running");
   }
   function stop() {
     running = false;
     clearTimeout(timerId);
     cancelAnimationFrame(rafId);
+    if (master) {                      // silence notes already scheduled ahead
+      const m = master;
+      master = null;
+      m.gain.setTargetAtTime(0, ctx.currentTime, 0.015);
+      setTimeout(() => m.disconnect(), 200);
+    }
     unlockScreen();
     queue.length = 0;
     keyEl.disabled = false;
