@@ -4,15 +4,17 @@
 
 A small tool to practice guitar scales **now**, while a much larger project is developed separately. This repository is independent of that project. Nothing from it should be anticipated here.
 
+**Scope is closed.** The tool is finished at §14: no new features. Only fixes, polish and tests from here on.
+
 **Guiding principle:** get it working and in use as soon as possible. When in doubt, pick the simplest option. If something is not decided in this document, **ask the user before making it up** (see §9).
 
 ## 2. Starting point
 
-- The functional reference is `index.html` at commit `2e9a486` (`style: color note letter brass`), equivalent to v5. The `main` history already covers the v1–v5 evolution.
-- Its behavior (§3) **does not change** except where §5, §6, §12 and §13 explicitly say so.
+- The app started as a single working HTML file (v1–v5, all in the `main` history). This document describes what it is now.
+- §3 is the core behavior; §5, §6 and §12–§14 build on it and say explicitly where they change it.
 - No migration to frameworks, bundlers or TypeScript. It stays HTML + CSS + JS with no build step.
 
-## 3. Current app behavior (do not change)
+## 3. Core behavior
 
 This section is for understanding the code and checking that nothing breaks.
 
@@ -38,7 +40,7 @@ This section is for understanding the code and checking that nothing breaks.
 - A phase line shows the key, the current step (prep, ascending, descending or wait) and the countdown.
 
 **Audio:**
-- The start note always plays in octave 3.
+- With the fretboard off, the start note always plays in octave 3. With it on, the zone decides the octave (§13.3).
 - The scheduler uses lookahead over `AudioContext.currentTime`, and the UI syncs with `requestAnimationFrame`, subtracting `outputLatency`.
 
 **Shortcuts:** `Space` starts or stops; `↑`/`↓` add or subtract 1 BPM; with `Shift`, 5.
@@ -117,10 +119,7 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 
 ## 8. Work order
 
-1. Texts: code in English, `strings.js` with `en`/`es` and language selector (§5).
-2. PWA (§6).
-3. Publishing: README, LICENSE and GitHub Pages (§4.2, §7).
-4. UX tweaks, only if testing on the phone calls for them.
+Everything in §5–§7 and §12–§14 is built. What is left: fixes found while using it on the phone, small UX polish, and tests (§4.2).
 
 ## 9. Pending confirmation from the user
 
@@ -128,20 +127,22 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 
 ## 10. Acceptance criteria
 
-1. §3 behavior is identical to v5, in both languages.
+1. §3 holds in every language.
 2. No UI text remains outside `strings.js`, and switching language changes every text.
 3. The site published on GitHub Pages loads correctly from the subdirectory.
 4. On iPhone (Safari) it can be added to the home screen with the correct name and icon, and it opens full screen.
 5. After a first load, it opens and works in airplane mode, fonts included.
 6. While practice is running, the screen does not turn off.
 7. After publishing a change and bumping the cache version, the installed app picks it up when reopened.
-8. Settings saved with v5 are preserved.
+8. Settings saved by any earlier version are preserved (same `scaleWalkLight` key; missing fields get their defaults).
 9. With one key selected, practice looks and sounds as before §12; with several, every point of §12 holds.
 10. With the fretboard off, practice looks and sounds exactly as without §13.
+11. With the fretboard on, every walk in every zone of at least 5 frets is playable: each marked fret sounds the pitch played, stays inside the zone, never moves to a lower string while ascending, and the same key, start note and zone always give the same fingering.
+12. The first-use guide shows once (language step first), can be reopened with **?**, and is never shown while practice is running.
 
 ## 11. Out of scope
 
-New practice features beyond §12, §13 and §14, other scales or modes, tuner, accounts, analytics, frameworks, build, and anything from the larger project.
+Any new practice feature (scope is closed, §1), other scales or modes, tuner, accounts, analytics, frameworks, build, and anything from the larger project.
 
 ## 12. Multi-key practice
 
