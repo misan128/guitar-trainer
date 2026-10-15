@@ -28,7 +28,7 @@ This section is for understanding the code and checking that nothing breaks.
 - BPM controls, built for thumbs: the slider has a 48px touch area around a 7px bar (gold progress) and a 27px thumb; tapping anywhere on it jumps there, then it drags (handled in JS, since iOS only drags the thumb natively), and it never scrolls the page. On `−`/`+` (all steppers), a press steps once and holding repeats until release, with mouse or touch; the click a press leaves behind is ignored so a tap never counts twice. Slider, number and buttons stay in sync, also while running.
 - Ticks before and after the walk.
 - Keys: one or more of the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped. The selector sits in the top-left corner in brass (see §12).
-- "Show every note of the walk": off, only the start note is shown; on, each note's name is shown on its tick. It is an unlabeled eye toggle to the right of the key selector, on the same line (closed and muted = off; open on a brass-tinted tile = on), usable while running.
+- "Show every note of the walk": off, only the start note is shown; on, each note's name is shown on its tick. **On by default** (same reasoning as the fretboard, §13.2); a saved choice is kept. It is an unlabeled eye toggle to the right of the key selector, on the same line (closed and muted = off; open on a brass-tinted tile = on), usable while running.
 - Settings are saved in `localStorage` under the key `scaleWalkLight`. **Keep that key** so the user's settings are not lost.
 - With a single key selected, everything in this section behaves exactly as before §12.
 
@@ -194,6 +194,7 @@ Built in phases. **Phase 1 (MVP)** is what this section describes. Later phases 
 - Zone limits: first fret 0–15, last fret up to 19, and **at least 5 frets** (last ≥ first + 4). Changing the first fret pushes the last one up if needed. Default zone: 2–6 (the part of the neck the user knows best). Fret 0 means open strings.
 - No tuning selector until there is more than standard tuning (E A D G B e).
 - Like the keys, the button is disabled while practice is running: the fretboard and zone are fixed per session.
+- **On by default**, like the eye: aids start on and players turn them off as they need them less; an aid that starts off may never be discovered. Saved settings without `board` (from before §13) also get it on; an explicit saved choice is kept.
 - Storage: `scaleWalkLight` gains `board` (bool), `fretFrom` and `fretTo`.
 
 ### 13.3 Building the walk

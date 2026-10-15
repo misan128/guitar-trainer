@@ -735,14 +735,14 @@
   }
 
   // ---- Settings ----
-  let showAll = false;
+  let showAll = true;                  // eye open by default, like the fretboard
   let keys = [0];                      // selected key indices, circle-of-fifths order; may be empty
   let order = "random";                // "random" | "sequential"
-  // Fretboard (SPEC §13): off by default; a zone spans at least ZONE_MIN frets
+  // Fretboard (SPEC §13): on by default (aids start on, players turn them off); a zone spans at least ZONE_MIN frets
   const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
   const ZONE_DEFAULT = 2;              // frets 2–6
   let guideSeen = false;
-  let board = false, fretFrom = ZONE_DEFAULT, fretTo = ZONE_DEFAULT + ZONE_MIN - 1;
+  let board = true, fretFrom = ZONE_DEFAULT, fretTo = ZONE_DEFAULT + ZONE_MIN - 1;
   function setShowAll(v) {
     showAll = v;
     showAllEl.setAttribute("aria-pressed", String(v));
@@ -776,13 +776,14 @@
       const valid = FIFTHS.filter(i => saved.map(Number).includes(i));
       if (valid.length) keys = valid;
       if (s.order === "sequential") order = s.order;
-      setShowAll(!!s.showAll);
+      if (typeof s.showAll === "boolean") showAll = s.showAll;
       if (STRINGS[s.lang]) langEl.value = s.lang;
-      board = s.board === true;
+      if (typeof s.board === "boolean") board = s.board;   // older settings get the default
       guideSeen = s.guideSeen === true;
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }
   } catch (e) {}
+  setShowAll(showAll);
   for (const k in inputs) clampInput(inputs[k]);
 
   // Slider follows the BPM field; the gold fill is drawn in CSS from --fill
