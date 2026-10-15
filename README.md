@@ -58,7 +58,14 @@ The screen stays on while practice is running. Sound follows the media volume.
 
 Open `index.html` in a browser. There is no build step and nothing to install. Offline support needs the site to be served over HTTP(S), not opened as a file.
 
-Tests: `node --test` from the repo root (Node 18+, no dependencies).
+## Testing
+
+```sh
+node --test                    # automated tests: Node 18+, no dependencies
+python3 -m http.server 8000    # then open http://localhost:8000/
+```
+
+The tests check every fretboard walk and that all languages have the same texts. What they cover, and a manual checklist for the phone, are in [docs/TESTING.md](docs/TESTING.md).
 
 ## License
 
