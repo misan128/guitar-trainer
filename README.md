@@ -21,7 +21,7 @@ Practice keeps going until you stop it.
 - **Ticks before / after the walk**: 1–16 and 0–16.
 - **Key** (top-left): the 12 major keys, ordered by the circle of fifths. Can only be changed while stopped.
 - **Show every note of the walk** (eye under the key): closed shows only the start note; open shows each note as it is played.
-- **Language** (top-right): English or Spanish.
+- **Language** (top-right): English, Spanish or Basque.
 
 Settings are saved in the browser.
 

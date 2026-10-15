@@ -69,11 +69,11 @@ LICENSE
 ## 5. Language and texts
 
 - **Code in English:** comments, identifiers and commit messages.
-- **UI texts centralized in `strings.js`:** one object per language (`en`, `es`) with the same keys. Covers everything visible or read by screen readers: labels, buttons, phases, shortcut hint, `aria-label` and `<title>`. Note and key names (C, D♭, F♯…) are not translatable text.
+- **UI texts centralized in `strings.js`:** one object per language (`en`, `es`, `eu`) with the same keys. Covers everything visible or read by screen readers: labels, buttons, phases, shortcut hint, `aria-label` and `<title>`. Note and key names (C, D♭, F♯…) are not translatable text.
 - Loaded with `<script>` before the app code. No build, no `fetch`.
-- **Language selector:** small and subtle in the top-right corner, showing the language code (EN / ES). Saved in `localStorage` inside `scaleWalkLight` (new `lang` field), without breaking previously saved settings.
+- **Language selector:** small and subtle in the top-right corner, showing the language code (EN / ES / EU). Saved in `localStorage` inside `scaleWalkLight` (new `lang` field), without breaking previously saved settings.
 - Adding a language = adding an object to `strings.js` with the same keys, without touching the rest of the code.
-- **Default language** when nothing is saved: the browser's (`es*` → Spanish; anything else → English).
+- **Default language** when nothing is saved: the browser's (`es*` → Spanish, `eu*` → Basque; anything else → English).
 - The language **can be changed while practice is running** and applies immediately.
 
 ## 6. PWA
