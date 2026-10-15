@@ -211,6 +211,7 @@ Built in phases. **Phase 1 (MVP)** is what this section describes. Later phases 
 - An SVG fretboard under the note while practice is running with the fretboard on. While idle, the pick shows as before and there is no fretboard.
 - Six horizontal strings, high e at the top, labeled e B G D A E; only the zone's frets; fret numbers under each fret; the nut when the zone starts at 0.
 - **Eye open:** the other scale notes in the zone as very faint dots, the walk's positions joined by a faint brass line, and the **current position in gold** with its note name. During prep and wait the current position is the start note.
+- With the eye open, the **next move** is hinted, to build muscle memory rather than to be read: the next position is slightly brighter (no name), and a single small arrow sits halfway between the current note and the next one, pointing at it. During prep it shows the first step; there is none during the wait.
 - **Eye closed:** only the start position, in gold, for the whole round; the rest has to be found by the player. The big note still shows the start note, as today.
 - The gold dot moves to the next position on each tick, with a short transition (disabled with reduced motion).
 - While the fretboard shows, the note gets smaller so everything fits on a phone screen.
