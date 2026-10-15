@@ -405,7 +405,6 @@
   #board .nut { stroke: var(--bone); stroke-width: 4; opacity: .6; }
   #board .edge { stroke: var(--brass); stroke-width: 2; opacity: .55; }
   #board text { font: 600 10px "Instrument Sans", system-ui, sans-serif; fill: var(--muted); text-anchor: middle; }
-  #board .scale circle { fill: var(--wire); opacity: .6; }
   #board .path line { stroke: var(--brass); stroke-opacity: .5; stroke-width: 2.2; stroke-linecap: round; }
   #board .path line.cross { stroke-opacity: .28; stroke-width: 1.4; stroke-dasharray: 3 4; }
   #board .path circle { fill: #4a3a2f; stroke: var(--brass); stroke-opacity: .55; stroke-width: 1.5; }
@@ -417,9 +416,11 @@
   #board .cur.anim, #board .next.anim { transition: transform .16s ease-out; }
   @media (prefers-reduced-motion: reduce) { #board .cur.anim, #board .next.anim { transition: none; } }
   /* The note shrinks so note, fretboard and controls fit together */
-  main.with-board { --note: clamp(3.5rem, min(24vw, 11dvh), 10rem); padding-top: 3.25rem; }
-  main.with-board #phase { margin-top: .4rem; }
-  main.with-board #board { margin-top: .5rem; }
+  /* With the fretboard the big letter goes: the gold dot already names the note */
+  main.with-board { padding-top: 3.25rem; }
+  main.with-board .display { display: none; }
+  main.with-board #phase { margin-top: 0; }
+  main.with-board #board { max-width: 34rem; margin-top: .75rem; }
 
   /* Help button: a quiet "?" beside the language */
   #helpBtn {
@@ -671,7 +672,7 @@
   const BASE_MIDI = 48;            // start note always in octave 3 (C3–B3)
 
   // Scale theory and fretboard walks live in theory.js (tested in tests/)
-  const { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk } = Theory;
+  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk } = Theory;
 
   const $ = id => document.getElementById(id);
   const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
@@ -994,15 +995,6 @@
     src.stop(time + (duration || src.buffer.duration));
   }
 
-  // Scale notes inside the zone, shown faintly behind the walk
-  function scaleDots(keyPc, a, b) {
-    const dots = [];
-    for (let st = 0; st < 6; st++) for (let f = a; f <= b; f++) {
-      if (MAJOR.includes((OPEN_MIDI[st] + f - keyPc + 120) % 12)) dots.push([st, f]);
-    }
-    return dots;
-  }
-
   // ---- Lookahead scheduler ----
   let running = false, timerId = null;
   let nextTime = 0, step = 0;
@@ -1055,7 +1047,7 @@
     lastDeg = deg;
     const walk = up.concat(up.slice(0, 7).reverse());
     const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
-    const boardInfo = fits.length ? { from: zone.from, to: zone.to, dots: scaleDots(key.pc, zone.from, zone.to) } : null;
+    const boardInfo = fits.length ? { from: zone.from, to: zone.to } : null;
     return { walk, prep, wait, total: prep + WALK + wait, key, next: KEYS[session.upcoming], board: boardInfo };
   }
 
@@ -1106,17 +1098,15 @@
 
     const k = T.keyName(round.key.name);
     const left = round.total - step;
-    if (session.keys.length > 1) {      // key sits above the note; phase line drops it
-      roundKeyEl.textContent = k;
-      roundKeyEl.hidden = false;
-      if (step < round.prep) phaseEl.textContent = T.phasePrep(round.prep - step);
-      else if (inWalk) phaseEl.textContent = w < 8 ? T.phaseUp : T.phaseDown;
-      else phaseEl.textContent = T.phaseNextKey(T.keyName(round.next.name), left);
-    } else {
-      if (step < round.prep) phaseEl.textContent = `${k} · ${T.phasePrep(round.prep - step)}`;
-      else if (inWalk) phaseEl.textContent = `${k} · ${w < 8 ? T.phaseUp : T.phaseDown}`;
-      else phaseEl.textContent = `${k} · ${T.phaseNext(left)}`;
-    }
+    // Several keys: the key sits above the note and the wait announces the next one.
+    // With the fretboard there is no note letter, so the key goes back into the phase line.
+    const multi = session.keys.length > 1, keyAbove = multi && !round.board;
+    roundKeyEl.hidden = !keyAbove;
+    if (keyAbove) roundKeyEl.textContent = k;
+    const pre = keyAbove ? "" : `${k} · `;
+    if (step < round.prep) phaseEl.textContent = pre + T.phasePrep(round.prep - step);
+    else if (inWalk) phaseEl.textContent = pre + (w < 8 ? T.phaseUp : T.phaseDown);
+    else phaseEl.textContent = multi ? T.phaseNextKey(T.keyName(round.next.name), left) : pre + T.phaseNext(left);
     if (round.board) {
       if (round !== boardRound) buildBoard(round);
       drawBoard(round, inWalk ? w : step < round.prep ? -1 : -2);
@@ -1138,7 +1128,7 @@
   const by = st => TM + (5 - st) * SS;        // high e on top
   function buildBoard(round) {
     boardRound = round;
-    const { from, to, dots } = round.board, n = to - from + 1;
+    const { from, to } = round.board, n = to - from + 1;
     const w = LM + n * FW + 4, bottom = TM + 5 * SS;
     boardEl.setAttribute("viewBox", `0 0 ${w} ${bottom + 22}`);
     boardEl.textContent = "";
@@ -1152,8 +1142,6 @@
       if (cls) el("line", { class: cls, x1: LM + i * FW, x2: LM + i * FW, y1: by(5) - 2, y2: bottom + 2 }, boardEl);
     }
     for (let f = from; f <= to; f++) el("text", { x: bx(round, f), y: bottom + 18 }, boardEl).textContent = f;
-    const scale = el("g", { class: "scale" }, boardEl);
-    for (const [st, f] of dots) el("circle", { cx: bx(round, f), cy: by(st), r: 4 }, scale);
     const path = el("g", { class: "path" }, boardEl);
     const up = round.walk.slice(0, 8);
     // Moves along a string are solid; string changes are dashed and fainter
@@ -1167,14 +1155,14 @@
     const cur = el("g", { class: "cur" }, boardEl);
     el("circle", { r: 9 }, cur);
     const label = el("text", {}, cur);
-    boardParts = { scale, path, next, arrow, cur, label, placed: false };
+    boardParts = { path, next, arrow, cur, label, placed: false };
     boardEl.removeAttribute("hidden");   // SVG has no .hidden property
     mainEl.classList.add("with-board");
   }
   // w: walk index; -1 during prep, -2 during wait (both show the start position)
   function drawBoard(round, w) {
-    const { scale, path, next, arrow, cur, label } = boardParts;
-    scale.style.display = path.style.display = showAll ? "" : "none";
+    const { path, next, arrow, cur, label } = boardParts;
+    path.style.display = showAll ? "" : "none";
     const p = showAll && w >= 0 ? round.walk[w] : round.walk[0];   // eye closed: start position only
     cur.style.transform = `translate(${bx(round, p.f)}px, ${by(p.st)}px)`;
     label.textContent = p.name;
