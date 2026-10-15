@@ -58,6 +58,8 @@ The screen stays on while practice is running. Sound follows the media volume.
 
 Open `index.html` in a browser. There is no build step and nothing to install. Offline support needs the site to be served over HTTP(S), not opened as a file.
 
+Tests: `node --test` from the repo root (Node 18+, no dependencies).
+
 ## License
 
 [MIT](LICENSE)

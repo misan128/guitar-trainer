@@ -55,9 +55,11 @@ This section is for understanding the code and checking that nothing breaks.
 ```
 index.html
 strings.js
+theory.js
 manifest.webmanifest
 sw.js
 icons/
+tests/
 docs/SPEC.md
 README.md
 LICENSE
@@ -67,6 +69,8 @@ LICENSE
 - **`.gitignore`:** system files, editors, `node_modules/`, logs, `*.zip`, AI agent directories and the loose versions folder (`.tmp/`).
 - **`LICENSE`:** MIT, held by Michael Sandoval.
 - **`README.md`:** in English. Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
+- **`theory.js`:** scale theory and fretboard walks (§13.3), with no DOM, so the tests can load it. In the browser it defines `Theory`; in Node it is a CommonJS module.
+- **`tests/`:** run with `node --test` from the repo root (Node 18+, no dependencies). They check every fretboard walk against acceptance criterion 11, known fingerings, scale spelling, and that every language has the same texts.
 - **`docs/SPEC.md`:** this document. Describes state and decisions, not one-off steps.
 - **Repo description** (GitHub "About" field, set by the user): *Guitar scale trainer: metronome-driven scale walks from a random note, in any major key. Static web app, no dependencies.*
 
@@ -101,7 +105,7 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 - Service worker registration.
 
 ### 6.4 Service worker
-- Precaches `index.html`, `strings.js`, the manifest, the icons and the fonts.
+- Precaches `index.html`, `strings.js`, `theory.js`, the manifest, the icons and the fonts.
 - Fonts are self-hosted in `fonts/` (latin subsets, OFL); the app makes no third-party requests.
 - The cache name is versioned (`scale-trainer-v1`, etc.). Old caches are deleted on activate. **Every published change bumps the version.**
 - Strategy for app files (`index.html`, `strings.js`, …): network first, falling back to cache, so updates arrive without reinstalling.
@@ -211,11 +215,11 @@ Built in phases. **Phase 1 (MVP)** is what this section describes. Later phases 
 
 - An SVG fretboard under the note while practice is running with the fretboard on. While idle, the pick shows as before and there is no fretboard.
 - Six horizontal strings, high e at the top, labeled e B G D A E; only the zone's frets; fret numbers under each fret; the nut when the zone starts at 0.
-- **Eye open:** the other scale notes in the zone as very faint dots, the walk's positions joined by a faint brass line, and the **current position in gold** with its note name. During prep and wait the current position is the start note.
+- The fretboard **replaces the big note letter** while it shows: the gold dot already names the note. The key goes into the phase line ("C major · Ascending"), also with several keys.
+- **Eye open:** the walk's positions joined by a faint brass line, and the **current position in gold** with its note name. During prep and wait the current position is the start note. Other scale notes in the zone are not drawn: the path is what gets memorized.
 - With the eye open, the **next move** is hinted, to build muscle memory rather than to be read: the next position is slightly brighter (no name), and a single small arrow sits halfway between the current note and the next one, pointing at it. During prep it shows the first step; there is none during the wait.
 - **Eye closed:** only the start position, in gold, for the whole round; the rest has to be found by the player. The big note still shows the start note, as today.
 - The gold dot moves to the next position on each tick, with a short transition (disabled with reduced motion).
-- While the fretboard shows, the note gets smaller so everything fits on a phone screen.
 
 ### 13.5 Texts
 
