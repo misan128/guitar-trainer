@@ -63,7 +63,7 @@ LICENSE
 
 - **`.gitignore`:** system files, editors, `node_modules/`, logs, `*.zip`, AI agent directories and the loose versions folder (`.tmp/`).
 - **`LICENSE`:** MIT, held by Michael Sandoval.
-- **`README.md`:** in English. Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on an iPhone and a link to the published site. No roadmap or promises.
+- **`README.md`:** in English. Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
 - **`docs/SPEC.md`:** this document. Describes state and decisions, not one-off steps.
 - **Repo description** (GitHub "About" field, set by the user): *Guitar scale trainer: metronome-driven scale walks from a random note, in any major key. Static web app, no dependencies.*
 
@@ -79,7 +79,7 @@ LICENSE
 
 ## 6. PWA
 
-Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it offline.
+Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it offline. The same manifest, icons (including maskable) and service worker also make it installable from Chrome on **Android** ("Install app").
 
 ### 6.1 Manifest
 - `name` and `short_name`: **Scale Trainer** (same in every language). iOS may truncate it under the icon; that is accepted.

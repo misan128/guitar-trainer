@@ -43,6 +43,14 @@ Settings are saved in the browser.
 
 The screen stays on while practice is running. It plays even with the phone on silent (iOS 17 or later).
 
+## Install on Android
+
+1. Open https://misan128.github.io/scale-trainer/ in Chrome.
+2. Tap the **⋮** menu → **Install app** (or **Add to Home screen**). Chrome may also offer it on its own.
+3. Open it from the app icon. It runs full screen, appears in the app drawer and works offline after the first load.
+
+The screen stays on while practice is running. Sound follows the media volume.
+
 ## Running it locally
 
 Open `index.html` in a browser. There is no build step and nothing to install. Offline support needs the site to be served over HTTP(S), not opened as a file.
