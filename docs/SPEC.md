@@ -190,7 +190,7 @@ Built in phases. **Phase 1 (MVP)** is what this section describes. Later phases 
 
 - **Guitar button** in the top-left corner, right of the eye. Muted when the fretboard is off, a brass tile when on. It opens the **fretboard panel**, styled like the key panel (same open/close, focus and `Esc` rules; only one panel open at a time; shortcuts off while open).
 - Panel contents: title "Fretboard" with an on/off **switch**; "Neck zone" with **first fret** and **last fret** selectors; a one-line note saying the walk is shown inside that range; a **Done** button that closes it.
-- Zone limits: first fret 0–15, last fret up to 19, and **at least 5 frets** (last ≥ first + 4). Changing the first fret pushes the last one up if needed. Default zone: 5–9. Fret 0 means open strings.
+- Zone limits: first fret 0–15, last fret up to 19, and **at least 5 frets** (last ≥ first + 4). Changing the first fret pushes the last one up if needed. Default zone: 2–6 (the part of the neck the user knows best). Fret 0 means open strings.
 - No tuning selector until there is more than standard tuning (E A D G B e).
 - Like the keys, the button is disabled while practice is running: the fretboard and zone are fixed per session.
 - Storage: `scaleWalkLight` gains `board` (bool), `fretFrom` and `fretTo`.

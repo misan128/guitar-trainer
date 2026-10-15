@@ -617,7 +617,8 @@
   let order = "random";                // "random" | "sequential"
   // Fretboard (SPEC §13): off by default; a zone spans at least ZONE_MIN frets
   const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
-  let board = false, fretFrom = 5, fretTo = 9;
+  const ZONE_DEFAULT = 2;              // frets 2–6
+  let board = false, fretFrom = ZONE_DEFAULT, fretTo = ZONE_DEFAULT + ZONE_MIN - 1;
   function setShowAll(v) {
     showAll = v;
     showAllEl.setAttribute("aria-pressed", String(v));
@@ -625,7 +626,7 @@
   langEl.value = browserLang();       // overridden by saved settings
   // Keeps the zone valid: first fret 0–15, last fret up to 19, at least ZONE_MIN frets
   function setZone(from, to) {
-    fretFrom = Number.isInteger(from) ? Math.min(FRET_FIRST_MAX, Math.max(0, from)) : 5;
+    fretFrom = Number.isInteger(from) ? Math.min(FRET_FIRST_MAX, Math.max(0, from)) : ZONE_DEFAULT;
     fretTo = Number.isInteger(to) ? Math.min(FRET_LAST_MAX, Math.max(fretFrom + ZONE_MIN - 1, to)) : fretFrom + ZONE_MIN - 1;
   }
   function clampInput(el) {
