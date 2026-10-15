@@ -217,7 +217,7 @@ Built in phases. **Phase 1 (MVP)** is what this section describes. Later phases 
 - Six horizontal strings, high e at the top, labeled e B G D A E; only the zone's frets; fret numbers under each fret; the nut when the zone starts at 0.
 - The fretboard **replaces the big note letter** while it shows: the gold dot already names the note. The key goes into the phase line ("C major · Ascending"), also with several keys.
 - **Eye open:** the walk's positions joined by a faint brass line, and the **current position in gold** with its note name. During prep and wait the current position is the start note. Other scale notes in the zone are not drawn: the path is what gets memorized.
-- With the eye open, the **next move** is hinted, to build muscle memory rather than to be read: the next position is slightly brighter (no name), and a single small arrow sits halfway between the current note and the next one, pointing at it. During prep it shows the first step; there is none during the wait.
+- With the eye open, the **next move** is hinted, to build muscle memory rather than to be read: the next position stands out (larger, brighter, full brass ring, no name), the segment from the current note to it is drawn in strong brass with a small arrow halfway pointing at it, and the rest of the path is faded to a quiet map. During prep it shows the first step; there is none during the wait.
 - **Eye closed:** only the start position, in gold, for the whole round; the rest has to be found by the player. The big note still shows the start note, as today.
 - The gold dot moves to the next position on each tick, with a short transition (disabled with reduced motion).
 

@@ -405,13 +405,15 @@
   #board .nut { stroke: var(--bone); stroke-width: 4; opacity: .6; }
   #board .edge { stroke: var(--brass); stroke-width: 2; opacity: .55; }
   #board text { font: 600 10px "Instrument Sans", system-ui, sans-serif; fill: var(--muted); text-anchor: middle; }
-  #board .path line { stroke: var(--brass); stroke-opacity: .5; stroke-width: 2.2; stroke-linecap: round; }
-  #board .path line.cross { stroke-opacity: .28; stroke-width: 1.4; stroke-dasharray: 3 4; }
-  #board .path circle { fill: #4a3a2f; stroke: var(--brass); stroke-opacity: .55; stroke-width: 1.5; }
+  /* The rest of the path is a quiet map; the next step stands out */
+  #board .path line { stroke: var(--brass); stroke-opacity: .28; stroke-width: 2; stroke-linecap: round; }
+  #board .path line.cross { stroke-opacity: .16; stroke-width: 1.4; stroke-dasharray: 3 4; }
+  #board .path circle { fill: #33271f; stroke: var(--brass); stroke-opacity: .3; stroke-width: 1.4; }
   #board .cur circle { fill: var(--brass); }
   #board .cur text { fill: var(--wood); font-size: 9.5px; dominant-baseline: central; }
   /* Next move: the next position slightly brighter, and one arrow from the current note towards it */
-  #board .next { fill: #6b5338; stroke: var(--brass); stroke-opacity: .9; stroke-width: 1.8; }
+  #board .next { fill: #8a6a3e; stroke: var(--brass); stroke-width: 2.2; }
+  #board .step { stroke: var(--brass); stroke-opacity: .85; stroke-width: 2.6; stroke-linecap: round; }
   #board .arrow { fill: none; stroke: var(--brass); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   #board .cur.anim, #board .next.anim { transition: transform .16s ease-out; }
   @media (prefers-reduced-motion: reduce) { #board .cur.anim, #board .next.anim { transition: none; } }
@@ -1150,30 +1152,32 @@
       el("line", { class: a.st === b.st ? "same" : "cross", x1: bx(round, a.f), y1: by(a.st), x2: bx(round, b.f), y2: by(b.st) }, path);
     }
     for (const p of up) el("circle", { cx: bx(round, p.f), cy: by(p.st), r: 6 }, path);
-    const next = el("circle", { class: "next", r: 6.5 }, boardEl);
+    const step = el("line", { class: "step" }, boardEl);   // current → next, under the dots
+    const next = el("circle", { class: "next", r: 7.5 }, boardEl);
     const arrow = el("path", { class: "arrow", d: "M-3 -4.5 L2.5 0 L-3 4.5" }, boardEl);
     const cur = el("g", { class: "cur" }, boardEl);
     el("circle", { r: 9 }, cur);
     const label = el("text", {}, cur);
-    boardParts = { path, next, arrow, cur, label, placed: false };
+    boardParts = { path, step, next, arrow, cur, label, placed: false };
     boardEl.removeAttribute("hidden");   // SVG has no .hidden property
     mainEl.classList.add("with-board");
   }
   // w: walk index; -1 during prep, -2 during wait (both show the start position)
   function drawBoard(round, w) {
-    const { path, next, arrow, cur, label } = boardParts;
+    const { path, step, next, arrow, cur, label } = boardParts;
     path.style.display = showAll ? "" : "none";
     const p = showAll && w >= 0 ? round.walk[w] : round.walk[0];   // eye closed: start position only
     cur.style.transform = `translate(${bx(round, p.f)}px, ${by(p.st)}px)`;
     label.textContent = p.name;
     // The next move: during prep it is the first step of the walk; none after the last note or during the wait
     const n = w === -1 ? 1 : w >= 0 && w < round.walk.length - 1 ? w + 1 : -1;
-    next.style.display = arrow.style.display = showAll && n >= 0 ? "" : "none";
+    next.style.display = arrow.style.display = step.style.display = showAll && n >= 0 ? "" : "none";
     if (showAll && n >= 0) {
       const x1 = bx(round, p.f), y1 = by(p.st), x2 = bx(round, round.walk[n].f), y2 = by(round.walk[n].st);
       next.style.transform = `translate(${x2}px, ${y2}px)`;
       // Halfway, pointing at the next note (no transition: a turning arrow would spin)
       arrow.style.transform = `translate(${(x1 + x2) / 2}px, ${(y1 + y2) / 2}px) rotate(${Math.atan2(y2 - y1, x2 - x1)}rad)`;
+      for (const [k, v] of Object.entries({ x1, y1, x2, y2 })) step.setAttribute(k, v);
     }
     if (!boardParts.placed) {                 // no slide in from the corner on the first draw
       boardParts.placed = true;
