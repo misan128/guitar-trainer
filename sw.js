@@ -1,9 +1,10 @@
 // Bump the version on every published change so clients drop the old cache.
-const CACHE = "scale-trainer-v9";
+const CACHE = "scale-trainer-v10";
 const PRECACHE = [
   "./",
   "index.html",
   "strings.js",
+  "theory.js",
   "manifest.webmanifest",
   "icons/apple-touch-icon.png",
   "icons/icon-192.png",
