@@ -418,6 +418,76 @@
   main.with-board #phase { margin-top: .4rem; }
   main.with-board #board { margin-top: .5rem; }
 
+  /* Help button: a quiet "?" beside the language */
+  #helpBtn {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    opacity: .7;
+    cursor: pointer;
+  }
+  #helpBtn span {
+    display: inline-grid;
+    place-items: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    font: 600 .8rem "Instrument Sans", system-ui, sans-serif;
+  }
+  #helpBtn:hover, #helpBtn:focus-visible { opacity: 1; }
+  #helpBtn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* First-use guide: dims everything but the step's control */
+  #guide { position: fixed; inset: 0; z-index: 10; }
+  #guideSpot {
+    position: fixed;
+    border-radius: 12px;
+    box-shadow: 0 0 0 200vmax rgba(10, 7, 6, .74);
+    pointer-events: none;
+    transition: top .25s, left .25s, width .25s, height .25s;
+  }
+  #guideTip {
+    position: fixed;
+    width: min(20rem, calc(100vw - 2rem));
+    padding: 1rem 1rem .75rem;
+    border-radius: 14px;
+    background: var(--wood-2);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
+  }
+  #guideTitle { margin: 0 0 .35rem; font-weight: 600; color: var(--brass); }
+  #guideText { margin: 0; line-height: 1.4; }
+  .g-langs { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .8rem; }
+  .g-langs button {
+    flex: 1;
+    height: 2.6rem;
+    border: 0;
+    border-radius: 10px;
+    background: #3a2d26;
+    color: var(--bone);
+    font: 600 .95rem "Instrument Sans", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .g-langs button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+  .g-foot { display: flex; align-items: center; gap: .5rem; margin-top: .9rem; }
+  #guideDots { flex: 1; display: flex; gap: .35rem; }
+  #guideDots i { width: .45rem; height: .45rem; border-radius: 50%; background: var(--wire); }
+  #guideDots i.on { background: var(--brass); }
+  .g-foot button {
+    height: 2.4rem;
+    padding: 0 .9rem;
+    border: 0;
+    border-radius: 10px;
+    font: 600 .95rem "Instrument Sans", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  #guideSkip { background: none; color: var(--muted); }
+  #guideNext { background: var(--brass); color: var(--wood); }
+  @media (prefers-reduced-motion: reduce) { #guideSpot { transition: none; } }
+
   /* Round key, above the note, without moving it */
   .display { position: relative; }
   #roundKey {
@@ -521,7 +591,21 @@
   </fieldset>
 </div>
 <div class="corner right">
+  <button id="helpBtn" data-i18n-aria="guide"><span aria-hidden="true">?</span></button>
   <select id="lang" class="quiet" data-i18n-aria="lang"></select>
+</div>
+<div id="guide" role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideText" hidden>
+  <div id="guideSpot"></div>
+  <div id="guideTip">
+    <p id="guideTitle"></p>
+    <p id="guideText"></p>
+    <div id="guideLangs" class="g-langs" hidden></div>
+    <div class="g-foot">
+      <span id="guideDots"></span>
+      <button id="guideSkip" data-i18n="guideSkip"></button>
+      <button id="guideNext"></button>
+    </div>
+  </div>
 </div>
 <main>
   <section class="stage">
@@ -645,6 +729,7 @@
     document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", T[el.dataset.i18nAria]));
     toggleBtn.textContent = running ? T.stop : T.start;
     renderKeys();
+    if (!guideEl.hidden) showStep();
     if (running && lastShown) render(lastShown);
     else if (!running) phaseEl.textContent = T.idle;
   }
@@ -656,6 +741,7 @@
   // Fretboard (SPEC §13): off by default; a zone spans at least ZONE_MIN frets
   const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
   const ZONE_DEFAULT = 2;              // frets 2–6
+  let guideSeen = false;
   let board = false, fretFrom = ZONE_DEFAULT, fretTo = ZONE_DEFAULT + ZONE_MIN - 1;
   function setShowAll(v) {
     showAll = v;
@@ -678,7 +764,7 @@
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
         keys, order, key: keys[0], showAll: showAll, lang: langEl.value,
-        board, fretFrom, fretTo
+        board, fretFrom, fretTo, guideSeen
       }));
     } catch (e) {}
   }
@@ -693,6 +779,7 @@
       setShowAll(!!s.showAll);
       if (STRINGS[s.lang]) langEl.value = s.lang;
       board = s.board === true;
+      guideSeen = s.guideSeen === true;
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }
   } catch (e) {}
@@ -1220,6 +1307,7 @@
                 board: board ? { from: fretFrom, to: fretTo } : null };
     keyBtn.disabled = true;
     boardBtn.disabled = true;
+    helpBtn.disabled = true;
     running = true;
     const id = ++runId;
     toggleBtn.textContent = T.stop;
@@ -1254,6 +1342,7 @@
     queue.length = 0;
     keyBtn.disabled = false;
     boardBtn.disabled = false;
+    helpBtn.disabled = false;
     hideBoard();
     roundKeyEl.hidden = true;
     noteEl.hidden = true;
@@ -1268,6 +1357,10 @@
   document.addEventListener("keydown", e => {
     if (e.target.tagName === "INPUT" && e.target.type === "number") return;
     if (e.target.tagName === "SELECT") return;
+    if (!guideEl.hidden) {               // shortcuts are off during the guide
+      if (e.key === "Escape") closeGuide();
+      return;
+    }
     if (!keyPanel.hidden || !boardPanel.hidden) {   // shortcuts are off while a panel is open
       if (e.key === "Escape") { closePanel(true); closeBoard(true); }
       return;
@@ -1277,9 +1370,86 @@
     if (e.key === "ArrowDown") { e.preventDefault(); setBpm(Number(inputs.bpm.value) - (e.shiftKey ? 5 : 1)); }
   });
 
+  // ---- First-use guide (SPEC §14) ----
+  const guideEl = $("guide"), guideSpot = $("guideSpot"), guideTip = $("guideTip");
+  const guideNext = $("guideNext"), helpBtn = $("helpBtn");
+  // The language step comes first so the rest is read in the chosen language; it is skipped when reopened with ?
+  const GUIDE = [
+    { target: () => langEl, key: "guideLangPick", langs: true },
+    { target: () => document.querySelector(".display"), key: "guideRound" },
+    { target: () => keyBtn, key: "guideKeys" },
+    { target: () => showAllEl, key: "guideEye" },
+    { target: () => boardBtn, key: "guideBoard" },
+    { target: () => helpBtn, key: "guideHelp" },
+  ];
+  let steps = GUIDE, guideStep = 0, guideFromHelp = false;
+  const guideLangs = $("guideLangs");
+  for (const code in STRINGS) {
+    const b = guideLangs.appendChild(document.createElement("button"));
+    b.dataset.lang = code;
+    b.lang = code;
+    b.textContent = STRINGS[code].langName;
+  }
+  guideLangs.addEventListener("click", e => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    langEl.value = b.dataset.lang;
+    applyLang();                       // re-renders the step in the new language
+    save();
+  });
+  function showStep() {
+    const step = steps[guideStep], last = guideStep === steps.length - 1;
+    $("guideTitle").textContent = T[step.key + "Title"];
+    $("guideText").textContent = T[step.key + "Text"];
+    guideNext.textContent = last ? T.guideDone : T.guideNext;
+    guideLangs.hidden = !step.langs;
+    for (const b of guideLangs.children) b.setAttribute("aria-pressed", String(b.dataset.lang === langEl.value));
+    const dots = $("guideDots");
+    dots.textContent = "";
+    dots.setAttribute("aria-label", T.guideStep(guideStep + 1, steps.length));
+    steps.forEach((_, i) => dots.appendChild(document.createElement("i")).classList.toggle("on", i === guideStep));
+    placeGuide();
+  }
+  // Cutout around the target; bubble below it, or above when it does not fit
+  function placeGuide() {
+    if (guideEl.hidden) return;
+    const r = steps[guideStep].target().getBoundingClientRect(), pad = 6;
+    Object.assign(guideSpot.style, { top: `${r.top - pad}px`, left: `${r.left - pad}px`, width: `${r.width + 2 * pad}px`, height: `${r.height + 2 * pad}px` });
+    const tw = guideTip.offsetWidth, th = guideTip.offsetHeight, gap = 14;
+    const below = r.bottom + pad + gap, above = r.top - pad - gap - th;
+    guideTip.style.top = `${below + th <= innerHeight - 8 || above < 8 ? below : above}px`;
+    guideTip.style.left = `${Math.min(innerWidth - tw - 16, Math.max(16, r.left + r.width / 2 - tw / 2))}px`;
+  }
+  function openGuide(fromHelp) {
+    if (running) return;
+    closePanel(false);
+    closeBoard(false);
+    guideStep = 0;
+    guideFromHelp = fromHelp;
+    steps = fromHelp ? GUIDE.filter(s => !s.langs) : GUIDE;
+    guideEl.hidden = false;
+    showStep();
+    guideNext.focus();
+  }
+  function closeGuide() {
+    guideEl.hidden = true;
+    guideSeen = true;
+    save();
+    if (guideFromHelp) helpBtn.focus();
+  }
+  guideNext.addEventListener("click", () => {
+    if (guideStep === steps.length - 1) return closeGuide();
+    guideStep++;
+    showStep();
+  });
+  $("guideSkip").addEventListener("click", closeGuide);
+  helpBtn.addEventListener("click", () => openGuide(true));
+  window.addEventListener("resize", placeGuide);
+
   renderBoardPanel();
   applyLang();
   drawTrack(-1);
+  if (!guideSeen) openGuide(false);
 
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
