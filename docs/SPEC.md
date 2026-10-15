@@ -157,13 +157,13 @@ Asked for by the user's guitar teacher: practice switching between keys, not jus
 - 12 toggle tiles in a 3×4 grid, circle-of-fifths order (C G D / A E B / F♯ D♭ A♭ / E♭ B♭ F). Selected tiles are brass with a check mark. A counter shows "n of 12".
 - Every tap applies at once; there is no Apply button.
 - Quick actions: **All** (left) and **Clear** (right); each is disabled when it would change nothing.
-- The selection may be empty: the button then reads "Choose keys" and Start is disabled. An empty selection is not restored on reload; it falls back to C.
+- **At least one key is always selected:** tapping the only selected key does nothing, and **Clear** goes back to C major (disabled when that is already the selection). A saved empty selection falls back to C.
 - **Round order:** *Random* (default) or *In order*.
 - Closes on tapping outside, on `Esc` or on the button again. Focus moves into the panel and returns to the button on close. Tiles are buttons with `aria-pressed`.
 - The button is disabled while practice is running, like the old selector.
 - While the panel is open, the keyboard shortcuts (§3) are off.
 
-**Button label:** none → "Choose keys"; one key → "C major"; two → "C, G" (circle-of-fifths order); three or more → "n keys".
+**Button label:** one key → "C major"; two → "C, G" (circle-of-fifths order); three or more → "n keys".
 
 **Round order:**
 - *Random:* shuffle-bag. All selected keys are shuffled into a block and played once each before reshuffling. The first key of a new block is never the last key of the previous one (with two keys this alternates them).
@@ -177,7 +177,7 @@ Asked for by the user's guitar teacher: practice switching between keys, not jus
 
 **Storage:** `scaleWalkLight` gains `keys` (array of key indices) and `order` (`"random"` | `"sequential"`). A saved single `key` is migrated to `keys: [key]`.
 
-**Texts:** new keys in `strings.js` for every language: the "n keys" summary, "Choose keys", panel title, "n of 12" counter, "All", "Clear", round order and its two options, and "Next: …". Counts are functions (like `keyName`) so each language builds its own plural.
+**Texts:** new keys in `strings.js` for every language: the "n keys" summary, panel title, "n of 12" counter, "All", "Clear", round order and its two options, and "Next: …". Counts are functions (like `keyName`) so each language builds its own plural.
 
 ## 13. Fretboard walks
 

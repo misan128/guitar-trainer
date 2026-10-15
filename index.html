@@ -724,7 +724,8 @@
 
   // ---- Settings ----
   let showAll = true;                  // eye open by default, like the fretboard
-  let keys = [0];                      // selected key indices, circle-of-fifths order; may be empty
+  const DEFAULT_KEY = 0;               // C major; also what Clear goes back to
+  let keys = [DEFAULT_KEY];            // selected key indices, circle-of-fifths order; never empty
   let order = "random";                // "random" | "sequential"
   // Fretboard (SPEC §13): on by default (aids start on, players turn them off); a zone spans at least ZONE_MIN frets
   const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
@@ -858,14 +859,13 @@
   // ---- Key panel ----
   function renderKeys() {
     const names = keys.map(i => KEYS[i].name);
-    keyBtn.textContent = !keys.length ? T.keysNone : keys.length === 1 ? T.keyName(names[0])
+    keyBtn.textContent = keys.length === 1 ? T.keyName(names[0])
       : keys.length === 2 ? names.join(", ") : T.keysSummary(keys.length);
     keyBtn.setAttribute("aria-label", `${T.key}: ${keyBtn.textContent}`);
     for (const b of keyGrid.children) b.setAttribute("aria-pressed", String(keys.includes(Number(b.dataset.key))));
     keyCount.textContent = T.keysCount(keys.length, KEYS.length);
     keysAllBtn.disabled = keys.length === KEYS.length;
-    keysClearBtn.disabled = !keys.length;
-    toggleBtn.disabled = !running && !keys.length;   // nothing to practice
+    keysClearBtn.disabled = keys.length === 1 && keys[0] === DEFAULT_KEY;
     for (const r of keyPanel.querySelectorAll("input[name=order]")) r.checked = r.value === order;
   }
   function setKeys(next) {
@@ -890,10 +890,11 @@
     const b = e.target.closest("button");
     if (!b) return;
     const k = Number(b.dataset.key);
+    if (keys.includes(k) && keys.length === 1) return;   // at least one key stays selected
     setKeys(keys.includes(k) ? keys.filter(i => i !== k) : keys.concat(k));
   });
   keysAllBtn.addEventListener("click", () => setKeys(FIFTHS));
-  keysClearBtn.addEventListener("click", () => setKeys([]));
+  keysClearBtn.addEventListener("click", () => setKeys([DEFAULT_KEY]));   // back to C major
   keyPanel.addEventListener("change", e => {
     if (e.target.name !== "order") return;
     order = e.target.value;
@@ -1234,7 +1235,6 @@
   // ---- Start / stop ----
   let runId = 0;
   async function start() {
-    if (!keys.length) return;
     if (!ctx) {
       // iOS: play through the silent switch like a media app (Safari 17+)
       if (navigator.audioSession) navigator.audioSession.type = "playback";
