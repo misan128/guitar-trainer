@@ -97,8 +97,8 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 - Service worker registration.
 
 ### 6.4 Service worker
-- Precaches `index.html`, `strings.js`, the manifest and the icons.
-- Caches Google Fonts on first use, so they work offline.
+- Precaches `index.html`, `strings.js`, the manifest, the icons and the fonts.
+- Fonts are self-hosted in `fonts/` (latin subsets, OFL); the app makes no third-party requests.
 - The cache name is versioned (`scale-trainer-v1`, etc.). Old caches are deleted on activate. **Every published change bumps the version.**
 - Strategy for app files (`index.html`, `strings.js`, …): network first, falling back to cache, so updates arrive without reinstalling.
 

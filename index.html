@@ -11,10 +11,22 @@
 <meta name="apple-mobile-web-app-title" content="Scale Trainer">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/young-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Self-hosted latin subsets (OFL, see fonts/); no requests to third parties */
+  @font-face {
+    font-family: "Instrument Sans";
+    font-weight: 400 600;          /* variable font */
+    font-display: swap;
+    src: url(fonts/instrument-sans-latin.woff2) format("woff2");
+  }
+  @font-face {
+    font-family: "Young Serif";
+    font-weight: 400;
+    font-display: swap;
+    src: url(fonts/young-serif-latin.woff2) format("woff2");
+  }
   :root {
     --wood: #1d1613;
     --wood-2: #2a201b;

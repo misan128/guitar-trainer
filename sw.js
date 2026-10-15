@@ -1,5 +1,5 @@
 // Bump the version on every published change so clients drop the old cache.
-const CACHE = "scale-trainer-v5";
+const CACHE = "scale-trainer-v6";
 const PRECACHE = [
   "./",
   "index.html",
@@ -9,8 +9,9 @@ const PRECACHE = [
   "icons/icon-192.png",
   "icons/icon-512.png",
   "icons/icon-512-maskable.png",
+  "fonts/instrument-sans-latin.woff2",
+  "fonts/young-serif-latin.woff2",
 ];
-const FONT_HOSTS = ["fonts.googleapis.com", "fonts.gstatic.com"];
 
 self.addEventListener("install", e => {
   e.waitUntil(
@@ -32,21 +33,6 @@ self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
-
-  // Google Fonts: cache first, stored on first use.
-  if (FONT_HOSTS.includes(url.hostname)) {
-    e.respondWith(
-      caches.match(req).then(hit => hit || fetch(req).then(res => {
-        // The stylesheet is fetched no-cors, so its response is opaque (ok is false).
-        if (res.ok || res.type === "opaque") {
-          const copy = res.clone();
-          caches.open(CACHE).then(c => c.put(req, copy));
-        }
-        return res;
-      }).catch(() => Response.error()))
-    );
-    return;
-  }
 
   // App files: network first so updates arrive, cache as offline fallback.
   if (url.origin === location.origin) {
