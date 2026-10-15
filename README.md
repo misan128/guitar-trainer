@@ -23,6 +23,7 @@ Practice keeps going until you stop it.
 - **Ticks before / after the walk**: 1–16 and 0–16.
 - **Keys** (top-left): pick one or more of the 12 major keys, ordered by the circle of fifths. With several, rounds go in random order (each key once before any repeats) or in circle-of-fifths order. Can only be changed while stopped.
 - **Show every note of the walk** (eye beside the keys): closed shows only the start note; open shows each note as it is played.
+- **Fretboard** (guitar beside the eye): shows each walk on the fretboard, inside a neck zone you choose (first and last fret, at least 5 frets; standard tuning). Every walk has one fixed fingering — the same key, start note and zone always give the same one — and the notes you hear match the marked frets. With the eye open you see the whole path and the current position moving; with it closed, only the start position. Can only be changed while stopped.
 - **Language** (top-right): English, Spanish or Basque.
 
 Settings are saved in the browser.
