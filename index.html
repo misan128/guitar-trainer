@@ -569,14 +569,14 @@
   }
 
   // ---- Drawing synced to what is audible ----
-  let shownRound = null, lastShown = null;
+  let shownRound = null, lastShown = null, rafId = null;
   function draw() {
     if (!running) return;
     const now = ctx.currentTime - (ctx.outputLatency || 0);
     let current = null;
     while (queue.length && queue[0].time <= now) current = queue.shift();
     if (current) render(current);
-    requestAnimationFrame(draw);
+    rafId = requestAnimationFrame(draw);
   }
 
   function render(tick) {
@@ -653,7 +653,7 @@
     lastShown = null;
     nextTime = ctx.currentTime + 0.1;
     scheduler();
-    requestAnimationFrame(draw);
+    rafId = requestAnimationFrame(draw);
     lockScreen();
     toggleBtn.textContent = T.stop;
     toggleBtn.classList.add("running");
@@ -661,6 +661,7 @@
   function stop() {
     running = false;
     clearTimeout(timerId);
+    cancelAnimationFrame(rafId);
     unlockScreen();
     queue.length = 0;
     keyEl.disabled = false;
