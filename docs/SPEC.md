@@ -141,7 +141,7 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 
 ## 11. Out of scope
 
-New practice features beyond §12 and §13, other scales or modes, tuner, accounts, analytics, frameworks, build, and anything from the larger project.
+New practice features beyond §12, §13 and §14, other scales or modes, tuner, accounts, analytics, frameworks, build, and anything from the larger project.
 
 ## 12. Multi-key practice
 
@@ -217,3 +217,34 @@ Built in phases. **Phase 1 (MVP)** is what this section describes. Later phases 
 ### 13.5 Texts
 
 New keys in `strings.js` for every language: fretboard, neck zone, first fret, last fret, the zone note, Done, and the fretboard's accessible label.
+
+## 14. First-use guide
+
+A short guided tour that explains the unlabeled controls where they are.
+
+**When it shows**
+- Automatically on the first load, and once for users who already have saved settings. Finishing or skipping it marks it as seen: `scaleWalkLight` gains `guideSeen`.
+- A small, muted **?** button in the top-right corner, left of the language selector, opens it again.
+- Never while practice is running: the **?** is disabled then, like the key and fretboard buttons.
+
+**How it looks**
+- The screen dims except for a rounded cutout around the step's control.
+- A bubble next to it (below, or above if it does not fit) with a title, one or two sentences, progress dots, **Skip** and **Next** (**Done** on the last step).
+- Tapping outside does nothing. `Esc` closes it (counts as seen). Keyboard shortcuts are off while it is open. Focus moves to the bubble and returns to the **?** when opened from it.
+
+**Steps** (Spanish shown; English and Basque say the same)
+
+| # | Points at | Text |
+| --- | --- | --- |
+| 0 | Language selector | **Idioma:** elige el idioma de la guía y de la app; puedes cambiarlo después arriba a la derecha. The bubble has one button per language, each written in its own language (English · Español · Euskara), the current one highlighted; tapping one switches the whole app at once. |
+| 1 | The pick / note | **Una ronda:** una nota al azar de la tonalidad. Tras unos clics de preparación, subes una octava y vuelves a bajar al ritmo del metrónomo. |
+| 2 | Keys button | **Tonalidades:** elige una o varias, y si las rondas van al azar o en orden. |
+| 3 | Eye | **Ver las notas:** abierto, ves cada nota del recorrido; cerrado, solo la inicial, para memorizarlo. |
+| 4 | Guitar | **Diapasón:** muestra el recorrido en el mástil, dentro de la zona de trastes que elijas. |
+| 5 | **?** | **Ayuda:** con **?** vuelves a ver esta guía cuando quieras. |
+
+The language step comes first so the rest of the guide is read in the chosen language. It only appears on the automatic first showing; reopening with **?** starts at step 1.
+
+Tempo, ticks and installing on the phone are left out on purpose.
+
+**Texts:** new keys in `strings.js` for every language: the guide's name, Skip, Next, Done, the step counter, a title and text per step, and `langName`, each language's name written in that language.
