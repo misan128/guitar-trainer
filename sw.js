@@ -1,5 +1,5 @@
 // Bump the version on every published change so clients drop the old cache.
-const CACHE = "scale-trainer-v3";
+const CACHE = "scale-trainer-v4";
 const PRECACHE = [
   "./",
   "index.html",
@@ -37,10 +37,13 @@ self.addEventListener("fetch", e => {
   if (FONT_HOSTS.includes(url.hostname)) {
     e.respondWith(
       caches.match(req).then(hit => hit || fetch(req).then(res => {
-        const copy = res.clone();
-        caches.open(CACHE).then(c => c.put(req, copy));
+        // The stylesheet is fetched no-cors, so its response is opaque (ok is false).
+        if (res.ok || res.type === "opaque") {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
+        }
         return res;
-      }))
+      }).catch(() => Response.error()))
     );
     return;
   }
