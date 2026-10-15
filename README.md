@@ -26,6 +26,8 @@ Practice keeps going until you stop it.
 - **Fretboard** (guitar beside the eye): shows each walk on the fretboard, inside a neck zone you choose (first and last fret, at least 5 frets; standard tuning). Every walk has one fixed fingering — the same key, start note and zone always give the same one — and the notes you hear match the marked frets. With the eye open you see the whole path and the current position moving; with it closed, only the start position. Can only be changed while stopped.
 - **Language** (top-right): English, Spanish or Basque.
 
+A short guide explains the controls on first use; tap **?** (top-right) to see it again.
+
 Settings are saved in the browser.
 
 ## Shortcuts
