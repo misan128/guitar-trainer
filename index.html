@@ -676,7 +676,7 @@
   document.addEventListener("keydown", e => {
     if (e.target.tagName === "INPUT" && e.target.type === "number") return;
     if (e.target.tagName === "SELECT") return;
-    if (e.code === "Space") { e.preventDefault(); running ? stop() : start(); }
+    if (e.code === "Space") { e.preventDefault(); if (!e.repeat) running ? stop() : start(); }
     if (e.key === "ArrowUp") { e.preventDefault(); setBpm(Number(inputs.bpm.value) + (e.shiftKey ? 5 : 1)); }
     if (e.key === "ArrowDown") { e.preventDefault(); setBpm(Number(inputs.bpm.value) - (e.shiftKey ? 5 : 1)); }
   });
