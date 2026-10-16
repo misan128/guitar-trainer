@@ -54,13 +54,14 @@ This section is for understanding the code and checking that nothing breaks.
 ### 4.2 Files
 ```
 index.html
-styles.css
-app.js
-strings.js
-theory.js
-manifest.webmanifest
 sw.js
+manifest.webmanifest
+css/styles.css
+js/app.js
+js/strings.js
+js/theory.js
 icons/
+fonts/
 tests/
 docs/SPEC.md
 docs/TESTING.md
@@ -69,11 +70,12 @@ LICENSE
 .gitignore
 ```
 
+- **Layout:** `index.html`, `sw.js` and `manifest.webmanifest` stay at the root: Pages serves `index.html` there, and a service worker only controls its own folder and below. Styles go in `css/`, scripts in `js/`, and `icons/`, `fonts/`, `docs/` and `tests/` keep their folders. No `src/`: there is no build step.
 - **`.gitignore`:** system files, editors, `node_modules/`, logs, `*.zip`, AI agent directories and the loose versions folder (`.tmp/`).
 - **`LICENSE`:** MIT, held by Michael Sandoval.
 - **`README.md`:** in English. Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
-- **`index.html`:** markup only. **`styles.css`:** all the styles. **`app.js`:** the app (UI, audio, scheduler, fretboard drawing, panels, guide and dev mode), one plain script with no modules, so `index.html` still opens straight from disk.
-- **`theory.js`:** scale theory and fretboard walks (§13.3), with no DOM, so the tests can load it. In the browser it defines `Theory`; in Node it is a CommonJS module.
+- **`index.html`:** markup only. **`css/styles.css`:** all the styles. **`js/app.js`:** the app (UI, audio, scheduler, fretboard drawing, panels, guide and dev mode), one plain script with no modules, so `index.html` still opens straight from disk.
+- **`js/theory.js`:** scale theory and fretboard walks (§13.3), with no DOM, so the tests can load it. In the browser it defines `Theory`; in Node it is a CommonJS module.
 - **`tests/`:** run with `node --test` from the repo root (Node 18+, no dependencies). They check every fretboard walk against acceptance criterion 11, known fingerings, scale spelling, and that every language has the same texts.
 - **`docs/TESTING.md`:** how to run the tests, run the app locally, the dev mode, and the manual checklist for the phone.
 - **Dev mode:** `?debug` in the URL adds a small **dbg** panel and a `dbg` object in the console: a cursor over the round to pause, step, seek along the walk and swap the round's key and degree, each applied and sounded at once. It is a development tool, not a feature: without `?debug` it does not exist. Its texts are English only and stay out of `strings.js`, the one exception to §5.
@@ -112,10 +114,10 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 - Service worker registration.
 
 ### 6.4 Service worker
-- Precaches `index.html`, `styles.css`, `app.js`, `strings.js`, `theory.js`, the manifest, the icons and the fonts.
+- Precaches `index.html`, `css/styles.css`, everything in `js/`, the manifest, the icons and the fonts.
 - Fonts are self-hosted in `fonts/` (latin subsets, OFL); the app makes no third-party requests.
 - The cache name is versioned (`scale-trainer-v1`, etc.). Old caches are deleted on activate. **Every published change bumps the version.**
-- Strategy for app files (`index.html`, `styles.css`, `app.js`, …): network first, falling back to cache, so updates arrive without reinstalling.
+- Strategy for app files (`index.html`, `css/`, `js/`, …): network first, falling back to cache, so updates arrive without reinstalling.
 
 ### 6.5 Mobile behavior
 - **Wake Lock:** keep the screen on while practice is running. Released on stop, and requested again if the page returns to the foreground with practice running. If the API does not exist, it is silently ignored.

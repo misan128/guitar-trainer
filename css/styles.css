@@ -3,13 +3,13 @@
   font-family: "Instrument Sans";
   font-weight: 400 600;          /* variable font */
   font-display: swap;
-  src: url(fonts/instrument-sans-latin.woff2) format("woff2");
+  src: url(../fonts/instrument-sans-latin.woff2) format("woff2");
 }
 @font-face {
   font-family: "Young Serif";
   font-weight: 400;
   font-display: swap;
-  src: url(fonts/young-serif-latin.woff2) format("woff2");
+  src: url(../fonts/young-serif-latin.woff2) format("woff2");
 }
 :root {
   --wood: #1d1613;

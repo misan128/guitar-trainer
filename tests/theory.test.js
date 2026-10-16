@@ -1,7 +1,7 @@
 // Fretboard walks (SPEC §13.3, acceptance criterion 11). Run: node --test tests/
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, boardWalk } = require("../theory.js");
+const { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, boardWalk } = require("../js/theory.js");
 
 const ZONE_MIN = 5, FIRST_MAX = 15, LAST_MAX = 19;   // same limits as the fretboard panel
 const zones = [];

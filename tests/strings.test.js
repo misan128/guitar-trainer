@@ -3,7 +3,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 global.window = {};
-require("../strings.js");
+require("../js/strings.js");
 const STRINGS = window.STRINGS;
 
 test("languages are listed as EN, EU, ES", () => {
