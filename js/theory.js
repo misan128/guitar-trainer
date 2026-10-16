@@ -104,7 +104,37 @@
     };
   }
 
-  const api = { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk, createStartPicker };
+  // ---- Minor pentatonic shapes (SPEC §15.2) ----
+  // The five-box numbering: shape 1 has the root on the 6th string under the first finger, and the
+  // others follow up the neck. Defined explicitly in A minor (canonical positions; shape 5 at its
+  // lowest), never generated. Each shape is its ascending route, two notes per string, low E → high e,
+  // as [string, fret]. Notes, names and degrees are derived below and checked by the tests.
+  const MINOR_PENTA = [0, 3, 5, 7, 10];                 // semitones from the root
+  const PENTA_DEGREES = ["1", "♭3", "4", "5", "♭7"];
+  const PENTA_SHAPES = {
+    1: [[0, 5], [0, 8], [1, 5], [1, 7], [2, 5], [2, 7], [3, 5], [3, 7], [4, 5], [4, 8], [5, 5], [5, 8]],
+    2: [[0, 8], [0, 10], [1, 7], [1, 10], [2, 7], [2, 10], [3, 7], [3, 9], [4, 8], [4, 10], [5, 8], [5, 10]],
+    3: [[0, 10], [0, 12], [1, 10], [1, 12], [2, 10], [2, 12], [3, 9], [3, 12], [4, 10], [4, 13], [5, 10], [5, 12]],
+    4: [[0, 12], [0, 15], [1, 12], [1, 15], [2, 12], [2, 14], [3, 12], [3, 14], [4, 13], [4, 15], [5, 12], [5, 15]],
+    5: [[0, 3], [0, 5], [1, 3], [1, 5], [2, 2], [2, 5], [3, 2], [3, 5], [4, 3], [4, 5], [5, 3], [5, 5]],
+  };
+  const PENTA_KEY = { name: "A", pc: 9, relative: 0 };   // A minor; its notes are spelled like C major (KEYS[0])
+  // Shape n in A minor: its positions in ascending order, each with string, fret, MIDI pitch, note name,
+  // degree (1 ♭3 4 5 ♭7), whether it is the root, and its index in the route; plus its fret range.
+  function pentaShape(n) {
+    const route = PENTA_SHAPES[n];
+    if (!route) return null;
+    const names = new Map(scaleNames(KEYS[PENTA_KEY.relative]).map((name, d) => [(KEYS[PENTA_KEY.relative].pc + MAJOR[d]) % 12, name]));
+    const positions = route.map(([st, f], index) => {
+      const midi = OPEN_MIDI[st] + f, step = (midi - PENTA_KEY.pc + 120) % 12, d = MINOR_PENTA.indexOf(step);
+      return { st, f, midi, name: names.get(midi % 12), degree: PENTA_DEGREES[d], root: step === 0, index };
+    });
+    const frets = route.map(p => p[1]);
+    return { shape: n, key: PENTA_KEY.name, positions, from: Math.min(...frets), to: Math.max(...frets) };
+  }
+
+  const api = { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk, createStartPicker,
+    MINOR_PENTA, PENTA_DEGREES, PENTA_SHAPES, pentaShape };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.Theory = api;
 })(this);
