@@ -1561,10 +1561,10 @@
         <div class="grip" title="Drag to move"><span>dbg</span><button class="fold" title="Collapse" aria-label="Collapse">−</button></div>
         <div class="row"><span class="lbl">play</span>
           <button data-a="pause" title="Pause / play on">⏸</button><button data-a="step" title="Next tick (paused)">⏭</button></div>
-        <div class="row" title="Key and start degree of the current round"><span class="lbl">round</span>
-          <select data-f="key">${keyOpts}</select><select data-f="deg">${degOpts}</select></div>
-        <div class="row" title="Note of the walk (0–14)"><span class="lbl">walk</span>
-          <input data-f="idx" type="range" min="0" max="14" value="0"></div>
+        <div class="row" title="Key of the current round"><span class="lbl">round</span>
+          <select data-f="key">${keyOpts}</select></div>
+        <div class="row" title="Note of the walk: its degree and its position (0–14) move together"><span class="lbl">walk</span>
+          <select data-f="deg">${degOpts}</select><input data-f="idx" type="range" min="0" max="14" value="0"></div>
         <pre></pre>
       </div>`;
     document.body.appendChild(panel);
@@ -1576,34 +1576,59 @@
       if (typeof v === "string") { out.dataset.msg = v; console.log(`[dbg] › ${v}`); }
       refresh();
     };
-    // Stopped: the controls preview a walk. Running or paused: they change the current round at once.
+    // The degree select and the slider are one control: the current note of the walk, as a degree and as a position.
+    // Degree (0-based) of walk note i in a round that starts on degree `start`
+    const degreeAt = (start, i) => (start + (i < 8 ? i : 14 - i)) % 7;
+    // Position of degree d nearest to the current one (each degree is on the way up and on the way down)
+    const positionOf = (start, d, cur) => {
+      const k = (d - start + 7) % 7, options = k === 0 ? [0, 7, 14] : [k, 14 - k];
+      return options.reduce((best, o) => Math.abs(o - cur) < Math.abs(best - cur) ? o : best);
+    };
+    const current = () => { const t = dbgPaused ? cursor : lastShown; return running && t ? t : null; };
+    // Stopped: preview the selected key's walk from the tonic
     function previewWalk() {
-      say(dbg.walk(keySel.value, Number(degSel.value), fretFrom, fretTo, Number(idx.value)));
+      degSel.value = String(degreeAt(0, Number(idx.value)) + 1);
+      say(dbg.walk(keySel.value, 1, fretFrom, fretTo, Number(idx.value)));
     }
-    for (const sel of [keySel, degSel]) sel.addEventListener("change", () => {
-      if (!running) return previewWalk();
-      say(dbg.round(keySel.value, Number(degSel.value)));
+    let touched = 0;                   // the selects keep the user's choice for a moment before following again
+    keySel.addEventListener("change", () => {
+      touched = Date.now();
+      const t = current();
+      if (!t) return previewWalk();
+      say(dbg.round(keySel.value, t.round.deg + 1));   // same start degree and position, new key
     });
+    degSel.addEventListener("change", () => {
+      touched = Date.now();
+      const t = current(), start = t ? t.round.deg : 0;
+      const w = t ? Math.min(WALK - 1, Math.max(0, t.step - t.round.prep)) : Number(idx.value);
+      idx.value = positionOf(start, Number(degSel.value) - 1, w);
+      if (!t) return previewWalk();
+      say(dbg.seek(idx.value));
+    });
+    let sliding = false;
+    idx.addEventListener("pointerdown", () => { sliding = true; });
+    addEventListener("pointerup", () => { sliding = false; });
     idx.addEventListener("input", () => {
-      if (!running) return previewWalk();
+      const t = current();
+      if (!t) return previewWalk();
+      degSel.value = String(degreeAt(t.round.deg, Number(idx.value)) + 1);
       say(dbg.seek(idx.value));
     });
     // The state line is printed to the console whenever it changes, panel open or not.
-    // While running, the selects and the slider follow the current round and note.
+    // While running, the key, the degree and the slider follow the current round and note.
     let lastLine = "";
     function refresh() {
-      const st = dbg.state(), t = dbgPaused ? cursor : lastShown;
+      const st = dbg.state(), t = current();
       const line = (st.running && !st.phase ? "starting" : st.running ? `${st.phase} ${st.tick} · ${st.key}${st.paused ? " · paused" : ""}\n${st.walk}` : "stopped");
       if (line !== lastLine) { lastLine = line; console.log(`[dbg] ${line.replace(/\n/g, " · ")}`); }
       pauseBtn.textContent = st.paused ? "▶" : "⏸";
       pauseBtn.disabled = !st.running;
       stepBtn.disabled = !st.paused;
-      if (running && t) {
-        const active = document.activeElement;
-        if (active !== keySel) keySel.value = t.round.key.name;
-        if (active !== degSel) degSel.value = String(t.round.deg + 1);
-        const w = t.step - t.round.prep;
-        if (active !== idx) idx.value = w < 0 ? 0 : Math.min(WALK - 1, w);
+      if (t && !sliding && Date.now() - touched > 600) {
+        const w = Math.min(WALK - 1, Math.max(0, t.step - t.round.prep));   // prep shows the first note, wait the last
+        keySel.value = t.round.key.name;
+        idx.value = w;
+        degSel.value = String(degreeAt(t.round.deg, w) + 1);
       }
       if (!body.hidden) out.textContent = line + (out.dataset.msg ? `\n› ${out.dataset.msg}` : "");
     }

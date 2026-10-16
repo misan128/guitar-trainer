@@ -47,10 +47,10 @@ The idea: the panel is a cursor over the round. Whatever you change shows, and s
 | --- | --- | --- | --- |
 | **⏸ / ▶** | Pause on the current tick | Play on from the cursor | — |
 | **⏭** | — | Next tick, immediately, with its sound (at the end it moves on to a new round) | — |
-| **key · degree** | Swap the current round on the fly, same position | Swap it and sound the note at the same position | Draw that walk on the fretboard |
-| **walk slider** (0–14) | Jump to that walk note on the next tick | Go to that note and sound it | Move the current note along the drawn walk |
+| **round: key** | Swap the key on the fly, same start degree and position | Swap it and sound the note at the same position | Draw that key's walk from the tonic |
+| **walk: degree · slider** | Jump to that note on the next tick | Go to that note and sound it | Move along the drawn walk |
 
-While running, the selects and the slider follow the current round and note. Below them, a live line shows the phase, tick, key and degree, and the fingering.
+The degree select and the slider are one control: the current note of the walk, as a scale degree and as a position (0–14). Moving the slider updates the degree; choosing a degree moves the slider to that note, the nearest one if it appears both on the way up and on the way down. While running, key, degree and slider follow the current round and note. The round's start degree is the one the app drew; `dbg.round()` in the console can force it. Below them, a live line shows the phase, tick, key and degree, and the fingering.
 
 **Console:** the state line is printed as `[dbg] …` every time it changes (each tick, pause, stop), and so is the result of every action, even with the panel closed. The same controls are available as commands:
 
