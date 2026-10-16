@@ -289,6 +289,39 @@ select.quiet:disabled { opacity: .35; }
   background: var(--wood-2);
   box-shadow: 0 12px 32px rgba(0, 0, 0, .45);
 }
+/* Exercise row, first in the setup panel (SPEC §15.1) */
+.kp-exercise { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-bottom: .9rem; padding-bottom: .9rem; border-bottom: 1px solid var(--wire); }
+.kp-exercise button {
+  min-height: 2.5rem;
+  padding: .3rem .5rem;
+  border: 0;
+  border-radius: 10px;
+  background: #3a2d26;
+  color: var(--muted);
+  font: 600 .9rem "Instrument Sans", system-ui, sans-serif;
+  cursor: pointer;
+}
+.kp-exercise button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+/* Shape tiles: number, a small diagram of the shape and its frets */
+#shapeGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem; }
+#shapeGrid button {
+  display: grid;
+  justify-items: center;
+  gap: .2rem;
+  padding: .45rem .2rem .4rem;
+  border: 0;
+  border-radius: 10px;
+  background: #3a2d26;
+  color: var(--muted);
+  font: 600 1rem "Instrument Sans", system-ui, sans-serif;
+  cursor: pointer;
+}
+#shapeGrid button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+#shapeGrid svg { width: 100%; max-width: 3rem; height: auto; }
+#shapeGrid svg line { stroke: currentColor; stroke-opacity: .35; stroke-width: .6; }
+#shapeGrid svg circle { fill: currentColor; opacity: .75; }
+#shapeGrid svg circle.root { opacity: 1; }
+#shapeGrid small { font-size: .65rem; font-weight: 500; opacity: .8; white-space: nowrap; }
 .kp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .75rem; }
 .kp-head span:first-child { font-weight: 600; }
 #keyCount { color: var(--brass); font-size: .85rem; font-weight: 600; }
@@ -415,6 +448,8 @@ select.quiet:disabled { opacity: .35; }
 #board .pos.next .dot { fill: var(--next-fill); stroke-opacity: var(--next-ring); }
 #board .pos .lit { opacity: 0; transition: opacity var(--fade); }
 #board .pos.cur .lit { opacity: 1; }
+/* Roots (Pentatonic shapes): a thin second ring, always there; the gold layer covers it when current */
+#board .pos .ring { fill: none; stroke: var(--brass); stroke-opacity: .55; stroke-width: 1.1; }
 #board .lit circle { fill: var(--brass); }
 #board .lit text { fill: var(--wood); font-size: 9.5px; dominant-baseline: central; }
 @media (prefers-reduced-motion: reduce) { #board { --fade: 0ms !important; } }

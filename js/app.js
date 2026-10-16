@@ -7,7 +7,7 @@
   const BASE_MIDI = 48;            // start note always in octave 3 (C3–B3)
 
   // Scale theory and fretboard walks live in theory.js (tested in tests/)
-  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker } = Theory;
+  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker, PENTA_SHAPES, pentaShape } = Theory;
 
   const $ = id => document.getElementById(id);
   const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
@@ -15,6 +15,7 @@
   const langEl = $("lang"), showAllEl = $("showAll");
   const keyBtn = $("keyBtn"), keyPanel = $("keyPanel"), keyGrid = $("keyGrid");
   const keyCount = $("keyCount"), keysAllBtn = $("keysAll"), keysClearBtn = $("keysClear");
+  const walkSetup = $("walkSetup"), pentaSetup = $("pentaSetup"), shapeGrid = $("shapeGrid"), shapeKey = $("shapeKey");
   const roundKeyEl = $("roundKey");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
   const boardBtn = $("boardBtn"), boardPanel = $("boardPanel"), boardSwitch = $("boardSwitch");
@@ -52,7 +53,7 @@
     renderKeys();
     if (!guideEl.hidden) showStep();
     if (running && lastShown) render(lastShown);
-    else if (!running) phaseEl.textContent = T.idle;
+    else if (!running) showIdle();
   }
 
   // ---- Settings ----
@@ -60,6 +61,9 @@
   const DEFAULT_KEY = 0;               // C major; also what Clear goes back to
   let keys = [DEFAULT_KEY];            // selected key indices, circle-of-fifths order; never empty
   let order = "random";                // "random" | "sequential"
+  // Exercise (SPEC §15.1): BPM, ticks, eye, language and guide are shared; keys and fretboard belong to Scale walk
+  let exercise = "walk";               // "walk" | "penta"
+  let shapeNo = 1;                     // Pentatonic shape, 1–5
   // Fretboard (SPEC §13): on by default (aids start on, players turn them off); a zone spans at least ZONE_MIN frets
   const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
   const ZONE_DEFAULT = 2;              // frets 2–6
@@ -86,7 +90,7 @@
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
         keys, order, key: keys[0], showAll: showAll, lang: langEl.value,
-        board, fretFrom, fretTo, guideSeen
+        board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo
       }));
     } catch (e) {}
   }
@@ -102,6 +106,8 @@
       if (STRINGS[s.lang]) langEl.value = s.lang;
       if (typeof s.board === "boolean") board = s.board;   // older settings get the default
       guideSeen = s.guideSeen === true;
+      if (s.exercise === "penta") exercise = "penta";
+      if (PENTA_SHAPES[s.pentaShape]) shapeNo = Number(s.pentaShape);
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }
   } catch (e) {}
@@ -191,10 +197,21 @@
 
   // ---- Key panel ----
   function renderKeys() {
-    const names = keys.map(i => KEYS[i].name);
-    keyBtn.textContent = keys.length === 1 ? T.keyName(names[0])
+    const names = keys.map(i => KEYS[i].name), penta = exercise === "penta";
+    keyBtn.textContent = penta ? shapeLabel(shapeNo) : keys.length === 1 ? T.keyName(names[0])
       : keys.length === 2 ? names.join(", ") : T.keysSummary(keys.length);
-    keyBtn.setAttribute("aria-label", `${T.key}: ${keyBtn.textContent}`);
+    keyBtn.setAttribute("aria-label", `${penta ? T.shape : T.key}: ${keyBtn.textContent}`);
+    for (const b of keyPanel.querySelectorAll("[data-ex]")) b.setAttribute("aria-pressed", String(b.dataset.ex === exercise));
+    walkSetup.hidden = penta;
+    pentaSetup.hidden = !penta;
+    boardBtn.hidden = penta;             // in Pentatonic the fretboard is the exercise: always on
+    shapeKey.textContent = T.minorName(pentaShape(1).key);
+    for (const b of shapeGrid.children) {
+      const n = Number(b.dataset.shape), sh = pentaShape(n);
+      b.setAttribute("aria-pressed", String(n === shapeNo));
+      b.setAttribute("aria-label", T.shapeAria(n, sh.from, sh.to));
+      b.querySelector("small").textContent = `${sh.from}–${sh.to}`;
+    }
     for (const b of keyGrid.children) b.setAttribute("aria-pressed", String(keys.includes(Number(b.dataset.key))));
     keyCount.textContent = T.keysCount(keys.length, KEYS.length);
     keysAllBtn.disabled = keys.length === KEYS.length;
@@ -227,6 +244,42 @@
     setKeys(keys.includes(k) ? keys.filter(i => i !== k) : keys.concat(k));
   });
   keysAllBtn.addEventListener("click", () => setKeys(FIFTHS));
+  // ---- Pentatonic setup: exercise row and shape tiles (SPEC §15.1) ----
+  const shapeLabel = n => `${T.minorName(pentaShape(n).key)} · ${T.shapeName(n)}`;
+  // Each tile: the number, a small diagram of the shape (roots stronger) and its frets
+  for (const n of Object.keys(PENTA_SHAPES).map(Number)) {
+    const sh = pentaShape(n), cols = sh.to - sh.from + 1, b = document.createElement("button");
+    b.dataset.shape = n;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 36 28");
+    svg.setAttribute("aria-hidden", "true");
+    for (let st = 0; st < 6; st++) {
+      const y = 3 + (5 - st) * 4.4;
+      svg.insertAdjacentHTML("beforeend", `<line x1="0" x2="36" y1="${y}" y2="${y}"/>`);
+    }
+    for (const p of sh.positions) {
+      const x = (p.f - sh.from + .5) * 36 / cols, y = 3 + (5 - p.st) * 4.4;
+      svg.insertAdjacentHTML("beforeend", `<circle cx="${x}" cy="${y}" r="${p.root ? 2.3 : 1.7}"${p.root ? ' class="root"' : ""}/>`);
+    }
+    b.append(document.createTextNode(n), svg, document.createElement("small"));
+    shapeGrid.appendChild(b);
+  }
+  keyPanel.querySelector(".kp-exercise").addEventListener("click", e => {
+    const b = e.target.closest("[data-ex]");
+    if (!b || b.dataset.ex === exercise) return;
+    exercise = b.dataset.ex;
+    renderKeys();
+    showIdle();
+    save();
+  });
+  shapeGrid.addEventListener("click", e => {
+    const b = e.target.closest("[data-shape]");
+    if (!b) return;
+    shapeNo = Number(b.dataset.shape);
+    renderKeys();
+    showIdle();
+    save();
+  });
   keysClearBtn.addEventListener("click", () => setKeys([DEFAULT_KEY]));   // back to C major
   keyPanel.addEventListener("change", e => {
     if (e.target.name !== "order") return;
@@ -378,7 +431,27 @@
     return { walk, peak: WALK_PEAK, prep, wait, total: prep + walk.length + wait, key, keyIdx, deg, next: KEYS[session.upcoming ?? keyIdx], board };
   }
 
+  // Pentatonic shapes (SPEC §15.3): the complete shape up, then back down without repeating its top note.
+  // Always the same route. The fretboard shows the shape's frets, widened to at least 5.
+  const PENTA_MAX_FRET = 15;
+  function shapeRound(n) {
+    const sh = pentaShape(n);
+    const up = sh.positions.map(p => ({ midi: p.midi, name: p.name, st: p.st, f: p.f, root: p.root }));
+    const walk = up.concat(up.slice(0, -1).reverse());
+    let from = sh.from, to = sh.to;
+    if (to - from < ZONE_MIN - 1) {
+      if (from + ZONE_MIN - 1 <= PENTA_MAX_FRET) to = from + ZONE_MIN - 1;
+      else from = to - ZONE_MIN + 1;
+    }
+    const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
+    return { walk, peak: up.length - 1, prep, wait, total: prep + walk.length + wait, penta: true, shape: n,
+             key: { name: sh.key }, frets: [sh.from, sh.to], board: { from, to } };
+  }
+  // The round's name on the phase line: "C major", or "A minor · Shape 1"
+  const roundLabel = r => r.penta ? shapeLabel(r.shape) : T.keyName(r.key.name);
+
   function newRound() {
+    if (session.exercise === "penta") return shapeRound(session.shape);
     // The next key is drawn one round early so the wait ticks can announce it
     const keyIdx = session.upcoming ?? pickKey();
     session.upcoming = pickKey();
@@ -439,11 +512,11 @@
     const inWalk = w >= 0 && w < round.walk.length;
     noteEl.textContent = (inWalk && showAll ? round.walk[w] : round.walk[0]).name;
 
-    const k = T.keyName(round.key.name);
+    const k = roundLabel(round);
     const left = round.total - step;
     // Several keys: the key sits above the note and the wait announces the next one.
     // With the fretboard there is no note letter, so the key goes back into the phase line.
-    const multi = session.keys.length > 1, keyAbove = multi && !round.board;
+    const multi = !round.penta && session.keys.length > 1, keyAbove = multi && !round.board;
     roundKeyEl.hidden = !keyAbove;
     if (keyAbove) roundKeyEl.textContent = k;
     const pre = keyAbove ? "" : `${k} · `;
@@ -502,6 +575,7 @@
     const pos = up.map(p => {
       const g = el("g", { class: "pos", transform: `translate(${bx(round, p.f)} ${by(p.st)})` }, boardEl);
       el("circle", { class: "dot", r: 6 }, g);
+      if (p.root) el("circle", { class: "ring", r: 8.6 }, g);   // roots: a thin second ring (SPEC §15.4)
       const lit = el("g", { class: "lit" }, g);
       el("circle", { r: 9 }, lit);
       el("text", {}, lit).textContent = p.name;
@@ -515,8 +589,17 @@
   // reveal: show the path even with the eye closed (dev mode inspection)
   // Walk index → position on the route (the way down reuses the way up)
   const posOf = (round, i) => i <= round.peak ? i : 2 * round.peak - i;
+  // w = -3: idle preview, the whole route with nothing lit (Pentatonic shapes)
   function drawBoard(round, w, reveal = showAll) {
     const { path, segs, active, grad, pos } = boardParts;
+    if (w === -3) {
+      path.style.display = "";
+      pos.forEach(g => { g.style.display = ""; g.classList.remove("cur", "played", "next"); });
+      segs.forEach(sg => sg.classList.remove("played"));
+      active.style.display = "none";
+      boardEl.setAttribute("aria-label", T.boardAria(round.board.from, round.board.to));
+      return;
+    }
     // Fade from the tempo: never longer than a third of a beat, none when notes come faster than 250 ms
     const beat = 60 / Number(inputs.bpm.value), fade = beat < .25 ? 0 : Math.min(120, beat * 330);
     if (boardParts.fade !== fade) boardEl.style.setProperty("--fade", `${boardParts.fade = fade}ms`);
@@ -562,7 +645,11 @@
     for (let i = 0; i < wait; i++) add(14, false);
   }
   function drawTrack(step) {
-    if (step < 0) buildTrack(Number(inputs.prep.value), Number(inputs.wait.value));
+    if (step < 0) {
+      const n = PENTA_SHAPES[shapeNo].length;  // Pentatonic: the shape up and back down
+      if (exercise === "penta") buildTrack(Number(inputs.prep.value), Number(inputs.wait.value), 2 * n - 1, n - 1);
+      else buildTrack(Number(inputs.prep.value), Number(inputs.wait.value));
+    }
     [...trackEl.children].forEach((s, i) => s.classList.toggle("on", i === step));
   }
 
@@ -586,6 +673,22 @@
     if (document.visibilityState === "visible" && running) lockScreen();
   });
 
+  // ---- Idle view: the pick for Scale walk; the selected shape on the fretboard for Pentatonic ----
+  function showIdle() {
+    if (exercise === "penta") {
+      const r = shapeRound(shapeNo);
+      buildBoard(r);
+      drawBoard(r, -3);
+      pickEl.setAttribute("hidden", "");
+      phaseEl.textContent = `${roundLabel(r)} · ${T.frets(...r.frets)}`;
+    } else {
+      hideBoard();
+      pickEl.removeAttribute("hidden");
+      phaseEl.textContent = T.idle;
+    }
+    drawTrack(-1);
+  }
+
   // ---- Start / stop ----
   let runId = 0;
   async function start() {
@@ -600,7 +703,8 @@
     closePanel(false);
     closeBoard(false);
     session = { keys: keys.slice(), order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
-                board: board ? { from: fretFrom, to: fretTo } : null, pickStart: createStartPicker() };
+                board: board ? { from: fretFrom, to: fretTo } : null, pickStart: createStartPicker(),
+                exercise, shape: shapeNo };
     keyBtn.disabled = true;
     boardBtn.disabled = true;
     document.body.classList.add("practicing");
@@ -641,12 +745,9 @@
     boardBtn.disabled = false;
     document.body.classList.remove("practicing");
     helpBtn.disabled = false;
-    hideBoard();
     roundKeyEl.hidden = true;
     noteEl.hidden = true;
-    pickEl.removeAttribute("hidden");
-    phaseEl.textContent = T.idle;
-    drawTrack(-1);
+    showIdle();
     toggleBtn.textContent = T.start;
     toggleBtn.classList.remove("running");
   }
@@ -675,10 +776,10 @@
   // The language step comes first so the rest is read in the chosen language; it is skipped when reopened with ?
   const GUIDE = [
     { target: () => langEl, key: "guideLangPick", langs: true },
-    { target: () => document.querySelector(".display"), key: "guideRound" },
+    { target: () => mainEl.classList.contains("with-board") ? boardEl : document.querySelector(".display"), key: "guideRound" },
     { target: () => keyBtn, key: "guideKeys" },
     { target: () => showAllEl, key: "guideEye" },
-    { target: () => boardBtn, key: "guideBoard" },
+    { target: () => boardBtn, key: "guideBoard", skip: () => boardBtn.hidden },
     { target: () => helpBtn, key: "guideHelp" },
   ];
   let steps = GUIDE, guideStep = 0, guideFromHelp = false;
@@ -725,7 +826,7 @@
     closeBoard(false);
     guideStep = 0;
     guideFromHelp = fromHelp;
-    steps = fromHelp ? GUIDE.filter(s => !s.langs) : GUIDE;
+    steps = GUIDE.filter(s => !(fromHelp && s.langs) && !(s.skip && s.skip()));
     guideEl.hidden = false;
     showStep();
     guideNext.focus();
@@ -746,8 +847,7 @@
   window.addEventListener("resize", placeGuide);
 
   renderBoardPanel();
-  applyLang();
-  drawTrack(-1);
+  applyLang();                         // also draws the idle view
   // ---- Dev mode bridge: only with ?debug in the URL (js/debug.js, docs/TESTING.md) ----
   // Exposes just what the dev tool needs, then loads it. Without ?debug nothing is exposed or loaded.
   let dbgPaused = false;               // set by the dev tool; stop() clears it
@@ -763,7 +863,7 @@
       get nextTime() { return nextTime; }, set nextTime(v) { nextTime = v; },
       get lastShown() { return lastShown; },
       get queue() { return queue; },
-      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, lang: langEl.value }; },
+      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, lang: langEl.value, exercise, shape: shapeNo }; },
       stopScheduler() { clearTimeout(timerId); cancelAnimationFrame(rafId); },
       startScheduler() { scheduler(); rafId = requestAnimationFrame(draw); },
       render, playTick, buildRound, newRound, buildBoard, drawBoard,

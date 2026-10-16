@@ -88,6 +88,7 @@
       return `walk ${n}`;
     },
     round(name, deg) {
+      if (A.round && A.round.penta) return "Pentatonic shapes: the round is the selected shape.";
       if (!A.running) return "Start first (stopped: dbg.walk draws without playing).";
       const k = keyIndex(name), d = degree(deg);
       const r = A.buildRound(k, d);
@@ -113,7 +114,7 @@
         running: A.running, paused: A.paused,
         phase: t ? phaseOf(t.round, t.step) : null,
         tick: t ? `${t.step + 1}/${t.round.total}` : null,
-        key: t ? `${t.round.key.name} major, degree ${t.round.deg + 1}` : null,
+        key: t ? (t.round.penta ? `${t.round.key.name} minor, shape ${t.round.shape}` : `${t.round.key.name} major, degree ${t.round.deg + 1}`) : null,
         walk: t ? fingering(t.round) : null,
         settings: { bpm: Number(inputs.bpm.value), prep: Number(inputs.prep.value), wait: Number(inputs.wait.value),
           keys: s.keys.map(k => KEYS[k].name), order: s.order, board: s.board, zone: `${s.fretFrom}–${s.fretTo}`, eye: s.showAll, lang: s.lang },
@@ -185,6 +186,8 @@
     return options.reduce((best, o) => Math.abs(o - cur) < Math.abs(best - cur) ? o : best);
   };
   const current = () => { const t = A.paused ? cursor : A.lastShown; return A.running && t ? t : null; };
+  // Pentatonic shapes: key and degree do not apply (the round is the selected shape); the slider steps through it
+  const pentaNow = () => { const t = current(); return t ? !!t.round.penta : A.settings.exercise === "penta"; };
   // Stopped: preview the selected key's walk from the tonic
   function previewWalk() {
     degSel.value = String(degreeAt(0, Number(idx.value)) + 1);
@@ -210,8 +213,8 @@
   addEventListener("pointerup", () => { sliding = false; });
   idx.addEventListener("input", () => {
     const t = current();
-    if (!t) return previewWalk();
-    degSel.value = String(degreeAt(t.round.deg, Number(idx.value)) + 1);
+    if (!t) return pentaNow() ? undefined : previewWalk();
+    if (!t.round.penta) degSel.value = String(degreeAt(t.round.deg, Number(idx.value)) + 1);
     say(dbg.seek(idx.value));
   });
   // The state line is printed to the console whenever it changes, panel open or not.
@@ -224,13 +227,18 @@
     pauseBtn.textContent = st.paused ? "▶" : "⏸";
     pauseBtn.disabled = !st.running;
     stepBtn.disabled = !st.paused;
+    const penta = pentaNow();
+    keySel.disabled = degSel.disabled = penta;
+    idx.disabled = penta && !t;           // stopped in Pentatonic: the idle preview is static
     if (!t) idx.max = 14;                // stopped: the Scale walk preview
     if (t && !sliding && Date.now() - touched > 600) {
       const w = Math.min(lastNote(t.round), Math.max(0, t.step - t.round.prep));   // prep shows the first note, wait the last
       idx.max = lastNote(t.round);
-      keySel.value = t.round.key.name;
       idx.value = w;
-      degSel.value = String(degreeAt(t.round.deg, w) + 1);
+      if (!t.round.penta) {
+        keySel.value = t.round.key.name;
+        degSel.value = String(degreeAt(t.round.deg, w) + 1);
+      }
     }
     if (!body.hidden) out.textContent = line + (out.dataset.msg ? `\n› ${out.dataset.msg}` : "");
   }

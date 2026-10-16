@@ -49,17 +49,27 @@
   <button id="boardDone" data-i18n="boardDone"></button>
 </div>
 <div id="keyPanel" role="dialog" data-i18n-aria="keysTitle" hidden>
-  <div class="kp-head"><span data-i18n="keysTitle"></span><span id="keyCount"></span></div>
-  <div id="keyGrid"></div>
-  <div class="kp-actions">
-    <button id="keysAll" data-i18n="keysAll"></button>
-    <button id="keysClear" data-i18n="keysClear"></button>
+  <div class="kp-exercise" role="group" data-i18n-aria="exercise">
+    <button data-ex="walk" data-i18n="exWalk"></button>
+    <button data-ex="penta" data-i18n="exPenta"></button>
   </div>
-  <fieldset class="kp-order">
-    <legend data-i18n="order"></legend>
-    <label><input type="radio" name="order" value="random"><span data-i18n="orderRandom"></span></label>
-    <label><input type="radio" name="order" value="sequential"><span data-i18n="orderSequential"></span></label>
-  </fieldset>
+  <div id="walkSetup">
+    <div class="kp-head"><span data-i18n="keysTitle"></span><span id="keyCount"></span></div>
+    <div id="keyGrid"></div>
+    <div class="kp-actions">
+      <button id="keysAll" data-i18n="keysAll"></button>
+      <button id="keysClear" data-i18n="keysClear"></button>
+    </div>
+    <fieldset class="kp-order">
+      <legend data-i18n="order"></legend>
+      <label><input type="radio" name="order" value="random"><span data-i18n="orderRandom"></span></label>
+      <label><input type="radio" name="order" value="sequential"><span data-i18n="orderSequential"></span></label>
+    </fieldset>
+  </div>
+  <div id="pentaSetup" hidden>
+    <div class="kp-head"><span data-i18n="shape"></span><span id="shapeKey"></span></div>
+    <div id="shapeGrid"></div>
+  </div>
 </div>
 <div class="corner right">
   <button id="helpBtn" data-i18n-aria="guide"><span aria-hidden="true">?</span></button>
