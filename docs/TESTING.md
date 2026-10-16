@@ -17,7 +17,7 @@ Node 18 or later, no dependencies, no `npm install`. Node finds every `*.test.js
 | `tests/theory.test.js` | Every key × start note × fret zone the panel allows (5 frets or more) has a fretboard walk where each fret sounds the pitch played, stays inside the zone, never moves to a lower string while ascending, follows the scale steps, and spans at most 4 frets. Also: the same input always gives the same fingering, octave 3 is used in central zones, 4-fret zones really fail (why the minimum is 5), two known fingerings, and scale spelling (F♯, D♭…). |
 | `tests/strings.test.js` | Languages are listed EN, EU, ES, and every language has the same text keys, of the same kind (text or function), none empty. |
 
-They test `theory.js` and `strings.js` directly. `index.html` (UI, audio, drawing) is covered by the manual pass below.
+They test `theory.js` and `strings.js` directly. `app.js` (UI, audio, drawing) is covered by the manual pass below.
 
 **Adding a test:** create `tests/<name>.test.js` using `node:test` and `node:assert/strict`, as the existing ones do. `theory.js` loads with `require("../theory.js")`; `strings.js` needs `global.window = {}` before `require`.
 
