@@ -8,7 +8,7 @@ Guitar scale trainer: metronome-driven scale walks from a random note, in any ma
 
 ## How a round works
 
-1. **Announce** — a random note from the round's key is shown and played once as a reference. It is never the same as the previous round's.
+1. **Announce** — a random note from the round's key is shown and played once as a reference. Each key goes through all seven start notes before repeating one, and two rounds in a row never start on the same note.
 2. **Prep** — a few metronome clicks to get ready.
 3. **Walk** — 15 ticks, one note per tick: 8 notes up to the octave and 7 back down. Each note is played with a plucked-string sound.
 4. **Wait** — a few more clicks, then the next round starts.

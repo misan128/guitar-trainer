@@ -5,7 +5,7 @@
   const BASE_MIDI = 48;            // start note always in octave 3 (C3–B3)
 
   // Scale theory and fretboard walks live in theory.js (tested in tests/)
-  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk } = Theory;
+  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker } = Theory;
 
   const $ = id => document.getElementById(id);
   const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
@@ -334,7 +334,6 @@
   let nextTime = 0, step = 0;
   let round = null;
   let session = null;                  // keys and order are fixed for the whole session
-  let lastDeg = null;
   const queue = [];
 
   // Key sequence. Random: shuffle-bag, never the same key twice in a row.
@@ -382,15 +381,12 @@
     const keyIdx = session.upcoming ?? pickKey();
     session.upcoming = pickKey();
     const key = KEYS[keyIdx];
-    // Fretboard: only degrees with a walk inside the zone (all of them with ≥5 frets).
-    // If none fits, the round is played without the fretboard rather than with a wrong fingering.
-    const zone = session.board;
-    const fits = zone ? [0, 1, 2, 3, 4, 5, 6].filter(d => d !== lastDeg && boardWalk(key.pc, d, zone.from, zone.to)) : [];
-    let deg;
-    if (fits.length) deg = fits[Math.floor(Math.random() * fits.length)];
-    else do { deg = Math.floor(Math.random() * 7); } while (deg === lastDeg);
-    lastDeg = deg;
-    return buildRound(keyIdx, deg);
+    // Start note: each key goes through all its start notes before repeating, and two rounds in a row
+    // never start on the same note (theory.js). With the fretboard, only degrees with a walk inside the
+    // zone (all of them with ≥5 frets); if none fits, the round is played without the fretboard.
+    const all = [0, 1, 2, 3, 4, 5, 6], zone = session.board;
+    const fits = zone ? all.filter(d => boardWalk(key.pc, d, zone.from, zone.to)) : all;
+    return buildRound(keyIdx, session.pickStart(key.pc, fits.length ? fits : all));
   }
 
   // The sound of tick `st` of round `r` at `time`: reference note on announce, then clicks and walk notes
@@ -601,7 +597,7 @@
     closePanel(false);
     closeBoard(false);
     session = { keys: keys.slice(), order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
-                board: board ? { from: fretFrom, to: fretTo } : null };
+                board: board ? { from: fretFrom, to: fretTo } : null, pickStart: createStartPicker() };
     keyBtn.disabled = true;
     boardBtn.disabled = true;
     document.body.classList.add("practicing");
@@ -618,7 +614,6 @@
     master = ctx.createGain();
     master.connect(ctx.destination);
     step = 0;
-    lastDeg = null;
     queue.length = 0;
     shownRound = null;
     lastShown = null;
@@ -834,7 +829,6 @@
       round(name, deg) {
         if (!running) return "Start first (stopped: dbg.walk draws without playing).";
         const k = keyIndex(name), d = degree(deg);
-        lastDeg = d;
         const r = buildRound(k, d);
         if (dbgPaused) showTick(r, Math.min(cursor.step, r.total - 1));
         else round = r;                            // the next ticks use it, same position

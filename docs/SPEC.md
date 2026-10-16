@@ -19,7 +19,7 @@ A small tool to practice guitar scales **now**, while a much larger project is d
 This section is for understanding the code and checking that nothing breaks.
 
 **Round:**
-1. **Announce:** a random note from the round's key (see §12), different from the previous round's. It is shown on screen and played once as a reference.
+1. **Announce:** a random note from the round's key (see §12), shown on screen and played once as a reference. The start note is a shuffle-bag per key: each key goes through its seven start degrees in random order, all before any repeats, and a new pass never begins with the last one of the previous pass. Two rounds in a row never start on the same note, even in different keys, whenever another choice exists. With several keys a degree waits at most 15 rounds of its key. (`createStartPicker` in `js/theory.js`, tested.)
 2. **Prep:** *n* normal clicks (1–16, default 4).
 3. **Walk:** 15 ticks, one note per tick: 8 notes up to the octave and 7 back down. Each tick plays the note (Karplus-Strong) with a soft click. The first walk tick has an accented (soft) click, and each note is muted when the next one arrives.
 4. **Wait:** *m* normal clicks (0–16, default 4). Then a new round starts.
@@ -214,7 +214,7 @@ Built in phases. **Phase 1 (MVP)** is what this section describes. Later phases 
 ### 13.3 Building the walk
 
 - For each round, with the round's key (multi-key practice from §12 works unchanged; the zone stays the same across keys):
-  1. **Start note:** random degree as today (never the same twice in a row), but only among degrees with a valid walk in the zone. With ≥5 frets every degree has one.
+  1. **Start note:** chosen as in §3, but only among degrees with a valid walk in the zone. With ≥5 frets every degree has one.
   2. **Octave:** what you hear must match the marked frets, so the zone decides the octave. Octave 3 is used when the walk fits there (always for zones between 3–7 and 8–12); otherwise the octave whose start is closest to octave 3. This is the one documented change to "the start note always plays in octave 3", and only with the fretboard on.
   3. **Fingering:** among all string-monotone assignments inside the zone, the first by these rules, in order: smallest hand span (highest minus lowest fret), least total fret movement between consecutive notes, fewest string changes, start on the lowest string. The result is deterministic: the same key, start note and zone always give the same walk.
 - Every walk is up and down one octave, as today.

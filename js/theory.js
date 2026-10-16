@@ -74,7 +74,37 @@
     return found;
   }
 
-  const api = { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk };
+  // ---- Start notes (SPEC §3) ----
+  // Each key goes through its start degrees in random order, all of them before any repeats, and the
+  // first of a new pass is never the last one of the previous pass. Two rounds in a row never start on
+  // the same note, even in different keys, whenever another choice exists.
+  // next(keyPc, allowed) returns a degree (0–6) from `allowed` (e.g. those that fit a fretboard zone).
+  function createStartPicker(rand = Math.random) {
+    const bags = new Map(), lastOf = new Map();
+    let lastPc = null;
+    const shuffle = a => {
+      for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+      return a;
+    };
+    return function next(keyPc, allowed = [0, 1, 2, 3, 4, 5, 6]) {
+      const pcOf = d => (keyPc + MAJOR[d]) % 12;
+      const ok = d => d !== lastOf.get(keyPc) && pcOf(d) !== lastPc;
+      let bag = (bags.get(keyPc) || []).filter(d => allowed.includes(d));
+      if (!bag.length) bag = shuffle(allowed.slice());
+      // pop() takes from the end; if what is left of this pass cannot go now, the next pass starts
+      // underneath it, so the leftovers still come first
+      if (!ok(bag[bag.length - 1]) && !bag.some(ok)) bag = shuffle(allowed.filter(d => !bag.includes(d))).concat(bag);
+      const j = bag.findLastIndex(ok);   // the valid one closest to the top keeps the order
+      if (j >= 0) [bag[j], bag[bag.length - 1]] = [bag[bag.length - 1], bag[j]];
+      const d = bag.pop();
+      bags.set(keyPc, bag);
+      lastOf.set(keyPc, d);
+      lastPc = pcOf(d);
+      return d;
+    };
+  }
+
+  const api = { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk, createStartPicker };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.Theory = api;
 })(this);

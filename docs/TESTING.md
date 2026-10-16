@@ -14,7 +14,7 @@ Node 18 or later, no dependencies, no `npm install`. Node finds every `*.test.js
 
 | File | What it checks |
 | --- | --- |
-| `tests/theory.test.js` | Every key × start note × fret zone the panel allows (5 frets or more) has a fretboard walk where each fret sounds the pitch played, stays inside the zone, never moves to a lower string while ascending, follows the scale steps, and spans at most 4 frets. Also: the same input always gives the same fingering, octave 3 is used in central zones, 4-fret zones really fail (why the minimum is 5), two known fingerings, and scale spelling (F♯, D♭…). |
+| `tests/theory.test.js` | Start notes: one key covers all seven in every pass of 7 rounds; with 2–12 keys, no start note twice in a row, no repeat within a key and no degree waiting more than 15 rounds of its key. Fretboard: every key × start note × fret zone the panel allows (5 frets or more) has a fretboard walk where each fret sounds the pitch played, stays inside the zone, never moves to a lower string while ascending, follows the scale steps, and spans at most 4 frets. Also: the same input always gives the same fingering, octave 3 is used in central zones, 4-fret zones really fail (why the minimum is 5), two known fingerings, and scale spelling (F♯, D♭…). |
 | `tests/strings.test.js` | Languages are listed EN, EU, ES, and every language has the same text keys, of the same kind (text or function), none empty. |
 
 They test `js/theory.js` and `js/strings.js` directly. `js/app.js` (UI, audio, drawing) is covered by the manual pass below.

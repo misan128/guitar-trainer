@@ -1,7 +1,7 @@
 // Fretboard walks (SPEC §13.3, acceptance criterion 11). Run: node --test tests/
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, boardWalk } = require("../js/theory.js");
+const { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, boardWalk, createStartPicker } = require("../js/theory.js");
 
 const ZONE_MIN = 5, FIRST_MAX = 15, LAST_MAX = 19;   // same limits as the fretboard panel
 const zones = [];
@@ -58,4 +58,36 @@ test("scale spelling follows the key signature", () => {
   assert.equal(spell("F♯"), "F♯ G♯ A♯ B C♯ D♯ E♯");
   assert.equal(spell("D♭"), "D♭ E♭ F G♭ A♭ B♭ C");
   assert.equal(spell("F"), "F G A B♭ C D E");
+});
+
+// Start notes (SPEC §3). A seeded random source keeps these tests repeatable.
+const seeded = (seed = 1) => () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+
+test("one key: every pass of 7 rounds starts on each degree once", () => {
+  const pick = createStartPicker(seeded(7));
+  const seq = Array.from({ length: 7 * 500 }, () => pick(0));
+  for (let i = 0; i < seq.length; i += 7) assert.equal(new Set(seq.slice(i, i + 7)).size, 7, `pass at round ${i}`);
+});
+
+test("several keys: no start note twice in a row, no repeat within a key, no long droughts", () => {
+  for (const n of [2, 3, 5, 12]) {
+    const rand = seeded(n), pick = createStartPicker(rand), keys = KEYS.slice(0, n), per = new Map();
+    let lastPc = null;
+    for (let i = 0; i < 5000; i++) {
+      const key = keys[Math.floor(rand() * n)], d = pick(key.pc), pc = (key.pc + MAJOR[d]) % 12;
+      assert.notEqual(pc, lastPc, `${n} keys, round ${i}: same start note as the previous round`);
+      lastPc = pc;
+      const s = per.get(key.pc) || [];
+      if (s.length) assert.notEqual(d, s[s.length - 1], `${n} keys: ${key.name} repeats its start degree`);
+      s.push(d);
+      per.set(key.pc, s);
+    }
+    for (const [pc, s] of per) for (let i = 0; i + 15 <= s.length; i++)
+      assert.equal(new Set(s.slice(i, i + 15)).size, 7, `${n} keys: a degree of key ${pc} waited more than 15 of its rounds`);
+  }
+});
+
+test("start notes stay inside the allowed degrees", () => {
+  const pick = createStartPicker(seeded(3)), allowed = [0, 2, 4];
+  for (let i = 0; i < 300; i++) assert.ok(allowed.includes(pick(5, allowed)));
 });
