@@ -37,7 +37,7 @@ To start clean, as a first-time user: DevTools → *Application* → *Storage* �
 
 ## Dev mode
 
-Add `?debug` to the URL: `http://localhost:8000/?debug`, or with VS Code Live Preview `…/index.html?vscode-livepreview=true&debug`. Without `?debug` none of this exists, so users never see it.
+Add `?debug` to the URL: `http://localhost:8000/?debug`, or with VS Code Live Preview `…/index.html?vscode-livepreview=true&debug`. Without `?debug` none of this exists, so users never see it: the tool is `js/debug.js`, and `js/app.js` only loads it, and exposes the small bridge it uses, with `?debug`.
 
 The idea: the panel is a cursor over the round. Whatever you change shows, and sounds, at once; from there you can pause, step, or play on.
 
