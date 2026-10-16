@@ -220,9 +220,15 @@ Built in phases. **Phase 1 (MVP)** is what this section describes. Later phases 
 - Six horizontal strings, high e at the top, labeled e B G D A E; only the zone's frets; fret numbers under each fret; the nut when the zone starts at 0.
 - The fretboard **replaces the big note letter** while it shows: the gold dot already names the note. The key goes into the phase line ("C major · Ascending"), also with several keys.
 - **Eye open:** the walk's positions joined by a faint brass line, and the **current position in gold** with its note name. During prep and wait the current position is the start note. Other scale notes in the zone are not drawn: the path is what gets memorized.
-- With the eye open, the **next move** is hinted, to build muscle memory rather than to be read: the next position stands out (larger, brighter, full brass ring, no name), the segment from the current note to it is drawn in strong brass with a small arrow halfway pointing at it, and the rest of the path is faded to a quiet map. During prep it shows the first step; there is none during the wait.
+- With the eye open, the feedback is built for focus at any tempo, with three levels:
+  - **Current note:** the position lights up in solid gold with its name, always the same size.
+  - **Next move:** the next position is a touch lighter, with a slightly stronger ring, and only the segment from the current note to it gets a faint `linearGradient` in the direction of travel, brighter at the current note and fading towards the next. No extra circle, arrow or pulse; the next note must be distinguishable without drawing attention. During prep it shows the first step; there is none during the wait. It works going up and down, and across strings.
+  - **Rest of the route:** a quiet map in muted brass; positions and segments already played (behind the current one in the current direction) are dimmer than the upcoming ones.
 - **Eye closed:** only the start position, in gold, for the whole round; the rest has to be found by the player. The big note still shows the start note, as today.
-- The gold dot moves to the next position on each tick, with a short transition (disabled with reduced motion).
+- **Nothing moves:** every position has its own fixed dot, and the current one lights up in place. The geometry is built once per round; each beat only toggles classes and moves the gradient's end points.
+- Changes fade in opacity over up to 120 ms, never more than a third of a beat, and not at all when notes come faster than 250 ms (or with reduced motion), so the picture never lags behind the sound.
+- The tuning values (segment and dot opacities, next-position fill and ring, gradient strength, fade) are CSS variables on `#board`.
+- While practicing, the secondary controls (BPM, ticks, round bars, the top corners) step back to lower opacity, and come back on hover or focus; Stop stays as it is.
 
 ### 13.5 Texts
 

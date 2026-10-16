@@ -87,7 +87,8 @@ Do it on the phone after changes to the UI, audio or service worker, and before 
 
 **Fretboard**
 - [ ] On by default for a new user, zone 2–6.
-- [ ] Eye open: the path, the gold current note, the next note highlighted with the arrow; the arrow turns at the top note.
+- [ ] Eye open: the path, the gold current note lit in place (nothing slides), a faint gradient on the segment to the next note that turns at the top note; played positions dimmer than upcoming ones.
+- [ ] At 240–300 BPM the fretboard feels steady and never lags behind the sound.
 - [ ] Eye closed: only the start position.
 - [ ] What you hear matches the marked fret (play along on the guitar).
 - [ ] Fretboard off: the big note letter is back and everything looks as before.
