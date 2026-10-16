@@ -1,4 +1,4 @@
-// Fretboard walks (SPEC §13.3, acceptance criterion 11). Run: node --test tests/
+// Fretboard walks (SPEC §13.2, acceptance criterion 11). Run: node --test tests/
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, boardWalk, createStartPicker } = require("../js/theory.js");
@@ -32,7 +32,7 @@ test("the same key, start note and zone always give the same fingering", () => {
 });
 
 test("octave 3 is used whenever the walk fits there", () => {
-  // Central zones always fit octave 3 (SPEC §13.3)
+  // Central zones always fit octave 3 (SPEC §13.2)
   for (let a = 3; a <= 8; a++) for (const key of KEYS) for (let deg = 0; deg < 7; deg++) {
     const start = boardWalk(key.pc, deg, a, a + 4).pitches[0];
     assert.ok(start >= 48 && start < 60, `${key.name} degree ${deg}, frets ${a}-${a + 4}: start ${start} not in octave 3`);

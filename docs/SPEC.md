@@ -4,13 +4,13 @@
 
 A small tool to practice guitar scales **now**, while a much larger project is developed separately. This repository is independent of that project. Nothing from it should be anticipated here.
 
-**Scope is closed.** The tool is finished at §14: no new features. Only fixes, polish and tests from here on.
+**Scope:** the tool is feature-complete for its exercise. It keeps changing only as using it shows a need: fixes, refinements and small additions that serve the same exercise, each one recorded here before or as it is built. Anything that changes the exercise itself (other scales, other kinds of practice) belongs to the larger project (§11).
 
 **Guiding principle:** get it working and in use as soon as possible. When in doubt, pick the simplest option. If something is not decided in this document, **ask the user before making it up** (see §9).
 
 ## 2. Starting point
 
-- The app started as a single working HTML file (v1–v5, all in the `main` history). This document describes what it is now.
+- This document describes the app **as it is now**. Why some rules are the way they are, and how they got there, is in Appendix A.
 - §3 is the core behavior; §5, §6 and §12–§14 build on it and say explicitly where they change it.
 - No migration to frameworks, bundlers or TypeScript. It stays HTML + CSS + JS with no build step.
 
@@ -30,9 +30,9 @@ This section is for understanding the code and checking that nothing breaks.
 - BPM controls, built for thumbs: the slider has a 48px touch area around a 7px bar (gold progress) and a 27px thumb; tapping anywhere on it jumps there, then it drags (handled in JS, since iOS only drags the thumb natively), and it never scrolls the page. On `−`/`+` (all steppers), a press steps once and holding repeats until release, with mouse or touch; the click a press leaves behind is ignored so a tap never counts twice. Slider, number and buttons stay in sync, also while running.
 - Ticks before and after the walk.
 - Keys: one or more of the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped. The selector sits in the top-left corner in brass (see §12).
-- "Show every note of the walk": off, only the start note is shown; on, each note's name is shown on its tick. **On by default** (same reasoning as the fretboard, §13.2); a saved choice is kept. It is an unlabeled eye toggle to the right of the key selector, on the same line (closed and muted = off; open on a brass-tinted tile = on), usable while running.
+- "Show every note of the walk": off, only the start note is shown; on, each note's name is shown on its tick. **On by default** (same reasoning as the fretboard, §13.1); a saved choice is kept. It is an unlabeled eye toggle to the right of the key selector, on the same line (closed and muted = off; open on a brass-tinted tile = on), usable while running.
 - Settings are saved in `localStorage` under the key `scaleWalkLight`. **Keep that key** so the user's settings are not lost.
-- With a single key selected, everything in this section behaves exactly as before §12.
+- With a single key selected, no multi-key element shows (§12).
 
 **Screen:**
 - While idle, an animated SVG pick is shown. On start it disappears and the note appears centered, in brass. On stop the pick comes back.
@@ -40,7 +40,7 @@ This section is for understanding the code and checking that nothing breaks.
 - A phase line shows the key, the current step (prep, ascending, descending or wait) and the countdown.
 
 **Audio:**
-- With the fretboard off, the start note always plays in octave 3. With it on, the zone decides the octave (§13.3).
+- With the fretboard off, the start note always plays in octave 3. With it on, the zone decides the octave (§13.2).
 - The scheduler uses lookahead over `AudioContext.currentTime`, and the UI syncs with `requestAnimationFrame`, subtracting `outputLatency`.
 
 **Shortcuts:** `Space` starts or stops; `↑`/`↓` add or subtract 1 BPM; with `Shift`, 5.
@@ -58,6 +58,7 @@ sw.js
 manifest.webmanifest
 css/styles.css
 js/app.js
+js/debug.js
 js/strings.js
 js/theory.js
 icons/
@@ -74,11 +75,11 @@ LICENSE
 - **`.gitignore`:** system files, editors, `node_modules/`, logs, `*.zip`, AI agent directories and the loose versions folder (`.tmp/`).
 - **`LICENSE`:** MIT, held by Michael Sandoval.
 - **`README.md`:** in English. Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
-- **`index.html`:** markup only. **`css/styles.css`:** all the styles. **`js/app.js`:** the app (UI, audio, scheduler, fretboard drawing, panels, guide and dev mode), one plain script with no modules, so `index.html` still opens straight from disk.
-- **`js/theory.js`:** scale theory and fretboard walks (§13.3), with no DOM, so the tests can load it. In the browser it defines `Theory`; in Node it is a CommonJS module.
-- **`tests/`:** run with `node --test` from the repo root (Node 18+, no dependencies). They check every fretboard walk against acceptance criterion 11, known fingerings, scale spelling, and that every language has the same texts.
+- **`index.html`:** markup only. **`css/styles.css`:** all the styles. **`js/app.js`:** the app (UI, audio, scheduler, fretboard drawing, panels and guide), one plain script with no modules, so `index.html` still opens straight from disk.
+- **`js/theory.js`:** scale theory, start-note selection (§3) and fretboard walks (§13.2), with no DOM, so the tests can load it. In the browser it defines `Theory`; in Node it is a CommonJS module.
+- **`tests/`:** run with `node --test` from the repo root (Node 18+, no dependencies). They check start-note selection (§3), every fretboard walk against acceptance criterion 11, known fingerings, scale spelling, and that every language has the same texts.
 - **`docs/TESTING.md`:** how to run the tests, run the app locally, the dev mode, and the manual checklist for the phone.
-- **Dev mode:** `?debug` in the URL adds a small **dbg** panel and a `dbg` object in the console: a cursor over the round to pause, step, seek along the walk and swap the round's key and degree, each applied and sounded at once. It is a development tool, not a feature: without `?debug` it does not exist. Its texts are English only and stay out of `strings.js`, the one exception to §5.
+- **Dev mode:** `?debug` in the URL adds a small **dbg** panel and a `dbg` object in the console: a cursor over the round to pause, step, seek along the walk and swap the round's key and degree, each applied and sounded at once. It lives in **`js/debug.js`**, which `js/app.js` only loads with `?debug`, after exposing a small bridge (`ScaleTrainerDev`: getters and setters for the playback state, plus the few functions the tool calls). The tool touches the app only through that bridge. Without `?debug` neither the bridge nor the file exists. It is a development tool, not a feature: its texts are English only and stay out of `strings.js`, the one exception to §5.
 - **`docs/SPEC.md`:** this document. Describes state and decisions, not one-off steps.
 - **Repo description** (GitHub "About" field, set by the user): *Guitar scale trainer: metronome-driven scale walks from a random note, in any major key. Static web app, no dependencies.*
 
@@ -87,7 +88,7 @@ LICENSE
 - **Code in English:** comments, identifiers and commit messages.
 - **UI texts centralized in `strings.js`:** one object per language (`en`, `es`, `eu`) with the same keys. Covers everything visible or read by screen readers: labels, buttons, phases, shortcut hint, `aria-label` and `<title>`. Note and key names (C, D♭, F♯…) are not translatable text.
 - Loaded with `<script>` before the app code. No build, no `fetch`.
-- **Language selector:** small and subtle in the top-right corner, showing the language code (EN / ES / EU). Saved in `localStorage` inside `scaleWalkLight` (new `lang` field), without breaking previously saved settings.
+- **Language selector:** small and subtle in the top-right corner, showing the language code (EN / ES / EU). Saved in `localStorage` inside `scaleWalkLight` (field `lang`), without breaking previously saved settings.
 - Adding a language = adding an object to `strings.js` with the same keys, without touching the rest of the code.
 - **Default language** when nothing is saved: the browser's (`es*` → Spanish, `eu*` → Basque; anything else → English).
 - The language **can be changed while practice is running** and applies immediately.
@@ -114,7 +115,7 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 - Service worker registration.
 
 ### 6.4 Service worker
-- Precaches `index.html`, `css/styles.css`, everything in `js/`, the manifest, the icons and the fonts.
+- Precaches `index.html`, `css/styles.css`, the scripts in `js/` (not `debug.js`, which only loads with `?debug`), the manifest, the icons and the fonts.
 - Fonts are self-hosted in `fonts/` (latin subsets, OFL); the app makes no third-party requests.
 - The cache name is versioned (`scale-trainer-v1`, etc.). Old caches are deleted on activate. **Every published change bumps the version.**
 - Strategy for app files (`index.html`, `css/`, `js/`, …): network first, falling back to cache, so updates arrive without reinstalling.
@@ -130,9 +131,9 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 - URL: `https://misan128.github.io/scale-trainer/`.
 - No GitHub Actions, no build step.
 
-## 8. Work order
+## 8. Status
 
-Everything in §5–§7 and §12–§14 is built. What is left: fixes found while using it on the phone, small UX polish, and tests (§4.2).
+Everything in this document is built and published. Changes come from using it (§1): each one is specified here, tested where it is logic (§4.2), and released when the user notices it.
 
 ## 9. Pending confirmation from the user
 
@@ -148,20 +149,21 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 6. While practice is running, the screen does not turn off.
 7. After publishing a change and bumping the cache version, the installed app picks it up when reopened.
 8. Settings saved by any earlier version are preserved (same `scaleWalkLight` key; missing fields get their defaults).
-9. With one key selected, practice looks and sounds as before §12; with several, every point of §12 holds.
-10. With the fretboard off, practice looks and sounds exactly as without §13.
+9. With one key selected, no multi-key element shows; with several, every point of §12 holds.
+10. With the fretboard off, the big note letter shows, nothing from §13 is drawn, and the start note plays in octave 3.
 11. With the fretboard on, every walk in every zone of at least 5 frets is playable: each marked fret sounds the pitch played, stays inside the zone, never moves to a lower string while ascending, and the same key, start note and zone always give the same fingering.
 12. The first-use guide shows once (language step first), can be reopened with **?**, and is never shown while practice is running.
+13. Start notes follow §3: every pass of a key covers its seven start degrees, and two rounds in a row never start on the same note.
 
 ## 11. Out of scope
 
-Any new practice feature (scope is closed, §1), other scales or modes, tuner, accounts, analytics, frameworks, build, and anything from the larger project.
+Anything that changes the exercise itself (§1): other scales or modes, tuner, accounts, analytics, frameworks, build, and anything from the larger project.
 
 ## 12. Multi-key practice
 
 Asked for by the user's guitar teacher: practice switching between keys, not just walking within one.
 
-**Selection panel** (replaces the native key `<select>`):
+**Selection panel:**
 - The brass button in the top-left corner opens a dark panel; it follows the app's look, not the browser's.
 - 12 toggle tiles in a 3×4 grid, circle-of-fifths order (C G D / A E B / F♯ D♭ A♭ / E♭ B♭ F). Selected tiles are brass with a check mark. A counter shows "n of 12".
 - Every tap applies at once; there is no Apply button.
@@ -169,7 +171,7 @@ Asked for by the user's guitar teacher: practice switching between keys, not jus
 - **At least one key is always selected:** tapping the only selected key does nothing, and **Clear** goes back to C major (disabled when that is already the selection). A saved empty selection falls back to C.
 - **Round order:** *Random* (default) or *In order*.
 - Closes on tapping outside, on `Esc` or on the button again. Focus moves into the panel and returns to the button on close. Tiles are buttons with `aria-pressed`.
-- The button is disabled while practice is running, like the old selector.
+- The button is disabled while practice is running.
 - While the panel is open, the keyboard shortcuts (§3) are off.
 
 **Button label:** one key → "C major"; two → "C, G" (circle-of-fifths order); three or more → "n keys".
@@ -177,75 +179,65 @@ Asked for by the user's guitar teacher: practice switching between keys, not jus
 **Round order:**
 - *Random:* shuffle-bag. All selected keys are shuffled into a block and played once each before reshuffling. The first key of a new block is never the last key of the previous one (with two keys this alternates them).
 - *In order:* the selected keys in circle-of-fifths order, cycling.
-- The key changes only between rounds, at the announce. Practice is endless, as before; there is no round counter.
+- The key changes only between rounds, at the announce. Practice is endless; there is no round counter.
 
 **Screen while running (several keys selected):**
-- The round's key is shown as a label right above the note, smaller than the note. The note stays the dominant element; the eye toggle works as before.
+- The round's key is shown as a label right above the note, smaller than the note (with the fretboard on, it goes into the phase line, §13.3). The note stays the dominant element.
 - During the wait ticks, the phase line announces the next key: "Next: D major · 3", so there is time to move on the fretboard.
 - With one key selected, the screen is unchanged.
 
-**Storage:** `scaleWalkLight` gains `keys` (array of key indices) and `order` (`"random"` | `"sequential"`). A saved single `key` is migrated to `keys: [key]`.
+**Storage:** `scaleWalkLight` holds `keys` (array of key indices) and `order` (`"random"` | `"sequential"`). An older single `key` is read as `keys: [key]`.
 
-**Texts:** new keys in `strings.js` for every language: the "n keys" summary, panel title, "n of 12" counter, "All", "Clear", round order and its two options, and "Next: …". Counts are functions (like `keyName`) so each language builds its own plural.
+**Texts** in `strings.js`, for every language: the "n keys" summary, panel title, "n of 12" counter, "All", "Clear", round order and its two options, and "Next: …". Counts are functions (like `keyName`) so each language builds its own plural.
 
 ## 13. Fretboard walks
 
 Goal: learn **how to play** each scale walk across the six strings inside a limited fret zone, not just where the notes are. Each walk has one concrete string and fret per note, so it can be memorized and repeated.
 
-Built in phases. **Phase 1 (MVP)** is what this section describes. Later phases (better fingering rules, progressive memorization aids, more validation, mobile polish) are not decided yet.
-
-### 13.1 Analysis (why the rules below)
-
-- Today a round is only pitches: a random degree (never the same twice in a row), the start note in octave 3, 8 pitches up and the same 7 back down. There are no strings or frets.
-- Turning it into a fretboard walk means giving each of the 8 pitches a string and fret inside the zone, never moving to a lower string while ascending. The descent is the same path reversed.
-- In standard tuning, a **4-fret zone** covers 4 semitones per string while strings are 5 apart (4 between G and B), so some pitch is always out of reach. Only **26 of the 84** (key × start note) walks fit, wherever the zone is. In frets 5–8 there is no walk at all for D, A, E, F♯, B or D♭ major.
-- With **5 frets or more**, all 84 fit, anywhere on the neck. Inside 5 frets there are usually one or two string-monotone fingerings per walk, and they are the usual scale shapes (e.g. C from E8: `E8 E10 A7 A8 A10 D7 D9 D10`).
-
-### 13.2 Settings
+### 13.1 Settings
 
 - **Guitar button** in the top-left corner, right of the eye. Muted when the fretboard is off, a brass tile when on. It opens the **fretboard panel**, styled like the key panel (same open/close, focus and `Esc` rules; only one panel open at a time; shortcuts off while open).
 - Panel contents: title "Fretboard" with an on/off **switch**; "Neck zone" with **first fret** and **last fret** selectors; a one-line note saying the walk is shown inside that range; a **Done** button that closes it.
-- Zone limits: first fret 0–15, last fret up to 19, and **at least 5 frets** (last ≥ first + 4). Changing the first fret pushes the last one up if needed. Default zone: 2–6 (the part of the neck the user knows best). Fret 0 means open strings.
+- Zone limits: first fret 0–15, last fret up to 19, and **at least 5 frets** (last ≥ first + 4; why: Appendix A). Changing the first fret pushes the last one up if needed. Default zone: 2–6 (the part of the neck the user knows best). Fret 0 means open strings.
 - No tuning selector until there is more than standard tuning (E A D G B e).
 - Like the keys, the button is disabled while practice is running: the fretboard and zone are fixed per session.
-- **On by default**, like the eye: aids start on and players turn them off as they need them less; an aid that starts off may never be discovered. Saved settings without `board` (from before §13) also get it on; an explicit saved choice is kept.
-- Storage: `scaleWalkLight` gains `board` (bool), `fretFrom` and `fretTo`.
+- **On by default**, like the eye: aids start on and players turn them off as they need them less; an aid that starts off may never be discovered. Saved settings without `board` also get it on; an explicit saved choice is kept.
+- Storage: `scaleWalkLight` holds `board` (bool), `fretFrom` and `fretTo`.
 
-### 13.3 Building the walk
+### 13.2 Building the walk
 
 - For each round, with the round's key (multi-key practice from §12 works unchanged; the zone stays the same across keys):
   1. **Start note:** chosen as in §3, but only among degrees with a valid walk in the zone. With ≥5 frets every degree has one.
-  2. **Octave:** what you hear must match the marked frets, so the zone decides the octave. Octave 3 is used when the walk fits there (always for zones between 3–7 and 8–12); otherwise the octave whose start is closest to octave 3. This is the one documented change to "the start note always plays in octave 3", and only with the fretboard on.
+  2. **Octave:** what you hear must match the marked frets, so the zone decides the octave. Octave 3 is used when the walk fits there (always for zones between 3–7 and 8–12); otherwise the octave whose start is closest to octave 3. Only with the fretboard on (§3, Audio).
   3. **Fingering:** among all string-monotone assignments inside the zone, the first by these rules, in order: smallest hand span (highest minus lowest fret), least total fret movement between consecutive notes, fewest string changes, start on the lowest string. The result is deterministic: the same key, start note and zone always give the same walk.
-- Every walk is up and down one octave, as today.
+- Every walk is up and down one octave.
 - If no walk can be built for a key (not possible with ≥5 frets, but handled), the round is played without the fretboard instead of showing a wrong fingering.
 
-### 13.4 Display
+### 13.3 Display
 
-- An SVG fretboard under the note while practice is running with the fretboard on. While idle, the pick shows as before and there is no fretboard.
+- An SVG fretboard while practice is running with the fretboard on. While idle, the pick shows and there is no fretboard.
 - Six horizontal strings, high e at the top, labeled e B G D A E; only the zone's frets; fret numbers under each fret; the nut when the zone starts at 0.
 - The fretboard **replaces the big note letter** while it shows: the gold dot already names the note. The key goes into the phase line ("C major · Ascending"), also with several keys.
-- **Eye open:** the walk's positions joined by a faint brass line, and the **current position in gold** with its note name. During prep and wait the current position is the start note. Other scale notes in the zone are not drawn: the path is what gets memorized.
-- With the eye open, the feedback is built for focus at any tempo, with three levels:
+- **Eye open:** the walk's positions joined by a faint brass line; during prep and wait the current position is the start note. Other scale notes in the zone are not drawn: the path is what gets memorized. The feedback is built for focus at any tempo, with three levels:
   - **Current note:** the position lights up in solid gold with its name, always the same size.
   - **Next move:** the next position is a touch lighter, with a slightly stronger ring, and only the segment from the current note to it gets a faint `linearGradient` in the direction of travel, brighter at the current note and fading towards the next. No extra circle, arrow or pulse; the next note must be distinguishable without drawing attention. During prep it shows the first step; there is none during the wait. It works going up and down, and across strings.
   - **Rest of the route:** a quiet map in muted brass; positions and segments already played (behind the current one in the current direction) are dimmer than the upcoming ones.
-- **Eye closed:** only the start position, in gold, for the whole round; the rest has to be found by the player. The big note still shows the start note, as today.
+- **Eye closed:** only the start position, in gold, for the whole round; the rest has to be found by the player.
 - **Nothing moves:** every position has its own fixed dot, and the current one lights up in place. The geometry is built once per round; each beat only toggles classes and moves the gradient's end points.
 - Changes fade in opacity over up to 120 ms, never more than a third of a beat, and not at all when notes come faster than 250 ms (or with reduced motion), so the picture never lags behind the sound.
 - The tuning values (segment and dot opacities, next-position fill and ring, gradient strength, fade) are CSS variables on `#board`.
 - While practicing, the secondary controls (BPM, ticks, round bars, the top corners) step back to lower opacity, and come back on hover or focus; Stop stays as it is.
 
-### 13.5 Texts
+### 13.4 Texts
 
-New keys in `strings.js` for every language: fretboard, neck zone, first fret, last fret, the zone note, Done, and the fretboard's accessible label.
+Texts in `strings.js`, for every language: fretboard, neck zone, first fret, last fret, the zone note, Done, and the fretboard's accessible label.
 
 ## 14. First-use guide
 
 A short guided tour that explains the unlabeled controls where they are.
 
 **When it shows**
-- Automatically on the first load, and once for users who already have saved settings. Finishing or skipping it marks it as seen: `scaleWalkLight` gains `guideSeen`.
+- Automatically on the first load, and once for users who already have saved settings. Finishing or skipping it marks it as seen (`guideSeen` in `scaleWalkLight`).
 - A small, muted **?** button in the top-right corner, left of the language selector, opens it again.
 - Never while practice is running: the **?** is disabled then, like the key and fretboard buttons.
 
@@ -269,4 +261,19 @@ The language step comes first so the rest of the guide is read in the chosen lan
 
 Tempo, ticks and installing on the phone are left out on purpose.
 
-**Texts:** new keys in `strings.js` for every language: the guide's name, Skip, Next, Done, the step counter, a title and text per step, and `langName`, each language's name written in that language.
+**Texts** in `strings.js`, for every language: the guide's name, Skip, Next, Done, the step counter, a title and text per step, and `langName`, each language's name written in that language.
+
+## Appendix A. Design notes
+
+Why some rules are the way they are. This is background, not behavior: §1–§14 describe the app.
+
+**Origin.** The app started as a single working HTML file, iterated as v1–v5 (all in the `main` history), then grew the PWA, languages, several keys, the fretboard and the guide. Releases are tagged (`v1.0.0`, `v2.0.0`, …).
+
+**Why a fretboard zone needs at least 5 frets (§13.1).**
+- A walk is turned into fingering by giving each of its 8 pitches a string and fret inside the zone, never moving to a lower string while ascending; the descent is the same path reversed.
+- In standard tuning, a **4-fret zone** covers 4 semitones per string while strings are 5 apart (4 between G and B), so some pitch is always out of reach. Only **26 of the 84** (key × start note) walks fit, wherever the zone is. In frets 5–8 there is no walk at all for D, A, E, F♯, B or D♭ major.
+- With **5 frets or more**, all 84 fit, anywhere on the neck. Inside 5 frets there are usually one or two string-monotone fingerings per walk, and they are the usual scale shapes (e.g. C from E8: `E8 E10 A7 A8 A10 D7 D9 D10`).
+
+**Why start notes rotate per key (§3).** The first rule only avoided repeating the previous round's degree, compared across keys. With one key it allowed A–B–A–B patterns and long droughts; with several it could repeat a key's last start note, or start two rounds in a row on the same note in different keys.
+
+**Why nothing slides on the fretboard (§13.3).** The current note used to slide between positions over 160 ms, along with a moving next-note circle and an arrow. At high tempo (200 ms per note at 300 BPM) it was never still and lagged behind the sound.

@@ -24,7 +24,7 @@
   // Semitones from the tonic to scale degree d (d may pass the octave)
   const semis = d => MAJOR[d % 7] + 12 * Math.floor(d / 7);
 
-  // ---- Fretboard walks (SPEC §13.3) ----
+  // ---- Fretboard walks (SPEC §13.2) ----
   const OPEN_MIDI = [40, 45, 50, 55, 59, 64];   // standard tuning, low E to high e
   const STRING_NAMES = ["E", "A", "D", "G", "B", "e"];
   // Every fingering of the pitches inside [a, b] that never moves to a lower string
