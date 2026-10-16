@@ -8,7 +8,7 @@
   const A = window.ScaleTrainerDev;
   if (!A) return;
   const { KEYS, scaleNames, STRING_NAMES, boardWalk } = Theory;
-  const { WALK, ZONE_MIN, FIFTHS, inputs } = A;
+  const { ZONE_MIN, FIFTHS, inputs } = A;
 
   const keyIndex = name => {
     const n = String(name).trim().replace(/^./, c => c.toUpperCase()).replace("#", "♯").replace(/^(.)b$/, "$1♭");
@@ -20,8 +20,10 @@
     if (!Number.isInteger(d) || d < 1 || d > 7) throw new Error("Degree goes from 1 (tonic) to 7.");
     return d - 1;
   };
-  const phaseOf = (r, st) => st < r.prep ? "prep" : st < r.prep + WALK ? (st - r.prep < 8 ? "up" : "down") : "wait";
-  const fingering = w => w.slice(0, 8).map(p => p.st != null ? STRING_NAMES[p.st] + p.f : p.name).join(" ");
+  const phaseOf = (r, st) => st < r.prep ? "prep" : st < r.prep + r.walk.length ? (st - r.prep <= r.peak ? "up" : "down") : "wait";
+  // The route up to its top note, as string + fret (or note names without the fretboard)
+  const fingering = r => r.walk.slice(0, r.peak + 1).map(p => p.st != null ? STRING_NAMES[p.st] + p.f : p.name).join(" ");
+  const lastNote = r => r.walk.length - 1;
   const beatLen = () => 60 / Number(inputs.bpm.value);
   let cursor = null;                   // { round, step } while paused
   // Paused: put the cursor on a tick, draw it and play it now
@@ -79,8 +81,9 @@
     },
     seek(i) {
       if (!A.running) return "Start first (stopped: dbg.walk draws without playing).";
-      const n = Math.min(WALK - 1, Math.max(0, Math.round(Number(i))));
-      if (A.paused) showTick(cursor.round, cursor.round.prep + n);
+      const r = A.paused ? cursor.round : A.round;
+      const n = Math.min(lastNote(r), Math.max(0, Math.round(Number(i))));
+      if (A.paused) showTick(r, r.prep + n);
       else A.step = A.round.prep + n;                // the scheduler plays it on its next tick
       return `walk ${n}`;
     },
@@ -99,10 +102,10 @@
       const bw = boardWalk(key.pc, d, from, to);
       if (!bw) return "No playable walk in that zone.";
       const up = bw.pos.map(([st, f], k) => ({ midi: bw.pitches[k], name: names[(d + k) % 7], st, f }));
-      const r = { walk: up.concat(up.slice(0, 7).reverse()), board: { from, to } };
+      const r = { walk: up.concat(up.slice(0, 7).reverse()), peak: 7, board: { from, to } };
       A.buildBoard(r);
       A.drawBoard(r, Math.min(14, Math.max(0, i)), true);
-      return `${key.name} major from degree ${deg}, frets ${from}–${to}: ${fingering(r.walk)} (start ${bw.pitches[0]} MIDI)`;
+      return `${key.name} major from degree ${deg}, frets ${from}–${to}: ${fingering(r)} (start ${bw.pitches[0]} MIDI)`;
     },
     state() {
       const t = A.paused ? cursor : A.lastShown, s = A.settings;
@@ -111,7 +114,7 @@
         phase: t ? phaseOf(t.round, t.step) : null,
         tick: t ? `${t.step + 1}/${t.round.total}` : null,
         key: t ? `${t.round.key.name} major, degree ${t.round.deg + 1}` : null,
-        walk: t ? fingering(t.round.walk) : null,
+        walk: t ? fingering(t.round) : null,
         settings: { bpm: Number(inputs.bpm.value), prep: Number(inputs.prep.value), wait: Number(inputs.wait.value),
           keys: s.keys.map(k => KEYS[k].name), order: s.order, board: s.board, zone: `${s.fretFrom}–${s.fretTo}`, eye: s.showAll, lang: s.lang },
       };
@@ -175,10 +178,10 @@
   };
   // The degree select and the slider are one control: the current note of the walk, as a degree and as a position.
   // Degree (0-based) of walk note i in a round that starts on degree `start`
-  const degreeAt = (start, i) => (start + (i < 8 ? i : 14 - i)) % 7;
+  const degreeAt = (start, i, peak = 7) => (start + (i <= peak ? i : 2 * peak - i)) % 7;
   // Position of degree d nearest to the current one (each degree is on the way up and on the way down)
-  const positionOf = (start, d, cur) => {
-    const k = (d - start + 7) % 7, options = k === 0 ? [0, 7, 14] : [k, 14 - k];
+  const positionOf = (start, d, cur, peak = 7) => {
+    const k = (d - start + 7) % 7, options = k === 0 ? [0, peak, 2 * peak] : [k, 2 * peak - k];
     return options.reduce((best, o) => Math.abs(o - cur) < Math.abs(best - cur) ? o : best);
   };
   const current = () => { const t = A.paused ? cursor : A.lastShown; return A.running && t ? t : null; };
@@ -197,7 +200,7 @@
   degSel.addEventListener("change", () => {
     touched = Date.now();
     const t = current(), start = t ? t.round.deg : 0;
-    const w = t ? Math.min(WALK - 1, Math.max(0, t.step - t.round.prep)) : Number(idx.value);
+    const w = t ? Math.min(lastNote(t.round), Math.max(0, t.step - t.round.prep)) : Number(idx.value);
     idx.value = positionOf(start, Number(degSel.value) - 1, w);
     if (!t) return previewWalk();
     say(dbg.seek(idx.value));
@@ -221,8 +224,10 @@
     pauseBtn.textContent = st.paused ? "▶" : "⏸";
     pauseBtn.disabled = !st.running;
     stepBtn.disabled = !st.paused;
+    if (!t) idx.max = 14;                // stopped: the Scale walk preview
     if (t && !sliding && Date.now() - touched > 600) {
-      const w = Math.min(WALK - 1, Math.max(0, t.step - t.round.prep));   // prep shows the first note, wait the last
+      const w = Math.min(lastNote(t.round), Math.max(0, t.step - t.round.prep));   // prep shows the first note, wait the last
+      idx.max = lastNote(t.round);
       keySel.value = t.round.key.name;
       idx.value = w;
       degSel.value = String(degreeAt(t.round.deg, w) + 1);

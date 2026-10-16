@@ -1,5 +1,7 @@
 (() => {
-  const WALK = 15;                 // 8 up + 7 down
+  // A round's route: `walk` (its notes, up then back down) and `peak` (index of the top note).
+  // Scale walk: 8 up + 7 down. Other exercises bring their own length (SPEC §15).
+  const WALK = 15, WALK_PEAK = 7;
   const LOOKAHEAD_MS = 25;
   const SCHEDULE_AHEAD = 0.1;
   const BASE_MIDI = 48;            // start note always in octave 3 (C3–B3)
@@ -373,7 +375,7 @@
     const walk = up.concat(up.slice(0, 7).reverse());
     const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
     const board = bw ? { from: zone.from, to: zone.to } : null;
-    return { walk, prep, wait, total: prep + WALK + wait, key, keyIdx, deg, next: KEYS[session.upcoming ?? keyIdx], board };
+    return { walk, peak: WALK_PEAK, prep, wait, total: prep + walk.length + wait, key, keyIdx, deg, next: KEYS[session.upcoming ?? keyIdx], board };
   }
 
   function newRound() {
@@ -393,7 +395,7 @@
   function playTick(r, st, time, beat) {
     if (st === 0) playNote(r.walk[0].midi, time);
     const w = st - r.prep;
-    if (w >= 0 && w < WALK) {
+    if (w >= 0 && w < r.walk.length) {
       click(time, w === 0, true);              // soft click
       playNote(r.walk[w].midi, time, beat);
     } else {
@@ -429,12 +431,12 @@
     lastShown = tick;
     if (round !== shownRound) {
       shownRound = round;
-      buildTrack(round.prep, round.wait);
+      buildTrack(round.prep, round.wait, round.walk.length, round.peak);
       pickEl.setAttribute("hidden", "");
       noteEl.hidden = false;
     }
     const w = step - round.prep;
-    const inWalk = w >= 0 && w < WALK;
+    const inWalk = w >= 0 && w < round.walk.length;
     noteEl.textContent = (inWalk && showAll ? round.walk[w] : round.walk[0]).name;
 
     const k = T.keyName(round.key.name);
@@ -446,7 +448,7 @@
     if (keyAbove) roundKeyEl.textContent = k;
     const pre = keyAbove ? "" : `${k} · `;
     if (step < round.prep) phaseEl.textContent = pre + T.phasePrep(round.prep - step);
-    else if (inWalk) phaseEl.textContent = pre + (w < 8 ? T.phaseUp : T.phaseDown);
+    else if (inWalk) phaseEl.textContent = pre + (w <= round.peak ? T.phaseUp : T.phaseDown);
     else phaseEl.textContent = multi ? T.phaseNextKey(T.keyName(round.next.name), left) : pre + T.phaseNext(left);
     if (round.board) {
       if (round !== boardRound) buildBoard(round);
@@ -488,7 +490,7 @@
     el("stop", { class: "grad-near", offset: 0 }, grad);
     el("stop", { class: "grad-far", offset: 1 }, grad);
     const path = el("g", { class: "path" }, boardEl);
-    const up = round.walk.slice(0, 8);
+    const up = round.walk.slice(0, round.peak + 1);
     // Moves along a string are solid; string changes are dashed and fainter
     const segs = [];
     for (let i = 1; i < up.length; i++) {
@@ -511,7 +513,8 @@
   }
   // w: walk index; -1 during prep, -2 during wait (both show the start position)
   // reveal: show the path even with the eye closed (dev mode inspection)
-  const posOf = i => i < 8 ? i : 14 - i;        // walk index → position on the route (the way down reuses it)
+  // Walk index → position on the route (the way down reuses the way up)
+  const posOf = (round, i) => i <= round.peak ? i : 2 * round.peak - i;
   function drawBoard(round, w, reveal = showAll) {
     const { path, segs, active, grad, pos } = boardParts;
     // Fade from the tempo: never longer than a third of a beat, none when notes come faster than 250 ms
@@ -519,7 +522,7 @@
     if (boardParts.fade !== fade) boardEl.style.setProperty("--fade", `${boardParts.fade = fade}ms`);
     path.style.display = reveal ? "" : "none";
     const curIdx = reveal && w >= 0 ? w : 0;      // eye closed: start position only
-    const c = posOf(curIdx), down = w >= 8;
+    const c = posOf(round, curIdx), down = w > round.peak;
     // Played: behind the current position in the current direction (prep: nothing yet; wait: everything)
     const played = j => w === -2 || (w >= 0 && (down ? j > c : j < c));
     pos.forEach((g, j) => {
@@ -531,7 +534,7 @@
     // The next move: during prep it is the first step of the walk; none after the last note or during the wait
     const n = w === -1 ? 1 : w >= 0 && w < round.walk.length - 1 ? w + 1 : -1;
     active.style.display = reveal && n >= 0 ? "" : "none";
-    pos.forEach((g, j) => g.classList.toggle("next", reveal && n >= 0 && j === posOf(n) && j !== c));
+    pos.forEach((g, j) => g.classList.toggle("next", reveal && n >= 0 && j === posOf(round, n) && j !== c));
     if (reveal && n >= 0) {
       const p = round.walk[curIdx], q = round.walk[n];
       const pts = { x1: bx(round, p.f), y1: by(p.st), x2: bx(round, q.f), y2: by(q.st) };
@@ -545,8 +548,8 @@
     mainEl.classList.remove("with-board");
   }
 
-  // Bars: flat for prep and wait; rise and fall during the walk
-  function buildTrack(prep, wait) {
+  // Bars: flat for prep and wait; rise and fall during the walk, peaking at its top note
+  function buildTrack(prep, wait, len = WALK, peak = WALK_PEAK) {
     trackEl.innerHTML = "";
     const add = (h, walk) => {
       const s = document.createElement("span");
@@ -555,7 +558,7 @@
       trackEl.appendChild(s);
     };
     for (let i = 0; i < prep; i++) add(14, false);
-    for (let i = 0; i < WALK; i++) add(24 + (i < 8 ? i : 14 - i) * 10.8, true);
+    for (let i = 0; i < len; i++) add(24 + (i <= peak ? i : 2 * peak - i) / peak * 75.6, true);
     for (let i = 0; i < wait; i++) add(14, false);
   }
   function drawTrack(step) {
@@ -750,7 +753,7 @@
   let dbgPaused = false;               // set by the dev tool; stop() clears it
   if (new URLSearchParams(location.search).has("debug")) {
     window.ScaleTrainerDev = {
-      WALK, ZONE_MIN, FIFTHS, inputs,
+      ZONE_MIN, FIFTHS, inputs,
       get running() { return running; },
       get paused() { return dbgPaused; }, set paused(v) { dbgPaused = v; },
       get ctx() { return ctx; },
