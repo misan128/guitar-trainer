@@ -100,6 +100,7 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 ### 6.2 Icons
 - Generated from the **SVG pick** already in `index.html`: brass on the app background.
 - PNG: `apple-touch-icon` at 180×180, 192, 512 and 512 maskable with a safe-zone margin. iOS does not support SVG on the home screen.
+- **Favicon** for the browser tab: `icons/favicon.svg` (the pick, brass on transparent, simplified) with `icons/favicon-32.png` as fallback for browsers without SVG favicons. Both are precached.
 
 ### 6.3 Tags in `index.html`
 - `<link rel="manifest">`, `<link rel="apple-touch-icon">`, `<meta name="theme-color">`.

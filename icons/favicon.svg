@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112">
+  <!-- The app's pick, brass on transparent, simplified for tab size -->
+  <g transform="translate(56 56) rotate(-8) translate(-50 -56)">
+    <path d="M50 108 C34 96 6 60 7 32 C8 11 28 4 50 4 C72 4 92 11 93 32 C94 60 66 96 50 108 Z" fill="#d1a65a"/>
+    <path d="M24 26 C30 16 40 13 50 13" fill="none" stroke="#ede3d1" stroke-opacity=".45" stroke-width="7" stroke-linecap="round"/>
+  </g>
+</svg>
