@@ -72,7 +72,8 @@ LICENSE
 - **`README.md`:** in English. Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
 - **`theory.js`:** scale theory and fretboard walks (§13.3), with no DOM, so the tests can load it. In the browser it defines `Theory`; in Node it is a CommonJS module.
 - **`tests/`:** run with `node --test` from the repo root (Node 18+, no dependencies). They check every fretboard walk against acceptance criterion 11, known fingerings, scale spelling, and that every language has the same texts.
-- **`docs/TESTING.md`:** how to run the tests, run the app locally, and the manual checklist for the phone.
+- **`docs/TESTING.md`:** how to run the tests, run the app locally, the dev mode, and the manual checklist for the phone.
+- **Dev mode:** `?debug` in the URL adds a small **dbg** panel and a `dbg` object in the console: a cursor over the round to pause, step, seek along the walk and swap the round's key and degree, each applied and sounded at once. It is a development tool, not a feature: without `?debug` it does not exist. Its texts are English only and stay out of `strings.js`, the one exception to §5.
 - **`docs/SPEC.md`:** this document. Describes state and decisions, not one-off steps.
 - **Repo description** (GitHub "About" field, set by the user): *Guitar scale trainer: metronome-driven scale walks from a random note, in any major key. Static web app, no dependencies.*
 

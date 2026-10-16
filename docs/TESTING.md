@@ -35,6 +35,37 @@ Then open `http://localhost:8000/`. `localhost` counts as secure, so the service
 
 To start clean, as a first-time user: DevTools → *Application* → *Storage* → *Clear site data*. That brings back the first-use guide and the default settings.
 
+## Dev mode
+
+Add `?debug` to the URL: `http://localhost:8000/?debug`, or with VS Code Live Preview `…/index.html?vscode-livepreview=true&debug`. Without `?debug` none of this exists, so users never see it.
+
+The idea: the panel is a cursor over the round. Whatever you change shows, and sounds, at once; from there you can pause, step, or play on.
+
+**Panel:** a small **dbg** pill appears at the top right; drag it anywhere, or tap it to turn it into the panel, grown from its top-right corner. Drag the panel by its header. Its **−** button, tapping outside it, or `Esc` shrinks it back into the pill at the panel's top-right corner, so an unmoved panel folds back exactly where it started.
+
+| Control | Running | Paused | Stopped |
+| --- | --- | --- | --- |
+| **⏸ / ▶** | Pause on the current tick | Play on from the cursor | — |
+| **⏭** | — | Next tick, immediately, with its sound (at the end it moves on to a new round) | — |
+| **key · degree** | Swap the current round on the fly, same position | Swap it and sound the note at the same position | Draw that walk on the fretboard |
+| **walk slider** (0–14) | Jump to that walk note on the next tick | Go to that note and sound it | Move the current note along the drawn walk |
+
+While running, the selects and the slider follow the current round and note. Below them, a live line shows the phase, tick, key and degree, and the fingering.
+
+**Console:** the state line is printed as `[dbg] …` every time it changes (each tick, pause, stop), and so is the result of every action, even with the panel closed. The same controls are available as commands:
+
+| Command | What it does |
+| --- | --- |
+| `dbg.help()` | Lists the commands. |
+| `dbg.pause()` / `dbg.resume()` | Stop on the current tick / play on from it. |
+| `dbg.step()` | Paused: next tick now. |
+| `dbg.seek(i)` | Go to walk note `i` (0–14): now if paused, on the next tick if running. |
+| `dbg.round("G", 3)` | Swap the current round for G major from degree 3 (1 = tonic … 7), same position. `F#` and `Db` work too. |
+| `dbg.walk("C", 1, 7, 11, i)` | Stopped: draw that walk on frets 7–11 with the current note at walk index `i` and return its fingering, e.g. `E8 E10 A7 A8 A10 D7 D9 D10`. Zone defaults to the panel's. |
+| `dbg.state()` | Phase, tick, key and degree, the walk's fingering, and the settings. |
+
+Pausing stops the scheduler and silences what it had already queued; stepping, seeking or swapping the round plays that one tick right away; resuming schedules the next tick one beat later.
+
 ## Manual pass
 
 Do it on the phone after changes to the UI, audio or service worker, and before publishing. It needs the published site (HTTPS) or a local server reachable from the phone over HTTPS.
