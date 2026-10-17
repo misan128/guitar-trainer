@@ -19,9 +19,11 @@ let failed = false;
 const missing = files.filter(f => !fs.existsSync(path.join(root, f)));
 if (missing.length) { failed = true; console.error(`Precached but missing: ${missing.join(", ")}`); }
 
-// The latest release tag that is not HEAD itself (on main, the release being pushed may already be tagged)
+// The highest release tag that is not HEAD itself (on main, the release being pushed may already be tagged).
+// By version, not by history: release tags sit on main's merge commits, which develop and release branches
+// do not contain.
 const head = git("rev-parse", "HEAD");
-const base = process.argv[2] || git("tag", "--merged", "HEAD", "--sort=-v:refname", "--list", "v*")
+const base = process.argv[2] || git("tag", "--sort=-v:refname", "--list", "v*")
   .split("\n").find(t => t && git("rev-list", "-n", "1", t) !== head);
 if (!base) {
   console.log("No earlier release to compare with.");
