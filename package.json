@@ -3,6 +3,7 @@
   "private": true,
   "description": "Guitar scale practice app. No build step: these scripts only run the checks.",
   "scripts": {
+    "start": "node scripts/serve.js",
     "test": "node --test",
     "smoke:setup": "playwright install chromium",
     "smoke": "node --test tests/smoke/*.smoke.js",
