@@ -2,18 +2,32 @@
 
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-misan128-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/misan128)
 
-Guitar scale trainer: metronome-driven scale walks from a random note, in any major key. Static web app, no dependencies.
+Guitar practice with a metronome, on the fretboard: scale walks from a random note in any major key, and the five minor pentatonic shapes in any minor key. Static web app, no dependencies.
 
 **Use it:** https://misan128.github.io/scale-trainer/
 
-## How a round works
+## Two exercises
+
+Choose the exercise in the setup panel (the button at the top left). BPM, ticks, aids and language are shared.
+
+### Scale walk
 
 1. **Announce** — a random note from the round's key is shown and played once as a reference. Each key goes through all seven start notes before repeating one, and two rounds in a row never start on the same note.
 2. **Prep** — a few metronome clicks to get ready.
 3. **Walk** — 15 ticks, one note per tick: 8 notes up to the octave and 7 back down. Each note is played with a plucked-string sound.
 4. **Wait** — a few more clicks, then the next round starts.
 
-With several keys selected, each round uses one of them; the key is shown with the round, and the wait ticks announce the next one.
+- **Keys:** one or more of the 12 major keys (at least one stays selected; Clear goes back to C major), ordered by the circle of fifths. With several, rounds go in random order (each key once before any repeats) or in circle-of-fifths order; the key is shown with the round, and the wait ticks announce the next one.
+- **Fretboard** (guitar beside the eye): shows each walk on the fretboard, inside a neck zone you choose (first and last fret, at least 5 frets; standard tuning). Every walk has one fixed fingering — the same key, start note and zone always give the same one — and the notes you hear match the marked frets. On by default, frets 2–6.
+
+### Pentatonic shapes
+
+The five minor pentatonic shapes, played as fixed fingering patterns to build muscle memory. Shape 1 has the root on the 6th string under the first finger; shapes 2–5 follow up the neck.
+
+- **Key:** any of the 12 minor keys. The shape keeps its geometry and moves along the neck, with its notes spelled after the key signature.
+- **Shape:** 1 to 5, each tile with a small diagram and its frets. The selected shape is shown on the fretboard before you start, with its roots marked.
+- **Variant:** when a shape fits in two places, choose between them: *Open* or *Closed* for the five open-position ones (E minor shape 1, D minor 2, C minor 3, A minor 4, G minor 5), *Low* or *High* for two octaves of the same movable shape.
+- **A round:** the reference note, the prep ticks, the complete six-string shape up (12 notes) and back down (11), the wait ticks, then the same shape again. The route never changes.
 
 Practice keeps going until you stop it.
 
@@ -21,12 +35,10 @@ Practice keeps going until you stop it.
 
 - **BPM**: 30–300.
 - **Ticks before / after the walk**: 1–16 and 0–16.
-- **Keys** (top-left): pick one or more of the 12 major keys (at least one stays selected; Clear goes back to C major), ordered by the circle of fifths. With several, rounds go in random order (each key once before any repeats) or in circle-of-fifths order. Can only be changed while stopped.
-- **Show every note of the walk** (eye beside the keys): open shows each note as it is played; closed shows only the start note, to play the rest from memory. Open by default.
-- **Fretboard** (guitar beside the eye): shows each walk on the fretboard, inside a neck zone you choose (first and last fret, at least 5 frets; standard tuning). Every walk has one fixed fingering — the same key, start note and zone always give the same one — and the notes you hear match the marked frets. With the eye open you see the path, the current position in gold and the next move as a faint glow along its segment; with it closed, only the start position. On by default, frets 2–6. Can only be changed while stopped.
+- **Aids** (the eye): how much the fretboard shows, from more help to less. Each tap closes the eye one step: *all notes* named → only the *current note* named → the *shape* without names → only the *start* position, to play the rest from memory. Wide open by default.
 - **Language** (top-right): English, Spanish or Basque.
 
-A short guide explains the controls on first use; tap **?** (top-right) to see it again.
+The exercise, keys, shape and fretboard can only be changed while stopped. A short guide explains the controls on first use; tap **?** (top-right) to see it again.
 
 Settings are saved in the browser.
 
@@ -65,7 +77,7 @@ node --test                    # automated tests: Node 18+, no dependencies
 python3 -m http.server 8000    # then open http://localhost:8000/
 ```
 
-The tests check every fretboard walk and that all languages have the same texts. What they cover, and a manual checklist for the phone, are in [docs/TESTING.md](docs/TESTING.md).
+The tests check start-note selection, every fretboard walk, the five pentatonic shapes in every key, and that all languages have the same texts. What they cover, and a manual checklist for the phone, are in [docs/TESTING.md](docs/TESTING.md).
 
 ## License
 

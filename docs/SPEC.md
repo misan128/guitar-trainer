@@ -89,7 +89,7 @@ LICENSE
 - **`docs/TESTING.md`:** how to run the tests, run the app locally, the dev mode, and the manual checklist for the phone.
 - **Dev mode:** `?debug` in the URL adds a small **dbg** panel and a `dbg` object in the console: a cursor over the round to pause, step, seek along the walk and swap the round's key and degree, each applied and sounded at once. It lives in **`js/debug.js`**, which `js/app.js` only loads with `?debug`, after exposing a small bridge (`ScaleTrainerDev`: getters and setters for the playback state, plus the few functions the tool calls). The tool touches the app only through that bridge. Without `?debug` neither the bridge nor the file exists. It is a development tool, not a feature: its texts are English only and stay out of `strings.js`, the one exception to §5.
 - **`docs/SPEC.md`:** this document. Describes state and decisions, not one-off steps.
-- **Repo description** (GitHub "About" field, set by the user): *Guitar scale trainer: metronome-driven scale walks from a random note, in any major key. Static web app, no dependencies.*
+- **Repo description** (GitHub "About" field, set by the user): *Guitar practice with a metronome, on the fretboard: scale walks in any major key and the five minor pentatonic shapes in any minor key. Static web app, no dependencies.*
 
 ## 5. Language and texts
 
@@ -274,7 +274,7 @@ Tempo, ticks and installing on the phone are left out on purpose.
 
 ## 15. Pentatonic shapes
 
-**Status: phases 1 and 2 built, on the `v3` branch.** The five shapes in any minor key. Phase 3 (moving between shapes) is outlined at the end and not decided.
+**Status: phases 1 and 2 built (v3).** The five shapes in any minor key. Phase 3 (moving between shapes) is outlined at the end and not decided.
 
 Goal: memorize the five minor pentatonic shapes as **physical patterns**: where each one sits on the neck and how the hand moves through it. It is not Scale walk with five notes: each shape is a fixed, predefined fingering, the same every time.
 
