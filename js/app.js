@@ -611,8 +611,16 @@
       : round.nextShape ? `${T.phaseDown} · ${T.nextShape(T.shapeName(round.nextShape))}` : T.phaseDown);
     else phaseEl.textContent = multi ? T.phaseNextKey(T.keyName(round.next.name), left) : pre + T.phaseNext(left);
     if (round.board) {
-      if (round !== boardRound) buildBoard(round);
+      if (round !== boardRound) {
+        // The next shape's zone may already have slid in on the previous shape's last note
+        if (boardParts && boardParts.pendingShape === round.shape && round.penta) { boardRound = round; boardParts.pendingShape = null; }
+        else buildBoard(round);
+      }
+      if (boardParts.pendingShape) return drawTrack(step);          // sliding to the next shape: leave it be
       drawBoard(round, inWalk ? w : step < round.prep ? -1 : -2);
+      if (round.nextShape && w === round.walk.length - 1) {
+        slideBoard(shapeRound(round.nextShape, session.pentaKey, placeAt(session.pentaKey, round.nextShape), 0, 0), 60 / Number(inputs.bpm.value));
+      }
     } else if (!boardEl.hasAttribute("hidden")) hideBoard();
     drawTrack(step);
   }
@@ -629,6 +637,9 @@
   }
   const bx = (round, f) => LM + (f - round.board.from + .5) * FW;
   const by = st => TM + (5 - st) * SS;        // high e on top
+  // The board has a fixed part (strings, their names, fret wires) and a zone (fret numbers, the nut or the
+  // zone's edge, the route and its positions). Along the neck, zones slide in and out (slideBoard).
+  let zoneSeq = 0;
   function buildBoard(round) {
     boardRound = round;
     const { from, to } = round.board, n = to - from + 1;
@@ -639,17 +650,25 @@
       el("line", { class: "str", x1: LM, x2: w - 4, y1: by(st), y2: by(st), "stroke-width": 1.8 - st * .2 }, boardEl);
       el("text", { x: LM / 2 - 2, y: by(st) + 3.5 }, boardEl).textContent = STRING_NAMES[st];
     }
-    // Fret wires sit on column edges; with fret 0 the first column is the open strings, left of the nut
-    for (let i = 0; i <= n; i++) {
-      const cls = from === 0 ? (i === 1 ? "nut" : i === 0 ? null : "fret") : (i === 0 ? "edge" : "fret");
-      if (cls) el("line", { class: cls, x1: LM + i * FW, x2: LM + i * FW, y1: by(5) - 2, y2: bottom + 2 }, boardEl);
-    }
-    for (let f = from; f <= to; f++) el("text", { x: bx(round, f), y: bottom + 18 }, boardEl).textContent = f;
+    for (let i = 1; i <= n; i++) el("line", { class: "fret", x1: LM + i * FW, x2: LM + i * FW, y1: by(5) - 2, y2: bottom + 2 }, boardEl);
+    boardParts = buildZone(round);
+    boardParts.cols = n;
+    boardEl.removeAttribute("hidden");   // SVG has no .hidden property
+    mainEl.classList.add("with-board");
+  }
+  function buildZone(round) {
+    const { from, to } = round.board, n = to - from + 1, bottom = TM + 5 * SS;
+    const zone = el("g", { class: "zone" }, boardEl);
+    // With fret 0 the first column is the open strings, left of the nut; otherwise the zone's first wire is its edge
+    if (from === 0) el("line", { class: "nut", x1: LM + FW, x2: LM + FW, y1: by(5) - 2, y2: bottom + 2 }, zone);
+    else el("line", { class: "edge", x1: LM, x2: LM, y1: by(5) - 2, y2: bottom + 2 }, zone);
+    for (let f = from; f <= to; f++) el("text", { x: bx(round, f), y: bottom + 18 }, zone).textContent = f;
     // Built once per round; each beat only toggles classes and moves the gradient's end points
-    const grad = el("linearGradient", { id: "nextMove", gradientUnits: "userSpaceOnUse" }, el("defs", {}, boardEl));
+    const gradId = `nextMove${++zoneSeq}`;
+    const grad = el("linearGradient", { id: gradId, gradientUnits: "userSpaceOnUse" }, el("defs", {}, zone));
     el("stop", { class: "grad-near", offset: 0 }, grad);
     el("stop", { class: "grad-far", offset: 1 }, grad);
-    const path = el("g", { class: "path" }, boardEl);
+    const path = el("g", { class: "path" }, zone);
     const up = round.walk.slice(0, round.peak + 1);
     // Moves along a string are solid; string changes are dashed and fainter
     const segs = [];
@@ -657,10 +676,10 @@
       const a = up[i - 1], b = up[i];
       segs.push(el("line", { class: a.st === b.st ? "same" : "cross", x1: bx(round, a.f), y1: by(a.st), x2: bx(round, b.f), y2: by(b.st) }, path));
     }
-    const active = el("line", { class: "active" }, path);   // current → next, with the gradient
+    const active = el("line", { class: "active", stroke: `url(#${gradId})` }, path);   // current → next, with the gradient
     // One fixed group per position: a quiet dot, and a gold layer with the note name that lights up when current
     const pos = up.map(p => {
-      const g = el("g", { class: "pos", transform: `translate(${bx(round, p.f)} ${by(p.st)})` }, boardEl);
+      const g = el("g", { class: "pos", transform: `translate(${bx(round, p.f)} ${by(p.st)})` }, zone);
       el("circle", { class: "dot", r: 6 }, g);
       el("text", { class: "name" }, g).textContent = p.name;     // shown at aid level 1
       if (p.root) el("circle", { class: "ring", r: 8.6 }, g);   // roots: a thin second ring (SPEC §15.4)
@@ -670,10 +689,31 @@
       el("text", {}, lit).textContent = p.name;
       return g;
     });
-    boardEl.classList.toggle("open-pos", up.some(p => p.f === 0));
-    boardParts = { path, segs, active, grad, pos };
-    boardEl.removeAttribute("hidden");   // SVG has no .hidden property
-    mainEl.classList.add("with-board");
+    zone.classList.toggle("open-pos", up.some(p => p.f === 0));
+    return { zone, path, segs, active, grad, pos, from };
+  }
+  // Along the neck (SPEC §15.6): on the last note of a shape, its zone slides out in the direction of travel
+  // while the next shape's zone slides in from the other side, fret numbers and positions together; the
+  // strings and fret wires stay. It runs in the second half of that beat, so the next shape's first note
+  // finds its zone in place. No slide when notes come faster than 250 ms, or with reduced motion: then the
+  // next shape simply replaces this one when it starts.
+  function slideBoard(next, beat) {
+    const n = next.board.to - next.board.from + 1;
+    if (beat < .25 || n !== boardParts.cols || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const old = boardParts, dx = (next.board.from - old.from) * FW;
+    const incoming = buildZone(next);
+    incoming.cols = n;
+    incoming.pendingShape = next.shape;
+    const delay = beat * 400, dur = Math.min(500, beat * 550);
+    const ease = `${dur}ms cubic-bezier(.45, 0, .25, 1) ${delay}ms`;
+    Object.assign(incoming.zone.style, { transform: `translateX(${dx}px)`, opacity: 0 });
+    boardParts = incoming;
+    drawBoard(next, -1);                // the next shape's start, lit, as it arrives
+    incoming.zone.getBoundingClientRect();
+    for (const z of [old.zone, incoming.zone]) z.style.transition = `transform ${ease}, opacity ${ease}`;
+    Object.assign(old.zone.style, { transform: `translateX(${-dx}px)`, opacity: 0 });
+    Object.assign(incoming.zone.style, { transform: "translateX(0)", opacity: 1 });
+    setTimeout(() => old.zone.remove(), delay + dur + 50);
   }
   // w: walk index; -1 during prep, -2 during wait (both show the start position)
   // reveal: show the path even with the eye closed (dev mode inspection)
