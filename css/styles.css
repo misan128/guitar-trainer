@@ -319,6 +319,9 @@ select.quiet:disabled { opacity: .35; }
 }
 #placeGrid button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
 .kp-hint { margin: .5rem 0 0; color: var(--muted); font-size: .8rem; }
+.kp-switch { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--wire); }
+/* A control that has no effect in the current mode (Ticks after while moving along the neck) */
+.field.off { opacity: .4; }
 /* Shape tiles: number, a small diagram of the shape and its frets */
 #shapeGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem; }
 #shapeGrid button {
@@ -393,7 +396,7 @@ select.quiet:disabled { opacity: .35; }
 /* Fretboard panel */
 .bp-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: .9rem; border-bottom: 1px solid var(--wire); }
 .bp-head span { font-weight: 600; font-size: 1.05rem; }
-#boardSwitch {
+#boardSwitch, .switch {
   position: relative;
   width: 3.1rem;
   height: 1.8rem;
@@ -403,7 +406,7 @@ select.quiet:disabled { opacity: .35; }
   cursor: pointer;
   transition: background-color .2s;
 }
-#boardSwitch::after {
+#boardSwitch::after, .switch::after {
   content: "";
   position: absolute;
   top: .2rem;
@@ -414,8 +417,8 @@ select.quiet:disabled { opacity: .35; }
   background: var(--bone);
   transition: transform .2s;
 }
-#boardSwitch[aria-checked="true"] { background: var(--brass); }
-#boardSwitch[aria-checked="true"]::after { transform: translateX(1.3rem); }
+#boardSwitch[aria-checked="true"], .switch[aria-checked="true"] { background: var(--brass); }
+#boardSwitch[aria-checked="true"]::after, .switch[aria-checked="true"]::after { transform: translateX(1.3rem); }
 .bp-title { margin: .9rem 0 .6rem; font-weight: 600; }
 .bp-frets { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .bp-frets select { background-color: #3a2d26; }

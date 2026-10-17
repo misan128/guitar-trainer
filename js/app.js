@@ -7,7 +7,7 @@
   const BASE_MIDI = 48;            // start note always in octave 3 (C3–B3)
 
   // Scale theory and fretboard walks live in theory.js (tested in tests/)
-  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape } = Theory;
+  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape, pentaNeckOrder, createNeckWalk } = Theory;
 
   const $ = id => document.getElementById(id);
   const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
@@ -17,6 +17,7 @@
   const keyCount = $("keyCount"), keysAllBtn = $("keysAll"), keysClearBtn = $("keysClear");
   const walkSetup = $("walkSetup"), pentaSetup = $("pentaSetup"), shapeGrid = $("shapeGrid"), shapeKey = $("shapeKey");
   const pentaKeyGrid = $("pentaKeyGrid"), placeRow = $("placeRow"), placeGrid = $("placeGrid"), openHint = $("openHint");
+  const neckSwitch = $("neckSwitch");
   const roundKeyEl = $("roundKey");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
   const boardBtn = $("boardBtn"), boardPanel = $("boardPanel"), boardSwitch = $("boardSwitch");
@@ -70,6 +71,7 @@
   let shapeNo = 1;                     // Pentatonic shape, 1–5
   let pentaKey = 0;                    // Pentatonic minor key: index into MINOR_KEYS (A minor)
   let pentaPlace = {};                 // chosen placement per "key:shape" (its first fret), when there are two
+  let neckWalk = false;                // Pentatonic: move to the neighbouring shape each round (SPEC §15.6)
   // Fretboard (SPEC §13): on by default (aids start on, players turn them off); a zone spans at least ZONE_MIN frets
   const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
   const ZONE_DEFAULT = 2;              // frets 2–6
@@ -100,7 +102,7 @@
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
         keys, order, key: keys[0], aid, showAll, lang: langEl.value,
-        board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo, pentaKey, pentaPlace
+        board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo, pentaKey, pentaPlace, pentaNeck: neckWalk
       }));
     } catch (e) {}
   }
@@ -121,6 +123,7 @@
       if (s.exercise === "penta") exercise = "penta";
       if (PENTA_SHAPES[s.pentaShape]) shapeNo = Number(s.pentaShape);
       if (MINOR_KEYS[s.pentaKey]) pentaKey = Number(s.pentaKey);
+      neckWalk = s.pentaNeck === true;
       if (s.pentaPlace && typeof s.pentaPlace === "object") for (const k in s.pentaPlace) if (Number.isInteger(s.pentaPlace[k])) pentaPlace[k] = s.pentaPlace[k];
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }
@@ -146,6 +149,7 @@
   // The click that follows a pointer press is ignored, so a tap never counts twice.
   function stepInput(b) {
     const el = inputs[b.dataset.target], before = el.value;
+    if (el.disabled) return false;
     el.value = Number(el.value) + Number(b.dataset.delta);
     clampInput(el);
     if (el.value === before) return false;   // at the limit
@@ -227,6 +231,12 @@
       b.setAttribute("aria-label", T.shapeAria(n, sh.from, sh.to));
       b.querySelector("small").textContent = `${sh.from}–${sh.to}`;
     }
+    // Along the neck: no wait between shapes, so Ticks after has no effect while it is on
+    neckSwitch.setAttribute("aria-checked", String(neckWalk));
+    const noWait = penta && neckWalk;
+    inputs.wait.disabled = noWait;
+    for (const b of document.querySelectorAll('.stepper [data-target="wait"]')) b.disabled = noWait;
+    inputs.wait.closest(".field").classList.toggle("off", noWait);
     // Variant: shown only when this key and shape fit in two places (SPEC §15.2)
     const places = pentaPlacements(shapeNo, pentaKey), cur = pentaShape(shapeNo, pentaKey, placeAt(pentaKey, shapeNo));
     placeRow.hidden = places.length < 2;
@@ -323,6 +333,12 @@
     const v = pentaPlace[`${k}:${n}`];
     return pentaPlacements(n, k).some(p => p.from === v) ? v : undefined;
   };
+  neckSwitch.addEventListener("click", () => {
+    neckWalk = !neckWalk;
+    renderKeys();
+    showIdle();
+    save();
+  });
   placeGrid.addEventListener("click", e => {
     const b = e.target.closest("[data-from]");
     if (!b) return;
@@ -494,7 +510,8 @@
 
   // Pentatonic shapes (SPEC §15.3): the complete shape up, then back down without repeating its top note.
   // Always the same route. The fretboard shows the shape's frets, widened to at least 5.
-  function shapeRound(n, k = pentaKey, at = placeAt(k, n)) {
+  // prep, wait: override the settings (along the neck, only the first shape has prep, and none has a wait)
+  function shapeRound(n, k = pentaKey, at = placeAt(k, n), prep = Number(inputs.prep.value), wait = Number(inputs.wait.value)) {
     const sh = pentaShape(n, k, at);
     const up = sh.positions.map(p => ({ midi: p.midi, name: p.name, st: p.st, f: p.f, root: p.root }));
     const walk = up.concat(up.slice(0, -1).reverse());
@@ -503,7 +520,6 @@
       if (from + ZONE_MIN - 1 <= PENTA_MAX_FRET) to = from + ZONE_MIN - 1;
       else from = to - ZONE_MIN + 1;
     }
-    const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
     return { walk, peak: up.length - 1, prep, wait, total: prep + walk.length + wait, penta: true, shape: n,
              key: { name: sh.key }, frets: [sh.from, sh.to], board: { from, to },
              variant: variantOf(sh, pentaPlacements(n, k)) };
@@ -512,7 +528,16 @@
   const roundLabel = r => r.penta ? `${T.minorName(r.key.name)} · ${T.shapeName(r.shape)}${r.variant ? ` · ${T[r.variant]}` : ""}` : T.keyName(r.key.name);
 
   function newRound() {
-    if (session.exercise === "penta") return shapeRound(session.shape, session.pentaKey, session.pentaAt);
+    if (session.exercise === "penta") {
+      if (!session.neck) return shapeRound(session.shape, session.pentaKey, session.pentaAt);
+      // Along the neck: this shape, with the next one drawn now so its descent can announce it
+      const n = session.neckNext ?? session.neck(), first = session.neckNext == null;
+      session.neckNext = session.neck();
+      const r = shapeRound(n, session.pentaKey, placeAt(session.pentaKey, n), first ? Number(inputs.prep.value) : 0, 0);
+      r.announce = first;                // the reference note only before the first shape
+      r.nextShape = session.neckNext;
+      return r;
+    }
     // The next key is drawn one round early so the wait ticks can announce it
     const keyIdx = session.upcoming ?? pickKey();
     session.upcoming = pickKey();
@@ -527,7 +552,7 @@
 
   // The sound of tick `st` of round `r` at `time`: reference note on announce, then clicks and walk notes
   function playTick(r, st, time, beat) {
-    if (st === 0) playNote(r.walk[0].midi, time);
+    if (st === 0 && r.announce !== false) playNote(r.walk[0].midi, time);   // reference note
     const w = st - r.prep;
     if (w >= 0 && w < r.walk.length) {
       click(time, w === 0, true);              // soft click
@@ -582,7 +607,8 @@
     if (keyAbove) roundKeyEl.textContent = k;
     const pre = keyAbove ? "" : `${k} · `;
     if (step < round.prep) phaseEl.textContent = pre + T.phasePrep(round.prep - step);
-    else if (inWalk) phaseEl.textContent = pre + (w <= round.peak ? T.phaseUp : T.phaseDown);
+    else if (inWalk) phaseEl.textContent = pre + (w <= round.peak ? T.phaseUp
+      : round.nextShape ? `${T.phaseDown} · ${T.nextShape(T.shapeName(round.nextShape))}` : T.phaseDown);
     else phaseEl.textContent = multi ? T.phaseNextKey(T.keyName(round.next.name), left) : pre + T.phaseNext(left);
     if (round.board) {
       if (round !== boardRound) buildBoard(round);
@@ -713,7 +739,7 @@
   function drawTrack(step) {
     if (step < 0) {
       const n = PENTA_SHAPES[shapeNo].length;  // Pentatonic: the shape up and back down
-      if (exercise === "penta") buildTrack(Number(inputs.prep.value), Number(inputs.wait.value), 2 * n - 1, n - 1);
+      if (exercise === "penta") buildTrack(Number(inputs.prep.value), neckWalk ? 0 : Number(inputs.wait.value), 2 * n - 1, n - 1);
       else buildTrack(Number(inputs.prep.value), Number(inputs.wait.value));
     }
     [...trackEl.children].forEach((s, i) => s.classList.toggle("on", i === step));
@@ -770,7 +796,9 @@
     closeBoard(false);
     session = { keys: keys.slice(), order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
                 board: board ? { from: fretFrom, to: fretTo } : null, pickStart: createStartPicker(),
-                exercise, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo) };
+                exercise, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo),
+                neck: exercise === "penta" && neckWalk ? createNeckWalk(pentaNeckOrder(pentaKey, n => placeAt(pentaKey, n)), shapeNo) : null,
+                neckNext: null };
     keyBtn.disabled = true;
     boardBtn.disabled = true;
     document.body.classList.add("practicing");
