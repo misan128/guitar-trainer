@@ -46,10 +46,12 @@
       console.info([
         "dbg.pause() / dbg.resume()   stop on the current tick / play on from it",
         "dbg.step()                   paused: next tick now (moves on to a new round at the end)",
+        "dbg.back()                   paused: previous tick now, within the round",
         "dbg.seek(i)                  go to walk note i (0–14): now if paused, next tick if running",
         'dbg.round("G", 3)            swap the current round for G major from degree 3 (1 = tonic … 7), same position',
         'dbg.walk("C", 1, 5, 9, i)    stopped: draw that walk on frets 5–9, current note at walk index i',
         "dbg.state()                  phase, tick, key, walk and settings",
+        "Pentatonic: the round is the shape (key and degree do not apply); along the neck, the key shows → next shape",
       ].join("\n"));
     },
     pause() {
@@ -78,6 +80,13 @@
       if (st >= r.total) { r = A.newRound(); st = 0; }
       showTick(r, st);
       return `tick ${st + 1}/${r.total}`;
+    },
+    // Back stays within the round: the rounds before are gone (along the neck, the next shape is already drawn)
+    back() {
+      if (!A.paused) return "Pause first.";
+      if (cursor.step === 0) return "Start of the round.";
+      showTick(cursor.round, cursor.step - 1);
+      return `tick ${cursor.step + 1}/${cursor.round.total}`;
     },
     seek(i) {
       if (!A.running) return "Start first (stopped: dbg.walk draws without playing).";
@@ -114,10 +123,12 @@
         running: A.running, paused: A.paused,
         phase: t ? phaseOf(t.round, t.step) : null,
         tick: t ? `${t.step + 1}/${t.round.total}` : null,
-        key: t ? (t.round.penta ? `${t.round.key.name} minor, shape ${t.round.shape}` : `${t.round.key.name} major, degree ${t.round.deg + 1}`) : null,
+        key: t ? (t.round.penta ? `${t.round.key.name} minor, shape ${t.round.shape}${t.round.nextShape ? ` → shape ${t.round.nextShape}` : ""}`
+          : `${t.round.key.name} major, degree ${t.round.deg + 1}`) : null,
         walk: t ? fingering(t.round) : null,
         settings: { bpm: Number(inputs.bpm.value), prep: Number(inputs.prep.value), wait: Number(inputs.wait.value),
-          keys: s.keys.map(k => KEYS[k].name), order: s.order, board: s.board, zone: `${s.fretFrom}–${s.fretTo}`, aid: s.aid, lang: s.lang },
+          keys: s.keys.map(k => KEYS[k].name), order: s.order, board: s.board, zone: `${s.fretFrom}–${s.fretTo}`, aid: s.aid, lang: s.lang,
+          exercise: s.exercise, shape: s.shape, neckWalk: s.neckWalk },
       };
     },
   };
@@ -161,7 +172,7 @@
     <div class="dbg-body" hidden>
       <div class="grip" title="Drag to move"><span>dbg</span><button class="fold" title="Collapse" aria-label="Collapse">−</button></div>
       <div class="row"><span class="lbl">play</span>
-        <button data-a="pause" title="Pause / play on">⏸</button><button data-a="step" title="Next tick (paused)">⏭</button></div>
+        <button data-a="back" title="Previous tick (paused)">⏮</button><button data-a="pause" title="Pause / play on">⏸</button><button data-a="step" title="Next tick (paused)">⏭</button></div>
       <div class="row" title="Key of the current round"><span class="lbl">round</span>
         <select data-f="key">${keyOpts}</select></div>
       <div class="row" title="Note of the walk: its degree and its position (0–14) move together"><span class="lbl">walk</span>
@@ -170,7 +181,7 @@
     </div>`;
   document.body.appendChild(panel);
   const q = sel => panel.querySelector(sel), out = q("pre");
-  const pauseBtn = q("[data-a=pause]"), stepBtn = q("[data-a=step]"), idx = q("[data-f=idx]");
+  const pauseBtn = q("[data-a=pause]"), stepBtn = q("[data-a=step]"), backBtn = q("[data-a=back]"), idx = q("[data-f=idx]");
   const keySel = q("[data-f=key]"), degSel = q("[data-f=deg]");
   // Every action's result goes to the panel and to the console
   const say = v => {
@@ -227,6 +238,7 @@
     pauseBtn.textContent = st.paused ? "▶" : "⏸";
     pauseBtn.disabled = !st.running;
     stepBtn.disabled = !st.paused;
+    backBtn.disabled = !st.paused || cursor.step === 0;
     const penta = pentaNow();
     keySel.disabled = degSel.disabled = penta;
     idx.disabled = penta && !t;           // stopped in Pentatonic: the idle preview is static
@@ -247,6 +259,7 @@
     const a = e.target.closest("button")?.dataset.a;
     if (a === "pause") say(A.paused ? dbg.resume() : dbg.pause());
     if (a === "step") say(dbg.step());
+    if (a === "back") say(dbg.back());
   });
 
   // Pill and panel share their top-right corner: open grows from it, close shrinks back to it,
