@@ -117,7 +117,7 @@
         key: t ? (t.round.penta ? `${t.round.key.name} minor, shape ${t.round.shape}` : `${t.round.key.name} major, degree ${t.round.deg + 1}`) : null,
         walk: t ? fingering(t.round) : null,
         settings: { bpm: Number(inputs.bpm.value), prep: Number(inputs.prep.value), wait: Number(inputs.wait.value),
-          keys: s.keys.map(k => KEYS[k].name), order: s.order, board: s.board, zone: `${s.fretFrom}–${s.fretTo}`, eye: s.showAll, lang: s.lang },
+          keys: s.keys.map(k => KEYS[k].name), order: s.order, board: s.board, zone: `${s.fretFrom}–${s.fretTo}`, aid: s.aid, lang: s.lang },
       };
     },
   };

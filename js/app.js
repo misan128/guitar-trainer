@@ -52,13 +52,16 @@
     document.querySelectorAll("[data-i18n-aria]").forEach(el => el.setAttribute("aria-label", T[el.dataset.i18nAria]));
     toggleBtn.textContent = running ? T.stop : T.start;
     renderKeys();
+    setAid(aid);
     if (!guideEl.hidden) showStep();
     if (running && lastShown) render(lastShown);
     else if (!running) showIdle();
   }
 
   // ---- Settings ----
-  let showAll = true;                  // eye open by default, like the fretboard
+  // Aids (SPEC §3): 1 all notes named · 2 current note named · 3 shape only · 4 start only.
+  // The eye shows the level; showAll is "the route is visible" (levels 1–3).
+  let aid = 1, showAll = true;
   const DEFAULT_KEY = 0;               // C major; also what Clear goes back to
   let keys = [DEFAULT_KEY];            // selected key indices, circle-of-fifths order; never empty
   let order = "random";                // "random" | "sequential"
@@ -72,9 +75,13 @@
   const ZONE_DEFAULT = 2;              // frets 2–6
   let guideSeen = false;
   let board = true, fretFrom = ZONE_DEFAULT, fretTo = ZONE_DEFAULT + ZONE_MIN - 1;
-  function setShowAll(v) {
-    showAll = v;
-    showAllEl.setAttribute("aria-pressed", String(v));
+  function setAid(v) {
+    aid = v;
+    showAll = aid <= 3;
+    showAllEl.dataset.level = aid;
+    const label = `${T.aids}: ${T["aid" + aid]}`;
+    showAllEl.setAttribute("aria-label", label);
+    showAllEl.title = label;
   }
   langEl.value = browserLang();       // overridden by saved settings
   // Keeps the zone valid: first fret 0–15, last fret up to 19, at least ZONE_MIN frets
@@ -92,7 +99,7 @@
     try {
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
-        keys, order, key: keys[0], showAll: showAll, lang: langEl.value,
+        keys, order, key: keys[0], aid, showAll, lang: langEl.value,
         board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo, pentaKey, pentaPlace
       }));
     } catch (e) {}
@@ -105,7 +112,9 @@
       const valid = FIFTHS.filter(i => saved.map(Number).includes(i));
       if (valid.length) keys = valid;
       if (s.order === "sequential") order = s.order;
-      if (typeof s.showAll === "boolean") showAll = s.showAll;
+      // Older settings had an on/off eye: on was today's level 2, off level 4
+      if ([1, 2, 3, 4].includes(s.aid)) aid = s.aid;
+      else if (typeof s.showAll === "boolean") aid = s.showAll ? 2 : 4;
       if (STRINGS[s.lang]) langEl.value = s.lang;
       if (typeof s.board === "boolean") board = s.board;   // older settings get the default
       guideSeen = s.guideSeen === true;
@@ -116,7 +125,7 @@
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }
   } catch (e) {}
-  setShowAll(showAll);
+  setAid(aid);
   for (const k in inputs) clampInput(inputs[k]);
 
   // Slider follows the BPM field; the gold fill is drawn in CSS from --fill
@@ -371,10 +380,12 @@
     if (!boardPanel.hidden && !boardPanel.contains(e.target) && !boardBtn.contains(e.target)) closeBoard(false);
   });
 
+  // Each tap closes the eye one step (less help); from closed it opens fully again
   showAllEl.addEventListener("click", () => {
-    setShowAll(!showAll);
+    setAid(aid % 4 + 1);
     save();
     if (running && lastShown) render(lastShown);
+    else if (!running) showIdle();
   });
   langEl.addEventListener("change", () => { applyLang(); save(); });
 
@@ -560,7 +571,7 @@
     }
     const w = step - round.prep;
     const inWalk = w >= 0 && w < round.walk.length;
-    noteEl.textContent = (inWalk && showAll ? round.walk[w] : round.walk[0]).name;
+    noteEl.textContent = (inWalk && aid <= 2 ? round.walk[w] : round.walk[0]).name;   // without fretboard: 1–2 follow, 3–4 start
 
     const k = roundLabel(round);
     const left = round.total - step;
@@ -625,6 +636,7 @@
     const pos = up.map(p => {
       const g = el("g", { class: "pos", transform: `translate(${bx(round, p.f)} ${by(p.st)})` }, boardEl);
       el("circle", { class: "dot", r: 6 }, g);
+      el("text", { class: "name" }, g).textContent = p.name;     // shown at aid level 1
       if (p.root) el("circle", { class: "ring", r: 8.6 }, g);   // roots: a thin second ring (SPEC §15.4)
       if (p.f === 0) g.classList.add("open");                    // open string: hollow dot
       const lit = el("g", { class: "lit" }, g);
@@ -644,6 +656,8 @@
   // w = -3: idle preview, the whole route with nothing lit (Pentatonic shapes)
   function drawBoard(round, w, reveal = showAll) {
     const { path, segs, active, grad, pos } = boardParts;
+    boardEl.classList.toggle("names-all", aid === 1);
+    boardEl.classList.toggle("names-none", aid === 3);
     if (w === -3) {
       path.style.display = "";
       pos.forEach(g => { g.style.display = ""; g.classList.remove("cur", "played", "next"); });
@@ -830,7 +844,7 @@
     { target: () => langEl, key: "guideLangPick", langs: true },
     { target: () => mainEl.classList.contains("with-board") ? boardEl : document.querySelector(".display"), key: "guideRound" },
     { target: () => keyBtn, key: "guideKeys" },
-    { target: () => showAllEl, key: "guideEye" },
+    { target: () => showAllEl, key: "guideEye", legend: true },
     { target: () => boardBtn, key: "guideBoard", skip: () => boardBtn.hidden },
     { target: () => helpBtn, key: "guideHelp" },
   ];
@@ -855,6 +869,18 @@
     $("guideText").textContent = T[step.key + "Text"];
     guideNext.textContent = last ? T.guideDone : T.guideNext;
     guideLangs.hidden = !step.langs;
+    // The aid levels, each eye with what it shows
+    const legend = $("guideLegend");
+    legend.hidden = !step.legend;
+    legend.textContent = "";
+    if (step.legend) for (const n of [1, 2, 3, 4]) {
+      const li = document.createElement("li"), icon = document.createElement("span");
+      icon.className = "eye";
+      icon.dataset.level = n;
+      icon.innerHTML = showAllEl.innerHTML;
+      li.append(icon, T["aid" + n]);
+      legend.appendChild(li);
+    }
     for (const b of guideLangs.children) b.setAttribute("aria-pressed", String(b.dataset.lang === langEl.value));
     const dots = $("guideDots");
     dots.textContent = "";
@@ -915,7 +941,7 @@
       get nextTime() { return nextTime; }, set nextTime(v) { nextTime = v; },
       get lastShown() { return lastShown; },
       get queue() { return queue; },
-      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, lang: langEl.value, exercise, shape: shapeNo, pentaKey }; },
+      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, aid, lang: langEl.value, exercise, shape: shapeNo, pentaKey }; },
       stopScheduler() { clearTimeout(timerId); cancelAnimationFrame(rafId); },
       startScheduler() { scheduler(); rafId = requestAnimationFrame(draw); },
       render, playTick, buildRound, newRound, buildBoard, drawBoard,

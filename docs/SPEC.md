@@ -30,7 +30,15 @@ This section is for understanding the code and checking that nothing breaks.
 - BPM controls, built for thumbs: the slider has a 48px touch area around a 7px bar (gold progress) and a 27px thumb; tapping anywhere on it jumps there, then it drags (handled in JS, since iOS only drags the thumb natively), and it never scrolls the page. On `−`/`+` (all steppers), a press steps once and holding repeats until release, with mouse or touch; the click a press leaves behind is ignored so a tap never counts twice. Slider, number and buttons stay in sync, also while running.
 - Ticks before and after the walk.
 - Keys: one or more of the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped. The selector sits in the top-left corner in brass (see §12).
-- "Show every note of the walk": off, only the start note is shown; on, each note's name is shown on its tick. **On by default** (same reasoning as the fretboard, §13.1); a saved choice is kept. It is an unlabeled eye toggle to the right of the key selector, on the same line (closed and muted = off; open on a brass-tinted tile = on), usable while running.
+- **Aids (the eye):** four levels of help, shown by how open the eye is. Each tap closes it one step; from closed it opens fully again. Usable while running.
+  | Eye | Level | With the fretboard | Without it (the big letter) |
+  | --- | --- | --- | --- |
+  | Wide open | 1 · All notes | the route, every position named, the current one in gold | the letter follows each note |
+  | Lid a little down | 2 · Current note | the route, only the current position named | the letter follows each note |
+  | Half closed | 3 · Shape only | the route, the current position lit without its name | the start note only |
+  | Closed | 4 · Start only | only the first position, named; the rest from memory | the start note only |
+
+  The button is a brass tile at levels 1–3 and muted when closed; its accessible label and tooltip name the level ("Aids: All notes"). **Level 1 by default** (aids start on, §13.1); settings saved with the old on/off eye become level 2 (on) or 4 (off). Stored as `aid` (1–4) in `scaleWalkLight`. At level 1 the route's dots are a little larger so names fit.
 - Settings are saved in `localStorage` under the key `scaleWalkLight`. **Keep that key** so the user's settings are not lost.
 - With a single key selected, no multi-key element shows (§12).
 
@@ -202,7 +210,7 @@ Goal: learn **how to play** each scale walk across the six strings inside a limi
 - Zone limits: first fret 0–15, last fret up to 19, and **at least 5 frets** (last ≥ first + 4; why: Appendix A). Changing the first fret pushes the last one up if needed. Default zone: 2–6 (the part of the neck the user knows best). Fret 0 means open strings.
 - No tuning selector until there is more than standard tuning (E A D G B e).
 - Like the keys, the button is disabled while practice is running: the fretboard and zone are fixed per session.
-- **On by default**, like the eye: aids start on and players turn them off as they need them less; an aid that starts off may never be discovered. Saved settings without `board` also get it on; an explicit saved choice is kept.
+- **On by default**, like the aids (§3): aids start on and players turn them off as they need them less; an aid that starts off may never be discovered. Saved settings without `board` also get it on; an explicit saved choice is kept.
 - Storage: `scaleWalkLight` holds `board` (bool), `fretFrom` and `fretTo`.
 
 ### 13.2 Building the walk
@@ -219,11 +227,11 @@ Goal: learn **how to play** each scale walk across the six strings inside a limi
 - An SVG fretboard while practice is running with the fretboard on. While idle, the pick shows and there is no fretboard.
 - Six horizontal strings, high e at the top, labeled e B G D A E; only the zone's frets; fret numbers under each fret; the nut when the zone starts at 0.
 - The fretboard **replaces the big note letter** while it shows: the gold dot already names the note. The key goes into the phase line ("C major · Ascending"), also with several keys.
-- **Eye open:** the walk's positions joined by a faint brass line; during prep and wait the current position is the start note. Other scale notes in the zone are not drawn: the path is what gets memorized. The feedback is built for focus at any tempo, with three levels:
+- **Aid levels 1–3 (eye open, §3):** the walk's positions joined by a faint brass line; during prep and wait the current position is the start note. Other scale notes in the zone are not drawn: the path is what gets memorized. Level 1 names every position; level 2 only the current one; level 3 lights the current one without its name. The feedback is built for focus at any tempo, with three levels:
   - **Current note:** the position lights up in solid gold with its name, always the same size.
   - **Next move:** the next position is a touch lighter, with a slightly stronger ring, and only the segment from the current note to it gets a faint `linearGradient` in the direction of travel, brighter at the current note and fading towards the next. No extra circle, arrow or pulse; the next note must be distinguishable without drawing attention. During prep it shows the first step; there is none during the wait. It works going up and down, and across strings.
   - **Rest of the route:** a quiet map in muted brass; positions and segments already played (behind the current one in the current direction) are dimmer than the upcoming ones.
-- **Eye closed:** only the start position, in gold, for the whole round; the rest has to be found by the player.
+- **Aid level 4 (eye closed):** only the start position, in gold, for the whole round; the rest has to be found by the player.
 - **Nothing moves:** every position has its own fixed dot, and the current one lights up in place. The geometry is built once per round; each beat only toggles classes and moves the gradient's end points.
 - Changes fade in opacity over up to 120 ms, never more than a third of a beat, and not at all when notes come faster than 250 ms (or with reduced motion), so the picture never lags behind the sound.
 - The tuning values (segment and dot opacities, next-position fill and ring, gradient strength, fade) are CSS variables on `#board`.
@@ -254,7 +262,7 @@ A short guided tour that explains the unlabeled controls where they are.
 | 0 | Language selector | **Idioma:** elige el idioma de la guía y de la app; puedes cambiarlo después arriba a la derecha. The bubble has one button per language, each written in its own language (English · Español · Euskara), the current one highlighted; tapping one switches the whole app at once. |
 | 1 | The pick / note | **Una ronda:** una nota al azar de la tonalidad. Tras unos clics de preparación, subes una octava y vuelves a bajar al ritmo del metrónomo. |
 | 2 | Keys button | **Tonalidades:** elige una o varias, y si las rondas van al azar o en orden. |
-| 3 | Eye | **Ver las notas:** abierto, ves cada nota del recorrido; cerrado, solo la inicial, para memorizarlo. |
+| 3 | Eye | **Ayudas:** toca el ojo para cerrarlo poco a poco, de más ayuda a menos. Below the text, the four eyes with their level: *Todas las notas · Solo la actual · Solo la forma · Solo el inicio*. |
 | 4 | Guitar | **Diapasón:** muestra el recorrido en el mástil, dentro de la zona de trastes que elijas. |
 | 5 | **?** | **Ayuda:** con **?** vuelves a ver esta guía cuando quieras. |
 
@@ -318,7 +326,7 @@ The route never changes between rounds: no randomness in fingering or starting p
 - **Open strings** (open variant): drawn as hollow dots, and the nut a little stronger.
 - **Roots:** the positions that are the key's root (A in A minor) carry a subtle mark (a thin second ring), always, so the shape can be anchored to its root.
 - **Fret range:** the shape's own frets, widened to at least 5 so every shape has the same geometry (extra fret above; below if that would pass fret 16).
-- **Eye:** as in Scale walk. Open: the whole route and the next move. Closed: only the first position, so the rest is played from memory.
+- **Aids (eye):** as in Scale walk (§3): all notes, current note, shape only, start only. The idle preview follows level 1 (all positions named) or shows the plain route at the other levels.
 
 ### 15.5 Implementation order
 

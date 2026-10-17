@@ -20,10 +20,12 @@
 <body>
 <div class="corner left">
   <button id="keyBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="keyPanel"></button>
-  <button id="showAll" aria-pressed="false" data-i18n-aria="showAll">
+  <button id="showAll" class="eye" data-level="1">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <g class="lid-open"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></g>
-      <g class="lid-closed"><path d="M2 10.5c2.6 3.6 6 5.5 10 5.5s7.4-1.9 10-5.5"/><path d="M5.6 14l-1.5 2.2M12 16v2.6M18.4 14l1.5 2.2"/></g>
+      <g class="eye-1"><path d="M2 12Q12 1 22 12Q12 23 2 12z"/><circle cx="12" cy="12" r="3"/></g>
+      <g class="eye-2"><path d="M2 12Q12 8 22 12M2 12Q12 23 22 12"/><path d="M9.76 10A3 3 0 1 0 14.24 10"/></g>
+      <g class="eye-3"><path d="M2 12Q12 13 22 12M2 12Q12 22 22 12"/><path d="M9.04 12.5A3 3 0 0 0 14.96 12.5"/></g>
+      <g class="eye-4"><path d="M2 10.5c2.6 3.6 6 5.5 10 5.5s7.4-1.9 10-5.5"/><path d="M5.6 14l-1.5 2.2M12 16v2.6M18.4 14l1.5 2.2"/></g>
     </svg>
   </button>
   <button id="boardBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="boardPanel" data-i18n-aria="board">
@@ -87,6 +89,7 @@
   <div id="guideTip">
     <p id="guideTitle"></p>
     <p id="guideText"></p>
+    <ul id="guideLegend" class="g-legend" hidden></ul>
     <div id="guideLangs" class="g-langs" hidden></div>
     <div class="g-foot">
       <span id="guideDots"></span>

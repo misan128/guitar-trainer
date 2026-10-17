@@ -96,11 +96,11 @@ main {
   transition: background-color .2s, color .2s, opacity .2s;
 }
 #showAll:hover { opacity: 1; }
-#showAll[aria-pressed="true"] { background: rgba(209, 166, 90, .16); color: var(--brass); opacity: 1; }
+/* Aids (SPEC §3): the eye opens from 4 (closed: start only) to 1 (wide open: all notes); a brass tile unless closed */
+#showAll:not([data-level="4"]) { background: rgba(209, 166, 90, .16); color: var(--brass); opacity: 1; }
 #showAll svg { display: block; width: 100%; height: 100%; }
-#showAll .lid-open { display: none; }
-#showAll[aria-pressed="true"] .lid-open { display: inline; }
-#showAll[aria-pressed="true"] .lid-closed { display: none; }
+.eye .eye-1, .eye .eye-2, .eye .eye-3, .eye .eye-4 { display: none; }
+.eye[data-level="1"] .eye-1, .eye[data-level="2"] .eye-2, .eye[data-level="3"] .eye-3, .eye[data-level="4"] .eye-4 { display: inline; }
 #phase {
   margin-top: .75rem;
   color: var(--muted);
@@ -467,6 +467,12 @@ select.quiet:disabled { opacity: .35; }
 #board .pos.cur .lit { opacity: 1; }
 /* Roots (Pentatonic shapes): a thin second ring, always there; the gold layer covers it when current */
 #board .pos .ring { fill: none; stroke: var(--brass); stroke-opacity: .55; stroke-width: 1.1; }
+/* Aid 1: every position named (dots a little larger to fit the name); aid 3: the current one lit without its name */
+#board .pos .name { display: none; fill: var(--bone); font-size: 7.5px; dominant-baseline: central; }
+#board.names-all .pos .name { display: inline; }
+#board.names-all .pos .dot { transform: scale(1.3); }
+#board.names-all .pos.played .name { opacity: .55; }
+#board.names-none .lit text { display: none; }
 /* Open strings: a hollow dot, and a slightly stronger nut when the route uses them */
 #board .pos.open .dot { fill: var(--wood); stroke-opacity: .75; stroke-width: 1.6; }
 #board.open-pos .nut { opacity: .9; }
@@ -545,6 +551,11 @@ main.with-board #board { max-width: 34rem; margin-top: .75rem; }
 #guideDots { flex: 1; display: flex; gap: .35rem; }
 #guideDots i { width: .45rem; height: .45rem; border-radius: 50%; background: var(--wire); }
 #guideDots i.on { background: var(--brass); }
+/* The aid levels in the guide: each eye with what it shows */
+.g-legend { list-style: none; margin: .6rem 0 0; padding: 0; display: grid; gap: .35rem; }
+.g-legend li { display: flex; align-items: center; gap: .6rem; }
+.g-legend .eye { display: inline-block; width: 1.4rem; height: 1.4rem; color: var(--brass); flex: none; }
+.g-legend .eye svg { width: 100%; height: 100%; }
 .g-foot button {
   height: 2.4rem;
   padding: 0 .9rem;
