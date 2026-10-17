@@ -76,13 +76,21 @@ export const roundLabel = r => r.penta ? `${T.minorName(r.key.name)} · ${T.shap
 
 export function newRound() {
   const { session } = play;
+  // Pentatonic (SPEC §15.3): the path is fixed, so rounds follow each other without a wait; the reference
+  // note and the prep ticks only come before the first one
   if (session.exercise === "penta") {
-    if (!session.neck) return shapeRound(session.shape, session.pentaKey, session.pentaAt);
+    const first = !session.started;
+    session.started = true;
+    if (!session.neck) {
+      const r = shapeRound(session.shape, session.pentaKey, session.pentaAt, first ? Number(inputs.prep.value) : 0, 0);
+      r.announce = first;
+      return r;
+    }
     // Along the neck: this shape, with the next one drawn now so its descent can announce it
-    const n = session.neckNext ?? session.neck(), first = session.neckNext == null;
+    const n = session.neckNext ?? session.neck();
     session.neckNext = session.neck();
     const r = shapeRound(n, session.pentaKey, placeAt(session.pentaKey, n), first ? Number(inputs.prep.value) : 0, 0);
-    r.announce = first;                // the reference note only before the first shape
+    r.announce = first;
     r.neckBar = true;
     r.nextShape = session.neckNext;
     return r;

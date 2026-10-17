@@ -32,9 +32,9 @@ export function renderKeys() {
     b.setAttribute("aria-label", T.shapeAria(n, sh.from, sh.to));
     b.querySelector("small").textContent = `${sh.from}–${sh.to}`;
   }
-  // Along the neck: no wait between shapes, so Ticks after has no effect while it is on
   neckSwitch.setAttribute("aria-checked", String(settings.neckWalk));
-  const noWait = penta && settings.neckWalk;
+  // Pentatonic has no wait between rounds (SPEC §15.3), so Ticks after has no effect there
+  const noWait = penta;
   inputs.wait.disabled = noWait;
   for (const b of document.querySelectorAll('.stepper [data-target="wait"]')) b.disabled = noWait;
   inputs.wait.closest(".field").classList.toggle("off", noWait);
