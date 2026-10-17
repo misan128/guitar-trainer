@@ -166,7 +166,7 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 11. With the fretboard on, every walk in every zone of at least 5 frets is playable: each marked fret sounds the pitch played, stays inside the zone, never moves to a lower string while ascending, and the same key, start note and zone always give the same fingering.
 12. The first-use guide shows once (language step first), can be reopened with **?**, and is never shown while practice is running.
 13. Start notes follow §3: every pass of a key covers its seven start degrees, and two rounds in a row never start on the same note.
-14. Pentatonic shapes (§15): every shape matches §15.2, each round plays the complete shape up and down with the fretboard in sync, and switching back to Scale walk leaves it exactly as it was.
+14. Pentatonic shapes (§15): every shape matches §15.2, each round plays the complete shape up and down with the fretboard in sync, rounds follow each other with no wait (prep only before the first), and switching back to Scale walk leaves it exactly as it was.
 15. Along the neck (§15.6): consecutive rounds move to the neighbouring shape on the neck and turn at both ends, with no wait between shapes.
 
 ## 11. Out of scope
@@ -288,7 +288,7 @@ Goal: memorize the five minor pentatonic shapes as **physical patterns**: where 
 - **Two exercises:** *Scale walk* (everything in §3, §12 and §13) and *Pentatonic shapes*. Switching exercise feels like changing the activity, not the app: same screen, same controls.
 - **Selector inside the setup panel:** the top-left button opens one panel whose first row is the exercise (*Scale walk · Pentatonic*); below it, that exercise's setup. For Scale walk, the key panel as it is (§12). For Pentatonic, the 12 minor keys as tiles (circle-of-fifths order: A E B F♯ C♯ G♯ D♯ B♭ F C G D, one always selected), then the five shapes as tiles, each with a small diagram of the shape and its fret range in that key, and, only when the key and shape fit in two places, a **Variant** choice between them: *Open (0–3) · Closed (12–15)* for the open-position ones, with a one-line hint ("Same shape, with open strings."), or *Low (1–4) · High (13–16)* for two movable octaves. A variant is the same shape, never a different shape number. No new button in the top bar.
 - **Button label:** Scale walk as in §12 ("C major", "C, G", "n keys"); Pentatonic "A minor · Shape 1". One key per session: no automatic key changes between rounds.
-- **Shared:** BPM, prep and wait ticks, the eye, language and guide. **Per exercise:** Scale walk keeps keys, order, fretboard on/off and zone; Pentatonic keeps its key and shape.
+- **Shared:** BPM, prep ticks, the eye, language and guide; the wait ticks only apply to Scale walk (§15.3). **Per exercise:** Scale walk keeps keys, order, fretboard on/off and zone; Pentatonic keeps its key and shape.
 - **Fretboard button:** shown only in Scale walk. In Pentatonic the fretboard is always on: it is the exercise.
 - The exercise and the shape can only be changed while stopped, like the keys.
 - Storage: `scaleWalkLight` holds `exercise` (`"walk"` | `"penta"`, default `"walk"`), `pentaShape` (1–5, default 1), `pentaKey` (index of the minor key, default A minor) and `pentaPlace` (the chosen placement per key and shape, as its first fret, only where there is a choice).
@@ -317,10 +317,10 @@ Goal: memorize the five minor pentatonic shapes as **physical patterns**: where 
 
 ### 15.3 A round
 
-1. **Announce:** the shape's first (lowest) note, shown and played once as a reference.
-2. **Prep:** the shared prep ticks.
+1. **Announce:** the shape's first (lowest) note, shown and played once as a reference, before the first round only.
+2. **Prep:** the shared prep ticks, before the first round only.
 3. **Shape:** the complete six-string shape, one position per tick: 12 positions up, then the same 11 back down, without playing the highest twice (23 ticks). Each tick plays the position's real pitch (`OPEN_MIDI[string] + fret`), with the same clicks as Scale walk.
-4. **Wait:** the shared wait ticks, then the same shape again.
+4. **No wait:** the same shape again straight away, until Stop. The path is fixed and known, so a pause between rounds adds nothing; the wait ticks are for Scale walk, where the next key and start note change. **Ticks after** is shown disabled in Pentatonic.
 
 The route never changes between rounds: no randomness in fingering or starting point.
 
@@ -347,8 +347,7 @@ Learn the move from one shape to the next, not only each shape on its own.
 - **A switch in the Pentatonic setup:** *Move along the neck*, off by default. Stored as `pentaNeck`.
 - **Off:** as before, the selected shape again and again.
 - **On:** practice starts on the selected shape and each round moves to its **neighbour on the neck** in that key, up to the highest shape and back down, back and forth until Stop. The order follows the frets, not the shape numbers: in A minor, 5 (2–5) → 1 → 2 → 3 → 4 (12–15) and back. Each shape uses its chosen variant (§15.2), so an open variant sits at the bottom end. No arbitrary jumps between shapes: those belong to improvisation (§11).
-- **Continuous:** the prep ticks and the reference note only before the first shape; no wait ticks between shapes. Each shape ends on its lowest note, on the 6th string, and the next one starts on the 6th string too: the move is a slide along the low string to the next box.
-- **Ticks after** has no effect in this mode, so its control is shown disabled while it is on (Pentatonic with *Move along the neck*); it is enabled again otherwise.
+- **Continuous,** like a single shape (§15.3): the prep ticks and the reference note only before the first shape, no wait between shapes. Each shape ends on its lowest note, on the 6th string, and the next one starts on the 6th string too: the move is a slide along the low string to the next box.
 - **The next shape is announced** on the phase line during the descent: "A minor · Shape 2 · Descending · Next: Shape 3".
 - **Fretboard:** each shape shows its own zone. On the last note of a shape, in the second half of its beat, the zone slides to the next one with an easing of at most 0.5 s: fret numbers, the nut, the route and its positions move the real distance in the direction of travel and fade out, while the next shape's arrive from the other side and fade in, its start already lit. Going up the neck everything moves left; going down, right. Strings, their names and fret wires stay. When notes come faster than 250 ms, with reduced motion, or if the two zones differ in width, the next zone simply replaces this one when the next shape starts.
 - **Neck bar:** under the fret numbers, a thin line stands for the whole neck (frets 0–16) and a gold bar for the part of it on screen, with the shape's number below, like a scroll bar. On the way down the gold bar ends in a point on the side it will move to, so it says where you are and where you go; a faint bar with the next shape's number shows where the next zone lies. When the zone slides, the gold bar slides with it to that place. It shows whenever "Move along the neck" is on, also before starting.
