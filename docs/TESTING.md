@@ -47,11 +47,14 @@ The idea: the panel is a cursor over the round. Whatever you change shows, and s
 | Control | Running | Paused | Stopped |
 | --- | --- | --- | --- |
 | **⏸ / ▶** | Pause on the current tick | Play on from the cursor | — |
+| **⏮** | — | Previous tick, immediately, with its sound (within the round) | — |
 | **⏭** | — | Next tick, immediately, with its sound (at the end it moves on to a new round) | — |
 | **round: key** | Swap the key on the fly, same start degree and position | Swap it and sound the note at the same position | Draw that key's walk from the tonic |
 | **walk: degree · slider** | Jump to that note on the next tick | Go to that note and sound it | Move along the drawn walk |
 
 The degree select and the slider are one control: the current note of the walk, as a scale degree and as a position (0–14). Moving the slider updates the degree; choosing a degree moves the slider to that note, the nearest one if it appears both on the way up and on the way down. While running, key, degree and slider follow the current round and note. The round's start degree is the one the app drew; `dbg.round()` in the console can force it. Below them, a live line shows the phase, tick, key and degree, and the fingering.
+
+**Pentatonic shapes:** the round is the selected shape, so the key and degree selects are locked; the slider steps through the shape, up and back down. Stopped, the idle preview is static. Along the neck, the key in the live line ends with `→ shape n`, the next one, and stepping past the end moves on to it. On a shape's last note the fretboard has already slid to the next zone; seeking back from there draws the current shape again.
 
 **Console:** the state line is printed as `[dbg] …` every time it changes (each tick, pause, stop), and so is the result of every action, even with the panel closed. The same controls are available as commands:
 
@@ -60,10 +63,11 @@ The degree select and the slider are one control: the current note of the walk, 
 | `dbg.help()` | Lists the commands. |
 | `dbg.pause()` / `dbg.resume()` | Stop on the current tick / play on from it. |
 | `dbg.step()` | Paused: next tick now. |
+| `dbg.back()` | Paused: previous tick now, back to the round's first tick. |
 | `dbg.seek(i)` | Go to walk note `i` (0–14): now if paused, on the next tick if running. |
 | `dbg.round("G", 3)` | Swap the current round for G major from degree 3 (1 = tonic … 7), same position. `F#` and `Db` work too. |
 | `dbg.walk("C", 1, 7, 11, i)` | Stopped: draw that walk on frets 7–11 with the current note at walk index `i` and return its fingering, e.g. `E8 E10 A7 A8 A10 D7 D9 D10`. Zone defaults to the panel's. |
-| `dbg.state()` | Phase, tick, key and degree, the walk's fingering, and the settings. |
+| `dbg.state()` | Phase, tick, key and degree (Pentatonic: shape, and → the next one along the neck), the walk's fingering, and the settings. |
 
 Pausing stops the scheduler and silences what it had already queued; stepping, seeking or swapping the round plays that one tick right away; resuming schedules the next tick one beat later.
 

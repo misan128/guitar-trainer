@@ -617,7 +617,10 @@
         if (boardParts && boardParts.pendingShape === round.shape && round.penta) { boardRound = round; boardParts.pendingShape = null; }
         else buildBoard(round);
       }
-      if (boardParts.pendingShape) return drawTrack(step);          // sliding to the next shape: leave it be
+      if (boardParts.pendingShape) {
+        if (round.nextShape && w === round.walk.length - 1) return drawTrack(step);   // sliding to the next shape: leave it be
+        buildBoard(round);              // moved back from the last note (dev mode): this shape again
+      }
       drawBoard(round, inWalk ? w : step < round.prep ? -1 : -2);
       if (round.nextShape) {
         round.nextRound ??= shapeRound(round.nextShape, session.pentaKey, placeAt(session.pentaKey, round.nextShape), 0, 0);
@@ -1062,7 +1065,7 @@
       get nextTime() { return nextTime; }, set nextTime(v) { nextTime = v; },
       get lastShown() { return lastShown; },
       get queue() { return queue; },
-      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, aid, lang: langEl.value, exercise, shape: shapeNo, pentaKey }; },
+      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, aid, lang: langEl.value, exercise, shape: shapeNo, pentaKey, neckWalk }; },
       stopScheduler() { clearTimeout(timerId); cancelAnimationFrame(rafId); },
       startScheduler() { scheduler(); rafId = requestAnimationFrame(draw); },
       render, playTick, buildRound, newRound, buildBoard, drawBoard,
