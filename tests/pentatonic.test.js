@@ -1,7 +1,7 @@
 // Minor pentatonic shapes (SPEC §15.2) and their transposition to every minor key (§15.6). Run: node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { OPEN_MIDI, STRING_NAMES, MINOR_PENTA, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape } = require("../js/theory.js");
+const { OPEN_MIDI, STRING_NAMES, MINOR_PENTA, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape, pentaNeckOrder, createNeckWalk } = require("../js/theory.js");
 
 const SHAPES = [1, 2, 3, 4, 5];
 const A = 9;                                          // pitch class of A
@@ -149,4 +149,25 @@ test("any placement keeps the geometry; the default is the lowest movable one", 
     }
   }
   assert.equal(pentaShape(1, keyOf("E"), 7), null, "a placement that does not exist");
+});
+
+// ---- Along the neck (SPEC §15.6) ----
+test("shapes in neck order follow the frets, with each shape's chosen placement", () => {
+  assert.deepEqual(pentaNeckOrder(), [5, 1, 2, 3, 4]);                       // A minor: 2–5, 5–8, 7–10, 9–13, 12–15
+  for (const k of KEY_IDS) {
+    const order = pentaNeckOrder(k), from = order.map(n => pentaShape(n, k).from);
+    assert.deepEqual([...order].sort(), SHAPES, "all five shapes");
+    assert.deepEqual(from, [...from].sort((a, b) => a - b), `${MINOR_KEYS[k].name} minor: rising frets`);
+  }
+  const e = keyOf("E");
+  assert.equal(pentaNeckOrder(e, n => (n === 1 ? 0 : undefined))[0], 1, "E minor shape 1 open sits at the bottom end");
+});
+
+test("moving along the neck goes to the neighbour and turns at both ends", () => {
+  const order = [5, 1, 2, 3, 4], run = (start, n) => { const next = createNeckWalk(order, start); return Array.from({ length: n }, next); };
+  assert.deepEqual(run(1, 10), [1, 2, 3, 4, 3, 2, 1, 5, 1, 2]);
+  assert.deepEqual(run(4, 6), [4, 3, 2, 1, 5, 1]);
+  assert.deepEqual(run(5, 6), [5, 1, 2, 3, 4, 3]);
+  const seq = run(2, 200);
+  for (let i = 1; i < seq.length; i++) assert.equal(Math.abs(order.indexOf(seq[i]) - order.indexOf(seq[i - 1])), 1, "always a neighbour");
 });
