@@ -346,7 +346,7 @@ Learn the move from one shape to the next, not only each shape on its own.
 - **Continuous:** the prep ticks and the reference note only before the first shape; no wait ticks between shapes. Each shape ends on its lowest note, on the 6th string, and the next one starts on the 6th string too: the move is a slide along the low string to the next box.
 - **Ticks after** has no effect in this mode, so its control is shown disabled while it is on (Pentatonic with *Move along the neck*); it is enabled again otherwise.
 - **The next shape is announced** on the phase line during the descent: "A minor · Shape 2 · Descending · Next: Shape 3".
-- **Fretboard:** each shape shows its own zone, so the view jumps to the next zone when the next shape starts. An animated slide between zones may come later, after trying this.
+- **Fretboard:** each shape shows its own zone. On the last note of a shape, in the second half of its beat, the zone slides to the next one with an easing of at most 0.5 s: fret numbers, the nut, the route and its positions move the real distance in the direction of travel and fade out, while the next shape's arrive from the other side and fade in, its start already lit. Going up the neck everything moves left; going down, right. Strings, their names and fret wires stay. When notes come faster than 250 ms, with reduced motion, or if the two zones differ in width, the next zone simply replaces this one when the next shape starts.
 
 ### 15.7 Later phase (not decided)
 
