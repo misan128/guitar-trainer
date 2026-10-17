@@ -69,16 +69,23 @@ The screen stays on while practice is running. Sound follows the media volume.
 
 ## Running it locally
 
-Open `index.html` in a browser. There is no build step and nothing to install. Offline support needs the site to be served over HTTP(S), not opened as a file.
+There is no build step. Serve the folder and open it in a browser:
+
+```sh
+npm start                      # then open http://localhost:8000/
+```
+
+It needs only Node. Opening `index.html` as a file does not work: the app is made of ES modules, which browsers load only over HTTP(S).
 
 ## Testing
 
 ```sh
-node --test                    # automated tests: Node 18+, no dependencies
-python3 -m http.server 8000    # then open http://localhost:8000/
+node --test                    # unit tests: Node 18+, no dependencies
+npm install && npm run smoke:setup   # once, for the smoke tests (Playwright and Chromium)
+npm run smoke                  # the main flows in a real browser
 ```
 
-The tests check start-note selection, every fretboard walk, the five pentatonic shapes in every key, and that all languages have the same texts. What they cover, and a manual checklist for the phone, are in [docs/TESTING.md](docs/TESTING.md).
+The unit tests check start-note selection, every fretboard walk, the five pentatonic shapes in every key, and that all languages have the same texts. The smoke tests run the app in Chromium. What they cover, and a manual checklist for the phone, are in [docs/TESTING.md](docs/TESTING.md).
 
 ## License
 
