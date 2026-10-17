@@ -1065,7 +1065,7 @@
       get nextTime() { return nextTime; }, set nextTime(v) { nextTime = v; },
       get lastShown() { return lastShown; },
       get queue() { return queue; },
-      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, aid, lang: langEl.value, exercise, shape: shapeNo, pentaKey }; },
+      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, aid, lang: langEl.value, exercise, shape: shapeNo, pentaKey, neckWalk }; },
       stopScheduler() { clearTimeout(timerId); cancelAnimationFrame(rafId); },
       startScheduler() { scheduler(); rafId = requestAnimationFrame(draw); },
       render, playTick, buildRound, newRound, buildBoard, drawBoard,
