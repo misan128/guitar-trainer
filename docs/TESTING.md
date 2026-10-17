@@ -18,7 +18,7 @@ Node 18 or later, no dependencies, no `npm install`. Node finds every `*.test.js
 | `tests/pentatonic.test.js` | The five minor pentatonic shapes (SPEC §15.2): in A minor, every note in the scale, two notes per string on all six strings, a route that climbs through the scale without skipping a note, within 5 frets, the exact routes and fret ranges of the spec table, note names, degrees and roots. In all 12 minor keys: every shape fits (movable, frets 1–16), geometry and degrees are kept, the lowest movable placement is the default, notes are in the key and spelled after its key signature. Placements: the five open-position ones (E1, D2, C3, A4, G5), the nine combinations with two places an octave apart, and any placement keeping the geometry. Along the neck: shapes in fret order with their chosen placement, and the walk to the neighbouring shape turning at both ends. |
 | `tests/strings.test.js` | Languages are listed EN, EU, ES, and every language has the same text keys, of the same kind (text or function), none empty. |
 
-They test `js/theory.js` and `js/strings.js` directly. `js/app.js` (UI, audio, drawing) is covered by the smoke tests and the manual pass below.
+They test `js/theory.js` and `js/strings.js` directly. The app in `js/app/` (UI, audio, drawing) is covered by the smoke tests and the manual pass below.
 
 **Adding a test:** create `tests/<name>.test.js` using `node:test` and `node:assert/strict`, as the existing ones do. `js/theory.js` loads with `require("../js/theory.js")`; `js/strings.js` needs `global.window = {}` before `require`.
 
@@ -44,7 +44,7 @@ npm install
 npm run smoke:setup
 ```
 
-Then, before a release and after changes to `js/app.js`:
+Then, before a release and after changes to `js/app/`:
 
 ```sh
 npm run smoke
@@ -66,7 +66,7 @@ GitHub runs the same check, and `node --test`, on every push to `main` (`.github
 
 ## Running the app locally
 
-Serve the folder over HTTP. Opening `index.html` as a file works, but the service worker (offline) does not run there.
+Serve the folder over HTTP, or use VS Code Live Preview. Opening `index.html` as a file does not work: the app is made of ES modules, which browsers only load over HTTP(S).
 
 ```sh
 python3 -m http.server 8000
@@ -78,7 +78,7 @@ To start clean, as a first-time user: DevTools → *Application* → *Storage* �
 
 ## Dev mode
 
-Add `?debug` to the URL: `http://localhost:8000/?debug`, or with VS Code Live Preview `…/index.html?vscode-livepreview=true&debug`. Without `?debug` none of this exists, so users never see it: the tool is `js/debug.js`, and `js/app.js` only loads it, and exposes the small bridge it uses, with `?debug`.
+Add `?debug` to the URL: `http://localhost:8000/?debug`, or with VS Code Live Preview `…/index.html?vscode-livepreview=true&debug`. Without `?debug` none of this exists, so users never see it: the tool is `js/debug.js`, and `js/app/main.js` only loads it, and exposes the small bridge it uses, with `?debug`.
 
 The idea: the panel is a cursor over the round. Whatever you change shows, and sounds, at once; from there you can pause, step, or play on.
 
