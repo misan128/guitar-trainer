@@ -115,7 +115,7 @@ function buildTrack(prep, wait, len = WALK, peak = WALK_PEAK) {
 export function drawTrack(step) {
   if (step < 0) {
     const n = PENTA_SHAPES[settings.shapeNo].length;  // Pentatonic: the shape up and back down
-    if (settings.exercise === "penta") buildTrack(Number(inputs.prep.value), settings.neckWalk ? 0 : Number(inputs.wait.value), 2 * n - 1, n - 1);
+    if (settings.exercise === "penta") buildTrack(Number(inputs.prep.value), 0, 2 * n - 1, n - 1);
     else buildTrack(Number(inputs.prep.value), Number(inputs.wait.value));
   }
   [...trackEl.children].forEach((s, i) => s.classList.toggle("on", i === step));
