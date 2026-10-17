@@ -1,0 +1,19 @@
+# On every push to main (a release or a hotfix), checks that a change to a precached file came with a new
+# cache name in sw.js, and runs the unit tests. See scripts/check-cache.js.
+name: Release checks
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # tags and history, to compare with the previous release
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-cache.js
+      - run: node --test
