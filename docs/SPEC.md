@@ -163,6 +163,7 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 12. The first-use guide shows once (language step first), can be reopened with **?**, and is never shown while practice is running.
 13. Start notes follow §3: every pass of a key covers its seven start degrees, and two rounds in a row never start on the same note.
 14. Pentatonic shapes (§15): every shape matches §15.2, each round plays the complete shape up and down with the fretboard in sync, and switching back to Scale walk leaves it exactly as it was.
+15. Along the neck (§15.6): consecutive rounds move to the neighbouring shape on the neck and turn at both ends, with no wait between shapes.
 
 ## 11. Out of scope
 
@@ -335,13 +336,27 @@ The route never changes between rounds: no randomness in fingering or starting p
 3. **The exercise in the app:** setup panel with the exercise row and shape tiles, idle preview, the round, roots, storage and texts in every language. The dev mode follows the round's length, so it can step through a shape.
 4. **Any minor key:** key tiles, transposition and naming (§15.2), with their tests.
 
-### 15.6 Later phase (not decided)
+### 15.6 Along the neck
+
+Learn the move from one shape to the next, not only each shape on its own.
+
+- **A switch in the Pentatonic setup:** *Move along the neck*, off by default. Stored as `pentaNeck`.
+- **Off:** as before, the selected shape again and again.
+- **On:** practice starts on the selected shape and each round moves to its **neighbour on the neck** in that key, up to the highest shape and back down, back and forth until Stop. The order follows the frets, not the shape numbers: in A minor, 5 (2–5) → 1 → 2 → 3 → 4 (12–15) and back. Each shape uses its chosen variant (§15.2), so an open variant sits at the bottom end. No arbitrary jumps between shapes: those belong to improvisation (§11).
+- **Continuous:** the prep ticks and the reference note only before the first shape; no wait ticks between shapes. Each shape ends on its lowest note, on the 6th string, and the next one starts on the 6th string too: the move is a slide along the low string to the next box.
+- **Ticks after** has no effect in this mode, so its control is shown disabled while it is on (Pentatonic with *Move along the neck*); it is enabled again otherwise.
+- **The next shape is announced** on the phase line during the descent: "A minor · Shape 2 · Descending · Next: Shape 3".
+- **Fretboard:** each shape shows its own zone. On the last note of a shape, in the second half of its beat, the zone slides to the next one with an easing of at most 0.5 s: fret numbers, the nut, the route and its positions move the real distance in the direction of travel and fade out, while the next shape's arrive from the other side and fade in, its start already lit. Going up the neck everything moves left; going down, right. Strings, their names and fret wires stay. When notes come faster than 250 ms, with reduced motion, or if the two zones differ in width, the next zone simply replaces this one when the next shape starts.
+- **Neck bar:** under the fret numbers, a thin line stands for the whole neck (frets 0–16) and a gold bar for the part of it on screen, with the shape's number below, like a scroll bar. On the way down the gold bar ends in a point on the side it will move to, so it says where you are and where you go; a faint bar with the next shape's number shows where the next zone lies. When the zone slides, the gold bar slides with it to that place. It shows whenever "Move along the neck" is on, also before starting.
+- No mark for the next shape's start on the fretboard: going up it is the current shape's second note, already on screen; going down it usually lies outside the zone, so the neck bar says it.
+
+### 15.7 Later phase (not decided)
 
 - **Phase 3, moving between shapes:** shapes in one key share notes with their neighbours, so a route across two or more shapes can be built from the same position data. Nothing in phases 1–2 may prevent it.
 
-### 15.7 Texts
+### 15.8 Texts
 
-In `strings.js`, for every language: the two exercise names, "Exercise", "Key" (for the minor keys), "Shape", the shape label ("Shape n"), the minor key name ("A minor"), the fret range ("Frets a–b"), and the accessible labels for the shape tiles and the idle preview.
+In `strings.js`, for every language: the two exercise names, "Move along the neck", "Next: Shape n", "Exercise", "Key" (for the minor keys), "Shape", the shape label ("Shape n"), the minor key name ("A minor"), the fret range ("Frets a–b"), and the accessible labels for the shape tiles and the idle preview.
 
 ## Appendix A. Design notes
 

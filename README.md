@@ -28,6 +28,7 @@ The five minor pentatonic shapes, played as fixed fingering patterns to build mu
 - **Shape:** 1 to 5, each tile with a small diagram and its frets. The selected shape is shown on the fretboard before you start, with its roots marked.
 - **Variant:** when a shape fits in two places, choose between them: *Open* or *Closed* for the five open-position ones (E minor shape 1, D minor 2, C minor 3, A minor 4, G minor 5), *Low* or *High* for two octaves of the same movable shape.
 - **A round:** the reference note, the prep ticks, the complete six-string shape up (12 notes) and back down (11), the wait ticks, then the same shape again. The route never changes.
+- **Move along the neck:** instead of repeating one shape, each round moves to the next shape up the neck, and back down at the end, without stopping. The prep ticks only come before the first shape, there is no wait between shapes, and the next shape is announced while you descend: you slide along the 6th string into the next box.
 
 Practice keeps going until you stop it.
 

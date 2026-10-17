@@ -7,7 +7,7 @@
   const BASE_MIDI = 48;            // start note always in octave 3 (C3–B3)
 
   // Scale theory and fretboard walks live in theory.js (tested in tests/)
-  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape } = Theory;
+  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape, pentaNeckOrder, createNeckWalk } = Theory;
 
   const $ = id => document.getElementById(id);
   const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
@@ -17,6 +17,7 @@
   const keyCount = $("keyCount"), keysAllBtn = $("keysAll"), keysClearBtn = $("keysClear");
   const walkSetup = $("walkSetup"), pentaSetup = $("pentaSetup"), shapeGrid = $("shapeGrid"), shapeKey = $("shapeKey");
   const pentaKeyGrid = $("pentaKeyGrid"), placeRow = $("placeRow"), placeGrid = $("placeGrid"), openHint = $("openHint");
+  const neckSwitch = $("neckSwitch");
   const roundKeyEl = $("roundKey");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
   const boardBtn = $("boardBtn"), boardPanel = $("boardPanel"), boardSwitch = $("boardSwitch");
@@ -70,6 +71,7 @@
   let shapeNo = 1;                     // Pentatonic shape, 1–5
   let pentaKey = 0;                    // Pentatonic minor key: index into MINOR_KEYS (A minor)
   let pentaPlace = {};                 // chosen placement per "key:shape" (its first fret), when there are two
+  let neckWalk = false;                // Pentatonic: move to the neighbouring shape each round (SPEC §15.6)
   // Fretboard (SPEC §13): on by default (aids start on, players turn them off); a zone spans at least ZONE_MIN frets
   const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
   const ZONE_DEFAULT = 2;              // frets 2–6
@@ -100,7 +102,7 @@
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
         keys, order, key: keys[0], aid, showAll, lang: langEl.value,
-        board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo, pentaKey, pentaPlace
+        board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo, pentaKey, pentaPlace, pentaNeck: neckWalk
       }));
     } catch (e) {}
   }
@@ -121,6 +123,7 @@
       if (s.exercise === "penta") exercise = "penta";
       if (PENTA_SHAPES[s.pentaShape]) shapeNo = Number(s.pentaShape);
       if (MINOR_KEYS[s.pentaKey]) pentaKey = Number(s.pentaKey);
+      neckWalk = s.pentaNeck === true;
       if (s.pentaPlace && typeof s.pentaPlace === "object") for (const k in s.pentaPlace) if (Number.isInteger(s.pentaPlace[k])) pentaPlace[k] = s.pentaPlace[k];
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }
@@ -146,6 +149,7 @@
   // The click that follows a pointer press is ignored, so a tap never counts twice.
   function stepInput(b) {
     const el = inputs[b.dataset.target], before = el.value;
+    if (el.disabled) return false;
     el.value = Number(el.value) + Number(b.dataset.delta);
     clampInput(el);
     if (el.value === before) return false;   // at the limit
@@ -227,6 +231,12 @@
       b.setAttribute("aria-label", T.shapeAria(n, sh.from, sh.to));
       b.querySelector("small").textContent = `${sh.from}–${sh.to}`;
     }
+    // Along the neck: no wait between shapes, so Ticks after has no effect while it is on
+    neckSwitch.setAttribute("aria-checked", String(neckWalk));
+    const noWait = penta && neckWalk;
+    inputs.wait.disabled = noWait;
+    for (const b of document.querySelectorAll('.stepper [data-target="wait"]')) b.disabled = noWait;
+    inputs.wait.closest(".field").classList.toggle("off", noWait);
     // Variant: shown only when this key and shape fit in two places (SPEC §15.2)
     const places = pentaPlacements(shapeNo, pentaKey), cur = pentaShape(shapeNo, pentaKey, placeAt(pentaKey, shapeNo));
     placeRow.hidden = places.length < 2;
@@ -323,6 +333,12 @@
     const v = pentaPlace[`${k}:${n}`];
     return pentaPlacements(n, k).some(p => p.from === v) ? v : undefined;
   };
+  neckSwitch.addEventListener("click", () => {
+    neckWalk = !neckWalk;
+    renderKeys();
+    showIdle();
+    save();
+  });
   placeGrid.addEventListener("click", e => {
     const b = e.target.closest("[data-from]");
     if (!b) return;
@@ -494,7 +510,8 @@
 
   // Pentatonic shapes (SPEC §15.3): the complete shape up, then back down without repeating its top note.
   // Always the same route. The fretboard shows the shape's frets, widened to at least 5.
-  function shapeRound(n, k = pentaKey, at = placeAt(k, n)) {
+  // prep, wait: override the settings (along the neck, only the first shape has prep, and none has a wait)
+  function shapeRound(n, k = pentaKey, at = placeAt(k, n), prep = Number(inputs.prep.value), wait = Number(inputs.wait.value)) {
     const sh = pentaShape(n, k, at);
     const up = sh.positions.map(p => ({ midi: p.midi, name: p.name, st: p.st, f: p.f, root: p.root }));
     const walk = up.concat(up.slice(0, -1).reverse());
@@ -503,7 +520,6 @@
       if (from + ZONE_MIN - 1 <= PENTA_MAX_FRET) to = from + ZONE_MIN - 1;
       else from = to - ZONE_MIN + 1;
     }
-    const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
     return { walk, peak: up.length - 1, prep, wait, total: prep + walk.length + wait, penta: true, shape: n,
              key: { name: sh.key }, frets: [sh.from, sh.to], board: { from, to },
              variant: variantOf(sh, pentaPlacements(n, k)) };
@@ -512,7 +528,17 @@
   const roundLabel = r => r.penta ? `${T.minorName(r.key.name)} · ${T.shapeName(r.shape)}${r.variant ? ` · ${T[r.variant]}` : ""}` : T.keyName(r.key.name);
 
   function newRound() {
-    if (session.exercise === "penta") return shapeRound(session.shape, session.pentaKey, session.pentaAt);
+    if (session.exercise === "penta") {
+      if (!session.neck) return shapeRound(session.shape, session.pentaKey, session.pentaAt);
+      // Along the neck: this shape, with the next one drawn now so its descent can announce it
+      const n = session.neckNext ?? session.neck(), first = session.neckNext == null;
+      session.neckNext = session.neck();
+      const r = shapeRound(n, session.pentaKey, placeAt(session.pentaKey, n), first ? Number(inputs.prep.value) : 0, 0);
+      r.announce = first;                // the reference note only before the first shape
+      r.neckBar = true;
+      r.nextShape = session.neckNext;
+      return r;
+    }
     // The next key is drawn one round early so the wait ticks can announce it
     const keyIdx = session.upcoming ?? pickKey();
     session.upcoming = pickKey();
@@ -527,7 +553,7 @@
 
   // The sound of tick `st` of round `r` at `time`: reference note on announce, then clicks and walk notes
   function playTick(r, st, time, beat) {
-    if (st === 0) playNote(r.walk[0].midi, time);
+    if (st === 0 && r.announce !== false) playNote(r.walk[0].midi, time);   // reference note
     const w = st - r.prep;
     if (w >= 0 && w < r.walk.length) {
       click(time, w === 0, true);              // soft click
@@ -582,11 +608,22 @@
     if (keyAbove) roundKeyEl.textContent = k;
     const pre = keyAbove ? "" : `${k} · `;
     if (step < round.prep) phaseEl.textContent = pre + T.phasePrep(round.prep - step);
-    else if (inWalk) phaseEl.textContent = pre + (w <= round.peak ? T.phaseUp : T.phaseDown);
+    else if (inWalk) phaseEl.textContent = pre + (w <= round.peak ? T.phaseUp
+      : round.nextShape ? `${T.phaseDown} · ${T.nextShape(T.shapeName(round.nextShape))}` : T.phaseDown);
     else phaseEl.textContent = multi ? T.phaseNextKey(T.keyName(round.next.name), left) : pre + T.phaseNext(left);
     if (round.board) {
-      if (round !== boardRound) buildBoard(round);
+      if (round !== boardRound) {
+        // The next shape's zone may already have slid in on the previous shape's last note
+        if (boardParts && boardParts.pendingShape === round.shape && round.penta) { boardRound = round; boardParts.pendingShape = null; }
+        else buildBoard(round);
+      }
+      if (boardParts.pendingShape) return drawTrack(step);          // sliding to the next shape: leave it be
       drawBoard(round, inWalk ? w : step < round.prep ? -1 : -2);
+      if (round.nextShape) {
+        round.nextRound ??= shapeRound(round.nextShape, session.pentaKey, placeAt(session.pentaKey, round.nextShape), 0, 0);
+        drawBar(round, inWalk && w > round.peak ? round.nextRound : null);   // the next zone, on the way down
+        if (w === round.walk.length - 1) slideBoard(round.nextRound, 60 / Number(inputs.bpm.value));
+      }
     } else if (!boardEl.hasAttribute("hidden")) hideBoard();
     drawTrack(step);
   }
@@ -603,27 +640,41 @@
   }
   const bx = (round, f) => LM + (f - round.board.from + .5) * FW;
   const by = st => TM + (5 - st) * SS;        // high e on top
+  // The board has a fixed part (strings, their names, fret wires) and a zone (fret numbers, the nut or the
+  // zone's edge, the route and its positions). Along the neck, zones slide in and out (slideBoard).
+  let zoneSeq = 0;
   function buildBoard(round) {
     boardRound = round;
     const { from, to } = round.board, n = to - from + 1;
     const w = LM + n * FW + 4, bottom = TM + 5 * SS;
-    boardEl.setAttribute("viewBox", `0 0 ${w} ${bottom + 22}`);
+    boardEl.setAttribute("viewBox", `0 0 ${w} ${bottom + (round.neckBar ? BAR_GAP + 16 : 22)}`);
     boardEl.textContent = "";
     for (let st = 0; st < 6; st++) {
       el("line", { class: "str", x1: LM, x2: w - 4, y1: by(st), y2: by(st), "stroke-width": 1.8 - st * .2 }, boardEl);
       el("text", { x: LM / 2 - 2, y: by(st) + 3.5 }, boardEl).textContent = STRING_NAMES[st];
     }
-    // Fret wires sit on column edges; with fret 0 the first column is the open strings, left of the nut
-    for (let i = 0; i <= n; i++) {
-      const cls = from === 0 ? (i === 1 ? "nut" : i === 0 ? null : "fret") : (i === 0 ? "edge" : "fret");
-      if (cls) el("line", { class: cls, x1: LM + i * FW, x2: LM + i * FW, y1: by(5) - 2, y2: bottom + 2 }, boardEl);
-    }
-    for (let f = from; f <= to; f++) el("text", { x: bx(round, f), y: bottom + 18 }, boardEl).textContent = f;
+    for (let i = 1; i <= n; i++) el("line", { class: "fret", x1: LM + i * FW, x2: LM + i * FW, y1: by(5) - 2, y2: bottom + 2 }, boardEl);
+    neckBar = null;
+    if (round.neckBar) buildBar(n);
+    boardParts = buildZone(round);
+    boardParts.cols = n;
+    drawBar(round, null);
+    boardEl.removeAttribute("hidden");   // SVG has no .hidden property
+    mainEl.classList.add("with-board");
+  }
+  function buildZone(round) {
+    const { from, to } = round.board, n = to - from + 1, bottom = TM + 5 * SS;
+    const zone = el("g", { class: "zone" }, boardEl);
+    // With fret 0 the first column is the open strings, left of the nut; otherwise the zone's first wire is its edge
+    if (from === 0) el("line", { class: "nut", x1: LM + FW, x2: LM + FW, y1: by(5) - 2, y2: bottom + 2 }, zone);
+    else el("line", { class: "edge", x1: LM, x2: LM, y1: by(5) - 2, y2: bottom + 2 }, zone);
+    for (let f = from; f <= to; f++) el("text", { x: bx(round, f), y: bottom + 18 }, zone).textContent = f;
     // Built once per round; each beat only toggles classes and moves the gradient's end points
-    const grad = el("linearGradient", { id: "nextMove", gradientUnits: "userSpaceOnUse" }, el("defs", {}, boardEl));
+    const gradId = `nextMove${++zoneSeq}`;
+    const grad = el("linearGradient", { id: gradId, gradientUnits: "userSpaceOnUse" }, el("defs", {}, zone));
     el("stop", { class: "grad-near", offset: 0 }, grad);
     el("stop", { class: "grad-far", offset: 1 }, grad);
-    const path = el("g", { class: "path" }, boardEl);
+    const path = el("g", { class: "path" }, zone);
     const up = round.walk.slice(0, round.peak + 1);
     // Moves along a string are solid; string changes are dashed and fainter
     const segs = [];
@@ -631,10 +682,10 @@
       const a = up[i - 1], b = up[i];
       segs.push(el("line", { class: a.st === b.st ? "same" : "cross", x1: bx(round, a.f), y1: by(a.st), x2: bx(round, b.f), y2: by(b.st) }, path));
     }
-    const active = el("line", { class: "active" }, path);   // current → next, with the gradient
+    const active = el("line", { class: "active", stroke: `url(#${gradId})` }, path);   // current → next, with the gradient
     // One fixed group per position: a quiet dot, and a gold layer with the note name that lights up when current
     const pos = up.map(p => {
-      const g = el("g", { class: "pos", transform: `translate(${bx(round, p.f)} ${by(p.st)})` }, boardEl);
+      const g = el("g", { class: "pos", transform: `translate(${bx(round, p.f)} ${by(p.st)})` }, zone);
       el("circle", { class: "dot", r: 6 }, g);
       el("text", { class: "name" }, g).textContent = p.name;     // shown at aid level 1
       if (p.root) el("circle", { class: "ring", r: 8.6 }, g);   // roots: a thin second ring (SPEC §15.4)
@@ -644,11 +695,78 @@
       el("text", {}, lit).textContent = p.name;
       return g;
     });
-    boardEl.classList.toggle("open-pos", up.some(p => p.f === 0));
-    boardParts = { path, segs, active, grad, pos };
-    boardEl.removeAttribute("hidden");   // SVG has no .hidden property
-    mainEl.classList.add("with-board");
+    zone.classList.toggle("open-pos", up.some(p => p.f === 0));
+    return { zone, path, segs, active, grad, pos, from };
   }
+  // Along the neck (SPEC §15.6): on the last note of a shape, its zone slides out in the direction of travel
+  // while the next shape's zone slides in from the other side, fret numbers and positions together; the
+  // strings and fret wires stay. It runs in the second half of that beat, so the next shape's first note
+  // finds its zone in place. No slide when notes come faster than 250 ms, or with reduced motion: then the
+  // next shape simply replaces this one when it starts.
+  function slideBoard(next, beat) {
+    const n = next.board.to - next.board.from + 1;
+    if (beat < .25 || n !== boardParts.cols || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const old = boardParts, dx = (next.board.from - old.from) * FW;
+    const incoming = buildZone(next);
+    incoming.cols = n;
+    incoming.pendingShape = next.shape;
+    const delay = beat * 400, dur = Math.min(500, beat * 550);
+    const ease = `${dur}ms cubic-bezier(.45, 0, .25, 1) ${delay}ms`;
+    Object.assign(incoming.zone.style, { transform: `translateX(${dx}px)`, opacity: 0 });
+    boardParts = incoming;
+    drawBoard(next, -1);                // the next shape's start, lit, as it arrives
+    slideBar(next, ease);
+    incoming.zone.getBoundingClientRect();
+    for (const z of [old.zone, incoming.zone]) z.style.transition = `transform ${ease}, opacity ${ease}`;
+    Object.assign(old.zone.style, { transform: `translateX(${-dx}px)`, opacity: 0 });
+    Object.assign(incoming.zone.style, { transform: "translateX(0)", opacity: 1 });
+    setTimeout(() => old.zone.remove(), delay + dur + 50);
+  }
+  // Along the neck: under the fret numbers, a thin line is the whole neck (frets 0–16) and a gold bar the
+  // part of it on screen, with the shape's number. On the way down the gold bar gets a point on the side it
+  // will move to, and a faint bar with the next shape's number shows where the next zone lies. The bar slides
+  // with the zone. Like a scroll bar: the fretboard is a window on the neck.
+  const BAR_FRETS = PENTA_MAX_FRET + 1, BAR_GAP = 30, BAR_H = 1.75, HEAD_H = 3.5, HEAD_L = 6;
+  let neckBar = null;
+  function buildBar(n) {
+    const y = TM + 5 * SS + BAR_GAP, x0 = LM, span = n * FW;
+    const x = f => x0 + f / BAR_FRETS * span, wide = n / BAR_FRETS * span;
+    const g = el("g", { class: "neckbar" }, boardEl);
+    el("line", { class: "neck", x1: x0, x2: x0 + span, y1: y, y2: y }, g);
+    const part = cls => {
+      const p = el("g", { class: cls }, g);
+      el("rect", { x: 0, y: y - BAR_H, width: wide, height: 2 * BAR_H, rx: BAR_H }, p);
+      el("text", { x: wide / 2, y: y + 11 }, p);
+      return p;
+    };
+    const ghost = part("ghost"), thumb = part("thumb");
+    const head = el("path", { class: "head" }, thumb);
+    neckBar = { x, y, wide, ghost, thumb, head };
+  }
+  function placeBar(p, round) {
+    p.style.transform = `translateX(${neckBar.x(round.board.from)}px)`;
+    p.querySelector("text").textContent = round.shape;
+  }
+  function drawBar(round, next) {
+    if (!neckBar) return;
+    const { thumb, ghost, head, y, wide } = neckBar;
+    placeBar(thumb, round);
+    ghost.classList.toggle("on", !!next);
+    head.classList.toggle("on", !!next);
+    if (!next) return;
+    placeBar(ghost, next);
+    // The point, on the bar's edge toward the next zone
+    const up = next.board.from > round.board.from, edge = up ? wide - BAR_H : BAR_H, tip = up ? wide + HEAD_L : -HEAD_L;
+    head.setAttribute("d", `M${edge} ${y - HEAD_H} L${tip} ${y} L${edge} ${y + HEAD_H} Z`);
+  }
+  function slideBar(next, ease) {
+    if (!neckBar) return;
+    neckBar.thumb.style.transition = `transform ${ease}`;
+    placeBar(neckBar.thumb, next);
+    neckBar.ghost.classList.remove("on");
+    neckBar.head.classList.remove("on");
+  }
+
   // w: walk index; -1 during prep, -2 during wait (both show the start position)
   // reveal: show the path even with the eye closed (dev mode inspection)
   // Walk index → position on the route (the way down reuses the way up)
@@ -713,7 +831,7 @@
   function drawTrack(step) {
     if (step < 0) {
       const n = PENTA_SHAPES[shapeNo].length;  // Pentatonic: the shape up and back down
-      if (exercise === "penta") buildTrack(Number(inputs.prep.value), Number(inputs.wait.value), 2 * n - 1, n - 1);
+      if (exercise === "penta") buildTrack(Number(inputs.prep.value), neckWalk ? 0 : Number(inputs.wait.value), 2 * n - 1, n - 1);
       else buildTrack(Number(inputs.prep.value), Number(inputs.wait.value));
     }
     [...trackEl.children].forEach((s, i) => s.classList.toggle("on", i === step));
@@ -743,6 +861,7 @@
   function showIdle() {
     if (exercise === "penta") {
       const r = shapeRound(shapeNo);
+      r.neckBar = neckWalk;
       buildBoard(r);
       drawBoard(r, -3);
       pickEl.setAttribute("hidden", "");
@@ -770,7 +889,9 @@
     closeBoard(false);
     session = { keys: keys.slice(), order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
                 board: board ? { from: fretFrom, to: fretTo } : null, pickStart: createStartPicker(),
-                exercise, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo) };
+                exercise, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo),
+                neck: exercise === "penta" && neckWalk ? createNeckWalk(pentaNeckOrder(pentaKey, n => placeAt(pentaKey, n)), shapeNo) : null,
+                neckNext: null };
     keyBtn.disabled = true;
     boardBtn.disabled = true;
     document.body.classList.add("practicing");
