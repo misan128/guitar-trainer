@@ -18,11 +18,39 @@ Node 18 or later, no dependencies, no `npm install`. Node finds every `*.test.js
 | `tests/pentatonic.test.js` | The five minor pentatonic shapes (SPEC §15.2): in A minor, every note in the scale, two notes per string on all six strings, a route that climbs through the scale without skipping a note, within 5 frets, the exact routes and fret ranges of the spec table, note names, degrees and roots. In all 12 minor keys: every shape fits (movable, frets 1–16), geometry and degrees are kept, the lowest movable placement is the default, notes are in the key and spelled after its key signature. Placements: the five open-position ones (E1, D2, C3, A4, G5), the nine combinations with two places an octave apart, and any placement keeping the geometry. Along the neck: shapes in fret order with their chosen placement, and the walk to the neighbouring shape turning at both ends. |
 | `tests/strings.test.js` | Languages are listed EN, EU, ES, and every language has the same text keys, of the same kind (text or function), none empty. |
 
-They test `js/theory.js` and `js/strings.js` directly. `js/app.js` (UI, audio, drawing) is covered by the manual pass below.
+They test `js/theory.js` and `js/strings.js` directly. `js/app.js` (UI, audio, drawing) is covered by the smoke tests and the manual pass below.
 
 **Adding a test:** create `tests/<name>.test.js` using `node:test` and `node:assert/strict`, as the existing ones do. `js/theory.js` loads with `require("../js/theory.js")`; `js/strings.js` needs `global.window = {}` before `require`.
 
 **When to touch them:** changing the fingering rules, the zone limits, `OPEN_MIDI`, or adding a language or a text key.
+
+## Smoke tests
+
+The app in a real browser: Chromium with an iPhone 13 viewport, driven by Playwright, on a tiny static server over the repo. They check that the main flows run and show, not how they look:
+
+| Test | Checks |
+| --- | --- |
+| Load | No errors; the pick at rest; `debug.js` not requested without `?debug`. |
+| Scale walk | Start lights a position on the fretboard; stop hides it. |
+| Pentatonic along the neck | From A minor shape 1, the neck bar shows 1, points to 2 on the way down, slides to 2, and only one zone is left. |
+| Eye | Four taps go through levels 2, 3, 4, 1, and the level is saved. |
+| Language | Spanish and Basque change the texts; the choice is saved. |
+| Dev mode | `?debug` loads `dbg`; pause, step and back return to the same tick. |
+
+Once, from the repo root:
+
+```sh
+npm install
+npm run smoke:setup
+```
+
+Then, before a release and after changes to `js/app.js`:
+
+```sh
+npm run smoke
+```
+
+They take about 10 seconds. On Linux, if Chromium reports missing libraries, install the ones it names, e.g. on Ubuntu `sudo apt-get install libgbm1 libasound2`. Each test starts from its own saved settings (the guide already seen, English), so they do not depend on each other or on your browser. They live in `tests/smoke/` and are named `*.smoke.js`, so `node --test` alone does not run them.
 
 ## Release check
 
