@@ -347,6 +347,8 @@ Learn the move from one shape to the next, not only each shape on its own.
 - **Ticks after** has no effect in this mode, so its control is shown disabled while it is on (Pentatonic with *Move along the neck*); it is enabled again otherwise.
 - **The next shape is announced** on the phase line during the descent: "A minor · Shape 2 · Descending · Next: Shape 3".
 - **Fretboard:** each shape shows its own zone. On the last note of a shape, in the second half of its beat, the zone slides to the next one with an easing of at most 0.5 s: fret numbers, the nut, the route and its positions move the real distance in the direction of travel and fade out, while the next shape's arrive from the other side and fade in, its start already lit. Going up the neck everything moves left; going down, right. Strings, their names and fret wires stay. When notes come faster than 250 ms, with reduced motion, or if the two zones differ in width, the next zone simply replaces this one when the next shape starts.
+- **Neck bar:** under the fret numbers, a thin line stands for the whole neck (frets 0–16) and a gold bar for the part of it on screen, with the shape's number below, like a scroll bar. On the way down the gold bar ends in a point on the side it will move to, so it says where you are and where you go; a faint bar with the next shape's number shows where the next zone lies. When the zone slides, the gold bar slides with it to that place. It shows whenever "Move along the neck" is on, also before starting.
+- No mark for the next shape's start on the fretboard: going up it is the current shape's second note, already on screen; going down it usually lies outside the zone, so the neck bar says it.
 
 ### 15.7 Later phase (not decided)
 
