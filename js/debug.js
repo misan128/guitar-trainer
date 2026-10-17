@@ -2,7 +2,7 @@
 // Pause stops the scheduler on a tick; from there, stepping, seeking along the walk or swapping the
 // round's key and degree shows and sounds at once, and resume plays on from the cursor. While running,
 // the same changes apply on the fly. English only: it is a dev tool (SPEC §4.2).
-// It only touches the app through the bridge js/app.js exposes as ScaleTrainerDev, and js/app.js only
+// It only touches the app through the bridge js/app/main.js exposes as ScaleTrainerDev, and main.js only
 // loads this file with ?debug in the URL. See docs/TESTING.md.
 (() => {
   const A = window.ScaleTrainerDev;
