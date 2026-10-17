@@ -1,7 +1,7 @@
-// Minor pentatonic shapes in A minor (SPEC §15.2). Run: node --test
+// Minor pentatonic shapes (SPEC §15.2) and their transposition to every minor key (§15.6). Run: node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { OPEN_MIDI, STRING_NAMES, MINOR_PENTA, PENTA_SHAPES, pentaShape } = require("../js/theory.js");
+const { OPEN_MIDI, STRING_NAMES, MINOR_PENTA, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaShape } = require("../js/theory.js");
 
 const SHAPES = [1, 2, 3, 4, 5];
 const A = 9;                                          // pitch class of A
@@ -67,4 +67,48 @@ test("shapes are fixed data, the same on every call", () => {
   assert.deepEqual(pentaShape(3), pentaShape(3));
   assert.equal(pentaShape(6), null);
   assert.equal(Object.keys(PENTA_SHAPES).length, 5);
+});
+
+// ---- Transposition to every minor key (SPEC §15.6) ----
+const KEY_IDS = MINOR_KEYS.map((_, k) => k);
+
+test("every shape fits in every minor key: movable (no open string) and up to the highest fret", () => {
+  assert.equal(PENTA_MAX_FRET, 16);
+  for (const k of KEY_IDS) for (const n of SHAPES) {
+    const s = pentaShape(n, k), where = `${MINOR_KEYS[k].name} minor, shape ${n}`;
+    assert.ok(s, `${where} has no placement`);
+    assert.ok(s.from >= 1 && s.to <= PENTA_MAX_FRET, `${where} sits at ${s.from}–${s.to}`);
+  }
+});
+
+test("transposing keeps the shape's geometry and moves every note by the key's interval", () => {
+  for (const k of KEY_IDS) for (const n of SHAPES) {
+    const a = pentaShape(n).positions, t = pentaShape(n, k).positions, shift = t[0].f - a[0].f;
+    t.forEach((p, i) => {
+      assert.equal(p.st, a[i].st, "same strings");
+      assert.equal(p.f - a[i].f, shift, `${MINOR_KEYS[k].name} minor, shape ${n}: every fret moves the same`);
+      assert.equal(p.midi - a[i].midi, shift, "pitch follows the fret");
+      assert.equal(p.degree, a[i].degree, "same degrees");
+    });
+  }
+});
+
+test("the lowest placement is used", () => {
+  for (const k of KEY_IDS) for (const n of SHAPES) {
+    const s = pentaShape(n, k);
+    assert.ok(s.from - 12 < 1 || s.to - 12 > PENTA_MAX_FRET, `${MINOR_KEYS[k].name} minor, shape ${n} could sit an octave lower`);
+  }
+  assert.equal(`${pentaShape(4).from}–${pentaShape(4).to}`, "12–15");   // A minor shape 4 stays movable, not open
+});
+
+test("notes are in each key's pentatonic and spelled after its key signature", () => {
+  for (const k of KEY_IDS) for (const n of SHAPES) for (const p of pentaShape(n, k).positions) {
+    assert.ok(MINOR_PENTA.includes((p.midi - MINOR_KEYS[k].pc + 120) % 12), "in the scale");
+    assert.equal(p.root, p.name === MINOR_KEYS[k].name, `${MINOR_KEYS[k].name} minor: root flag`);
+  }
+  const notes = name => [...new Set(pentaShape(1, MINOR_KEYS.findIndex(k => k.name === name)).positions.map(p => p.name))].join(" ");
+  assert.equal(notes("D♯"), "D♯ F♯ G♯ A♯ C♯");
+  assert.equal(notes("B♭"), "B♭ D♭ E♭ F A♭");
+  assert.equal(notes("E"), "E G A B D");
+  assert.equal(notes("F"), "F A♭ B♭ C E♭");
 });

@@ -7,7 +7,7 @@
   const BASE_MIDI = 48;            // start note always in octave 3 (C3–B3)
 
   // Scale theory and fretboard walks live in theory.js (tested in tests/)
-  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker, PENTA_SHAPES, pentaShape } = Theory;
+  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaShape } = Theory;
 
   const $ = id => document.getElementById(id);
   const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
@@ -16,6 +16,7 @@
   const keyBtn = $("keyBtn"), keyPanel = $("keyPanel"), keyGrid = $("keyGrid");
   const keyCount = $("keyCount"), keysAllBtn = $("keysAll"), keysClearBtn = $("keysClear");
   const walkSetup = $("walkSetup"), pentaSetup = $("pentaSetup"), shapeGrid = $("shapeGrid"), shapeKey = $("shapeKey");
+  const pentaKeyGrid = $("pentaKeyGrid");
   const roundKeyEl = $("roundKey");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
   const boardBtn = $("boardBtn"), boardPanel = $("boardPanel"), boardSwitch = $("boardSwitch");
@@ -64,6 +65,7 @@
   // Exercise (SPEC §15.1): BPM, ticks, eye, language and guide are shared; keys and fretboard belong to Scale walk
   let exercise = "walk";               // "walk" | "penta"
   let shapeNo = 1;                     // Pentatonic shape, 1–5
+  let pentaKey = 0;                    // Pentatonic minor key: index into MINOR_KEYS (A minor)
   // Fretboard (SPEC §13): on by default (aids start on, players turn them off); a zone spans at least ZONE_MIN frets
   const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
   const ZONE_DEFAULT = 2;              // frets 2–6
@@ -90,7 +92,7 @@
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
         keys, order, key: keys[0], showAll: showAll, lang: langEl.value,
-        board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo
+        board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo, pentaKey
       }));
     } catch (e) {}
   }
@@ -108,6 +110,7 @@
       guideSeen = s.guideSeen === true;
       if (s.exercise === "penta") exercise = "penta";
       if (PENTA_SHAPES[s.pentaShape]) shapeNo = Number(s.pentaShape);
+      if (MINOR_KEYS[s.pentaKey]) pentaKey = Number(s.pentaKey);
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }
   } catch (e) {}
@@ -205,9 +208,10 @@
     walkSetup.hidden = penta;
     pentaSetup.hidden = !penta;
     boardBtn.hidden = penta;             // in Pentatonic the fretboard is the exercise: always on
-    shapeKey.textContent = T.minorName(pentaShape(1).key);
+    shapeKey.textContent = T.minorName(MINOR_KEYS[pentaKey].name);
+    for (const b of pentaKeyGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.key) === pentaKey));
     for (const b of shapeGrid.children) {
-      const n = Number(b.dataset.shape), sh = pentaShape(n);
+      const n = Number(b.dataset.shape), sh = pentaShape(n, pentaKey);
       b.setAttribute("aria-pressed", String(n === shapeNo));
       b.setAttribute("aria-label", T.shapeAria(n, sh.from, sh.to));
       b.querySelector("small").textContent = `${sh.from}–${sh.to}`;
@@ -245,7 +249,22 @@
   });
   keysAllBtn.addEventListener("click", () => setKeys(FIFTHS));
   // ---- Pentatonic setup: exercise row and shape tiles (SPEC §15.1) ----
-  const shapeLabel = n => `${T.minorName(pentaShape(n).key)} · ${T.shapeName(n)}`;
+  const shapeLabel = n => `${T.minorName(MINOR_KEYS[pentaKey].name)} · ${T.shapeName(n)}`;
+  // Minor key tiles, circle-of-fifths order (A E B F♯ C♯ G♯ D♯ B♭ F C G D); one is always selected
+  MINOR_KEYS.forEach((k, i) => {
+    const b = document.createElement("button");
+    b.dataset.key = i;
+    b.textContent = k.name;
+    pentaKeyGrid.appendChild(b);
+  });
+  pentaKeyGrid.addEventListener("click", e => {
+    const b = e.target.closest("[data-key]");
+    if (!b) return;
+    pentaKey = Number(b.dataset.key);
+    renderKeys();
+    showIdle();
+    save();
+  });
   // Each tile: the number, a small diagram of the shape (roots stronger) and its frets
   for (const n of Object.keys(PENTA_SHAPES).map(Number)) {
     const sh = pentaShape(n), cols = sh.to - sh.from + 1, b = document.createElement("button");
@@ -433,9 +452,8 @@
 
   // Pentatonic shapes (SPEC §15.3): the complete shape up, then back down without repeating its top note.
   // Always the same route. The fretboard shows the shape's frets, widened to at least 5.
-  const PENTA_MAX_FRET = 15;
-  function shapeRound(n) {
-    const sh = pentaShape(n);
+  function shapeRound(n, k = pentaKey) {
+    const sh = pentaShape(n, k);
     const up = sh.positions.map(p => ({ midi: p.midi, name: p.name, st: p.st, f: p.f, root: p.root }));
     const walk = up.concat(up.slice(0, -1).reverse());
     let from = sh.from, to = sh.to;
@@ -448,10 +466,10 @@
              key: { name: sh.key }, frets: [sh.from, sh.to], board: { from, to } };
   }
   // The round's name on the phase line: "C major", or "A minor · Shape 1"
-  const roundLabel = r => r.penta ? shapeLabel(r.shape) : T.keyName(r.key.name);
+  const roundLabel = r => r.penta ? `${T.minorName(r.key.name)} · ${T.shapeName(r.shape)}` : T.keyName(r.key.name);
 
   function newRound() {
-    if (session.exercise === "penta") return shapeRound(session.shape);
+    if (session.exercise === "penta") return shapeRound(session.shape, session.pentaKey);
     // The next key is drawn one round early so the wait ticks can announce it
     const keyIdx = session.upcoming ?? pickKey();
     session.upcoming = pickKey();
@@ -704,7 +722,7 @@
     closeBoard(false);
     session = { keys: keys.slice(), order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
                 board: board ? { from: fretFrom, to: fretTo } : null, pickStart: createStartPicker(),
-                exercise, shape: shapeNo };
+                exercise, shape: shapeNo, pentaKey };
     keyBtn.disabled = true;
     boardBtn.disabled = true;
     document.body.classList.add("practicing");
@@ -863,7 +881,7 @@
       get nextTime() { return nextTime; }, set nextTime(v) { nextTime = v; },
       get lastShown() { return lastShown; },
       get queue() { return queue; },
-      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, lang: langEl.value, exercise, shape: shapeNo }; },
+      get settings() { return { keys, order, board, fretFrom, fretTo, showAll, lang: langEl.value, exercise, shape: shapeNo, pentaKey }; },
       stopScheduler() { clearTimeout(timerId); cancelAnimationFrame(rafId); },
       startScheduler() { scheduler(); rafId = requestAnimationFrame(draw); },
       render, playTick, buildRound, newRound, buildBoard, drawBoard,

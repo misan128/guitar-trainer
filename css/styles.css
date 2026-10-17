@@ -302,6 +302,7 @@ select.quiet:disabled { opacity: .35; }
   cursor: pointer;
 }
 .kp-exercise button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+.kp-shapes { margin-top: .9rem; }
 /* Shape tiles: number, a small diagram of the shape and its frets */
 #shapeGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem; }
 #shapeGrid button {
@@ -325,8 +326,8 @@ select.quiet:disabled { opacity: .35; }
 .kp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: .75rem; }
 .kp-head span:first-child { font-weight: 600; }
 #keyCount { color: var(--brass); font-size: .85rem; font-weight: 600; }
-#keyGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
-#keyGrid button {
+#keyGrid, #pentaKeyGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+#keyGrid button, #pentaKeyGrid button {
   height: 2.75rem;
   border: 0;
   border-radius: 10px;
@@ -335,8 +336,8 @@ select.quiet:disabled { opacity: .35; }
   font: 600 1rem "Instrument Sans", system-ui, sans-serif;
   cursor: pointer;
 }
-#keyGrid button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
-#keyGrid button[aria-pressed="true"]::before { content: "✓ "; font-size: .8em; }
+#keyGrid button[aria-pressed="true"], #pentaKeyGrid button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+#keyGrid button[aria-pressed="true"]::before, #pentaKeyGrid button[aria-pressed="true"]::before { content: "✓ "; font-size: .8em; }
 .kp-actions { display: flex; justify-content: space-between; margin-top: .6rem; }
 .kp-actions button {
   padding: .4rem .2rem;

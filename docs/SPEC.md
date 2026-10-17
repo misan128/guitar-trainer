@@ -266,19 +266,19 @@ Tempo, ticks and installing on the phone are left out on purpose.
 
 ## 15. Pentatonic shapes
 
-**Status: phase 1 in progress, on the `v3` branch.** Phase 1 (A minor, the five shapes) is what this section describes; phase 2 (any minor key) and phase 3 (moving between shapes) are outlined at the end and not decided.
+**Status: phases 1 and 2 built, on the `v3` branch.** The five shapes in any minor key. Phase 3 (moving between shapes) is outlined at the end and not decided.
 
 Goal: memorize the five minor pentatonic shapes as **physical patterns**: where each one sits on the neck and how the hand moves through it. It is not Scale walk with five notes: each shape is a fixed, predefined fingering, the same every time.
 
 ### 15.1 Exercises and setup
 
 - **Two exercises:** *Scale walk* (everything in §3, §12 and §13) and *Pentatonic shapes*. Switching exercise feels like changing the activity, not the app: same screen, same controls.
-- **Selector inside the setup panel:** the top-left button opens one panel whose first row is the exercise (*Scale walk · Pentatonic*); below it, that exercise's setup. For Scale walk, the key panel as it is (§12). For Pentatonic, the five shapes as tiles, each with a small diagram of the shape and its fret range. No new button in the top bar.
-- **Button label:** Scale walk as in §12 ("C major", "C, G", "n keys"); Pentatonic "A minor · Shape 1".
-- **Shared:** BPM, prep and wait ticks, the eye, language and guide. **Per exercise:** Scale walk keeps keys, order, fretboard on/off and zone; Pentatonic keeps its shape.
+- **Selector inside the setup panel:** the top-left button opens one panel whose first row is the exercise (*Scale walk · Pentatonic*); below it, that exercise's setup. For Scale walk, the key panel as it is (§12). For Pentatonic, the 12 minor keys as tiles (circle-of-fifths order: A E B F♯ C♯ G♯ D♯ B♭ F C G D, one always selected), then the five shapes as tiles, each with a small diagram of the shape and its fret range in that key. No new button in the top bar.
+- **Button label:** Scale walk as in §12 ("C major", "C, G", "n keys"); Pentatonic "A minor · Shape 1". One key per session: no automatic key changes between rounds.
+- **Shared:** BPM, prep and wait ticks, the eye, language and guide. **Per exercise:** Scale walk keeps keys, order, fretboard on/off and zone; Pentatonic keeps its key and shape.
 - **Fretboard button:** shown only in Scale walk. In Pentatonic the fretboard is always on: it is the exercise.
 - The exercise and the shape can only be changed while stopped, like the keys.
-- Storage: `scaleWalkLight` holds `exercise` (`"walk"` | `"penta"`, default `"walk"`) and `pentaShape` (1–5, default 1).
+- Storage: `scaleWalkLight` holds `exercise` (`"walk"` | `"penta"`, default `"walk"`), `pentaShape` (1–5, default 1) and `pentaKey` (index of the minor key, default A minor).
 
 ### 15.2 The shapes
 
@@ -295,7 +295,8 @@ Goal: memorize the five minor pentatonic shapes as **physical patterns**: where 
 
 - **Data:** each shape is defined explicitly, not generated, as its ascending list of `[string, fret]`, in `js/theory.js`. Note, MIDI pitch, note name (spelled like the relative major) and degree are derived from it.
 - **Validated by tests:** every note is in A minor pentatonic; two notes per string on all six strings; each note higher than the previous one; the hand span is at most 5 frets; the table above holds.
-- Phase 1 needs frets up to 15.
+- **Other keys:** the same shape, every fret moved by the key's interval from A, so its geometry, strings, sequence and degrees stay the same. Of its octave placements, the **lowest** one that is **movable** (no open string, every fret ≥ 1) and ends **at or below fret 16**. With those rules every shape fits in every key (60 of 60); A minor keeps the positions in the table (shape 4 stays at 12–15). A shape that did not fit would be shown disabled, never adjusted.
+- **Note names** follow the relative major as the app spells it (§3): A minor like C major, D♯ minor like F♯ major, B♭ minor like D♭ major, and so on.
 
 ### 15.3 A round
 
@@ -311,7 +312,7 @@ The route never changes between rounds: no randomness in fingering or starting p
 - **While idle:** the selected shape drawn on the fretboard instead of the pick: every position of the route, the roots marked, nothing lit. The phase line reads "A minor · Shape 1 · Frets 5–8".
 - **While practicing:** exactly the Scale walk fretboard (§13.3): no big letter; the current position lit in gold; the next move as a faint gradient; played positions dimmer than upcoming ones; nothing moves; fades follow the tempo. The phase line reads "A minor · Shape 1 · Ascending".
 - **Roots:** the positions that are the key's root (A in A minor) carry a subtle mark (a thin second ring), always, so the shape can be anchored to its root.
-- **Fret range:** the shape's own frets, widened to at least 5 so every shape has the same geometry (extra fret above; below if that would pass fret 15).
+- **Fret range:** the shape's own frets, widened to at least 5 so every shape has the same geometry (extra fret above; below if that would pass fret 16).
 - **Eye:** as in Scale walk. Open: the whole route and the next move. Closed: only the first position, so the rest is played from memory.
 
 ### 15.5 Implementation order
@@ -319,15 +320,15 @@ The route never changes between rounds: no randomness in fingering or starting p
 1. **Generalize the round's length.** Today the code assumes 15 ticks with the turnaround after 8 (the `WALK` constant and fixed `8` / `14 - i` in the scheduler, phase line, progress bars, fretboard and dev mode). Each round carries its own length and turnaround instead. No visible change: Scale walk must behave exactly the same.
 2. **Shapes in `js/theory.js`**, with their tests (§15.2).
 3. **The exercise in the app:** setup panel with the exercise row and shape tiles, idle preview, the round, roots, storage and texts in every language. The dev mode follows the round's length, so it can step through a shape.
+4. **Any minor key:** key tiles, transposition and naming (§15.2), with their tests.
 
-### 15.6 Later phases (not decided)
+### 15.6 Later phase (not decided)
 
-- **Phase 2, any minor key:** the same shape shifted by the key's interval from A, with its notes renamed (B♭, C♯, E♭, F♯ and G♯ minor, spelled after their key signatures). To decide then: the placement rule when a shape fits in more than one octave, whether open strings are allowed, and the highest fret. Combinations that do not fit are shown disabled, never adjusted.
 - **Phase 3, moving between shapes:** shapes in one key share notes with their neighbours, so a route across two or more shapes can be built from the same position data. Nothing in phases 1–2 may prevent it.
 
 ### 15.7 Texts
 
-In `strings.js`, for every language: the two exercise names, "Exercise", "Shape", the shape label ("Shape n"), the minor key name ("A minor"), the fret range ("Frets a–b"), and the accessible labels for the shape tiles and the idle preview.
+In `strings.js`, for every language: the two exercise names, "Exercise", "Key" (for the minor keys), "Shape", the shape label ("Shape n"), the minor key name ("A minor"), the fret range ("Frets a–b"), and the accessible labels for the shape tiles and the idle preview.
 
 ## Appendix A. Design notes
 
