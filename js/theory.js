@@ -158,8 +158,30 @@
     return { shape: n, key: key.name, positions, from: place.from, to: place.to, open: place.open };
   }
 
+  // ---- Along the neck (SPEC §15.6) ----
+  // The five shapes of a key in neck order (lowest placement first), each at its chosen placement:
+  // at(n) gives that shape's first fret, or undefined for the default.
+  function pentaNeckOrder(k = 0, at = () => undefined) {
+    return Object.keys(PENTA_SHAPES).map(Number)
+      .map(n => ({ n, from: (pentaShape(n, k, at(n)) || pentaShape(n, k)).from }))
+      .sort((a, b) => a.from - b.from)
+      .map(x => x.n);
+  }
+  // From `start`, the next shape on each call: up the neck, turning at either end, back and forth.
+  function createNeckWalk(order, start) {
+    let i = Math.max(0, order.indexOf(start)), dir = i === order.length - 1 ? -1 : 1, first = true;
+    return function next() {
+      if (first) { first = false; return order[i]; }
+      if (order.length > 1) {
+        if (i + dir < 0 || i + dir >= order.length) dir = -dir;
+        i += dir;
+      }
+      return order[i];
+    };
+  }
+
   const api = { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk, createStartPicker,
-    MINOR_PENTA, PENTA_DEGREES, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape };
+    MINOR_PENTA, PENTA_DEGREES, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape, pentaNeckOrder, createNeckWalk };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.Theory = api;
 })(this);

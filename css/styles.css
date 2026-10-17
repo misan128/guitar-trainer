@@ -319,6 +319,9 @@ select.quiet:disabled { opacity: .35; }
 }
 #placeGrid button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
 .kp-hint { margin: .5rem 0 0; color: var(--muted); font-size: .8rem; }
+.kp-switch { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--wire); }
+/* A control that has no effect in the current mode (Ticks after while moving along the neck) */
+.field.off { opacity: .4; }
 /* Shape tiles: number, a small diagram of the shape and its frets */
 #shapeGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem; }
 #shapeGrid button {
@@ -393,7 +396,7 @@ select.quiet:disabled { opacity: .35; }
 /* Fretboard panel */
 .bp-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: .9rem; border-bottom: 1px solid var(--wire); }
 .bp-head span { font-weight: 600; font-size: 1.05rem; }
-#boardSwitch {
+#boardSwitch, .switch {
   position: relative;
   width: 3.1rem;
   height: 1.8rem;
@@ -403,7 +406,7 @@ select.quiet:disabled { opacity: .35; }
   cursor: pointer;
   transition: background-color .2s;
 }
-#boardSwitch::after {
+#boardSwitch::after, .switch::after {
   content: "";
   position: absolute;
   top: .2rem;
@@ -414,8 +417,8 @@ select.quiet:disabled { opacity: .35; }
   background: var(--bone);
   transition: transform .2s;
 }
-#boardSwitch[aria-checked="true"] { background: var(--brass); }
-#boardSwitch[aria-checked="true"]::after { transform: translateX(1.3rem); }
+#boardSwitch[aria-checked="true"], .switch[aria-checked="true"] { background: var(--brass); }
+#boardSwitch[aria-checked="true"]::after, .switch[aria-checked="true"]::after { transform: translateX(1.3rem); }
 .bp-title { margin: .9rem 0 .6rem; font-weight: 600; }
 .bp-frets { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .bp-frets select { background-color: #3a2d26; }
@@ -457,7 +460,7 @@ select.quiet:disabled { opacity: .35; }
 #board .path line.cross { stroke-width: 1.3; stroke-dasharray: 3 4; stroke-opacity: calc(var(--seg-ahead) * .65); }
 #board .path line.played { stroke-opacity: var(--seg-played); }
 #board .path line.cross.played { stroke-opacity: calc(var(--seg-played) * .65); }
-#board .active { stroke: url(#nextMove); stroke-width: 3; stroke-linecap: round; }
+#board .active { stroke-width: 3; stroke-linecap: round; }   /* stroke: its zone's gradient, set in buildZone */
 #board .grad-near { stop-color: var(--brass); stop-opacity: var(--grad-near); }
 #board .grad-far { stop-color: var(--brass); stop-opacity: var(--grad-far); }
 #board .pos .dot { fill: #33271f; stroke: var(--brass); stroke-opacity: .3; stroke-width: 1.4; transition: opacity var(--fade); }
@@ -475,10 +478,18 @@ select.quiet:disabled { opacity: .35; }
 #board.names-none .lit text { display: none; }
 /* Open strings: a hollow dot, and a slightly stronger nut when the route uses them */
 #board .pos.open .dot { fill: var(--wood); stroke-opacity: .75; stroke-width: 1.6; }
-#board.open-pos .nut { opacity: .9; }
+#board .open-pos .nut { opacity: .9; }
 #board .lit circle { fill: var(--brass); }
 #board .lit text { fill: var(--wood); font-size: 9.5px; dominant-baseline: central; }
 @media (prefers-reduced-motion: reduce) { #board { --fade: 0ms !important; } }
+/* Along the neck: the whole neck as a thin line, the part on screen as a gold bar with the shape's number;
+   on the way down, the bar points toward the next zone, shown faintly */
+#board .neckbar .neck { stroke: var(--wire); stroke-width: 1; opacity: .6; }
+#board .neckbar rect, #board .neckbar path { fill: var(--brass); }
+#board .neckbar text { font-size: 8.5px; fill: var(--brass); }
+#board .neckbar .ghost, #board .neckbar .head { opacity: 0; transition: opacity .3s; }
+#board .neckbar .ghost.on { opacity: .35; }
+#board .neckbar .head.on { opacity: 1; }
 
 /* While practicing, secondary controls step back a little; Stop stays as it is */
 .controls, #track, .corner { transition: opacity .3s; }
