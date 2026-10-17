@@ -482,6 +482,14 @@ select.quiet:disabled { opacity: .35; }
 #board .lit circle { fill: var(--brass); }
 #board .lit text { fill: var(--wood); font-size: 9.5px; dominant-baseline: central; }
 @media (prefers-reduced-motion: reduce) { #board { --fade: 0ms !important; } }
+/* Along the neck: the whole neck as a thin line, the part on screen as a gold bar with the shape's number;
+   on the way down, the bar points toward the next zone, shown faintly */
+#board .neckbar .neck { stroke: var(--wire); stroke-width: 1; opacity: .6; }
+#board .neckbar rect, #board .neckbar path { fill: var(--brass); }
+#board .neckbar text { font-size: 8.5px; fill: var(--brass); }
+#board .neckbar .ghost, #board .neckbar .head { opacity: 0; transition: opacity .3s; }
+#board .neckbar .ghost.on { opacity: .35; }
+#board .neckbar .head.on { opacity: 1; }
 
 /* While practicing, secondary controls step back a little; Stop stays as it is */
 .controls, #track, .corner { transition: opacity .3s; }
