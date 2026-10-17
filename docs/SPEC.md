@@ -273,12 +273,12 @@ Goal: memorize the five minor pentatonic shapes as **physical patterns**: where 
 ### 15.1 Exercises and setup
 
 - **Two exercises:** *Scale walk* (everything in §3, §12 and §13) and *Pentatonic shapes*. Switching exercise feels like changing the activity, not the app: same screen, same controls.
-- **Selector inside the setup panel:** the top-left button opens one panel whose first row is the exercise (*Scale walk · Pentatonic*); below it, that exercise's setup. For Scale walk, the key panel as it is (§12). For Pentatonic, the 12 minor keys as tiles (circle-of-fifths order: A E B F♯ C♯ G♯ D♯ B♭ F C G D, one always selected), then the five shapes as tiles, each with a small diagram of the shape and its fret range in that key. No new button in the top bar.
+- **Selector inside the setup panel:** the top-left button opens one panel whose first row is the exercise (*Scale walk · Pentatonic*); below it, that exercise's setup. For Scale walk, the key panel as it is (§12). For Pentatonic, the 12 minor keys as tiles (circle-of-fifths order: A E B F♯ C♯ G♯ D♯ B♭ F C G D, one always selected), then the five shapes as tiles, each with a small diagram of the shape and its fret range in that key, and, only when the key and shape fit in two places, a **Variant** choice between them: *Open (0–3) · Closed (12–15)* for the open-position ones, with a one-line hint ("Same shape, with open strings."), or *Low (1–4) · High (13–16)* for two movable octaves. A variant is the same shape, never a different shape number. No new button in the top bar.
 - **Button label:** Scale walk as in §12 ("C major", "C, G", "n keys"); Pentatonic "A minor · Shape 1". One key per session: no automatic key changes between rounds.
 - **Shared:** BPM, prep and wait ticks, the eye, language and guide. **Per exercise:** Scale walk keeps keys, order, fretboard on/off and zone; Pentatonic keeps its key and shape.
 - **Fretboard button:** shown only in Scale walk. In Pentatonic the fretboard is always on: it is the exercise.
 - The exercise and the shape can only be changed while stopped, like the keys.
-- Storage: `scaleWalkLight` holds `exercise` (`"walk"` | `"penta"`, default `"walk"`), `pentaShape` (1–5, default 1) and `pentaKey` (index of the minor key, default A minor).
+- Storage: `scaleWalkLight` holds `exercise` (`"walk"` | `"penta"`, default `"walk"`), `pentaShape` (1–5, default 1), `pentaKey` (index of the minor key, default A minor) and `pentaPlace` (the chosen placement per key and shape, as its first fret, only where there is a choice).
 
 ### 15.2 The shapes
 
@@ -295,7 +295,11 @@ Goal: memorize the five minor pentatonic shapes as **physical patterns**: where 
 
 - **Data:** each shape is defined explicitly, not generated, as its ascending list of `[string, fret]`, in `js/theory.js`. Note, MIDI pitch, note name (spelled like the relative major) and degree are derived from it.
 - **Validated by tests:** every note is in A minor pentatonic; two notes per string on all six strings; each note higher than the previous one; the hand span is at most 5 frets; the table above holds.
-- **Other keys:** the same shape, every fret moved by the key's interval from A, so its geometry, strings, sequence and degrees stay the same. Of its octave placements, the **lowest** one that is **movable** (no open string, every fret ≥ 1) and ends **at or below fret 16**. With those rules every shape fits in every key (60 of 60); A minor keeps the positions in the table (shape 4 stays at 12–15). A shape that did not fit would be shown disabled, never adjusted.
+- **Other keys:** the same shape, every fret moved by the key's interval from A, so its geometry, strings, sequence and degrees stay the same. Every shape fits in every key (60 of 60) between fret 0 and fret 16.
+- **Placement:** by default, the **lowest movable** one (no open string, every fret ≥ 1); A minor keeps the positions in the table (shape 4 stays at 12–15). Nine combinations fit in two places, an octave apart, and the user can choose:
+  - **Open position**, in five: E minor shape 1, D minor shape 2, C minor shape 3, A minor shape 4 and G minor shape 5 (lowest fret 0). Same geometry measured from the nut, with open strings instead of the first finger: the classic open-position pentatonics, close to the open chords.
+  - **Two movable octaves**, in the other four (e.g. 1–4 and 13–16).
+  - The choice is remembered per key and shape. A shape that did not fit would be shown disabled, never adjusted.
 - **Note names** follow the relative major as the app spells it (§3): A minor like C major, D♯ minor like F♯ major, B♭ minor like D♭ major, and so on.
 
 ### 15.3 A round
@@ -310,7 +314,8 @@ The route never changes between rounds: no randomness in fingering or starting p
 ### 15.4 Display
 
 - **While idle:** the selected shape drawn on the fretboard instead of the pick: every position of the route, the roots marked, nothing lit. The phase line reads "A minor · Shape 1 · Frets 5–8".
-- **While practicing:** exactly the Scale walk fretboard (§13.3): no big letter; the current position lit in gold; the next move as a faint gradient; played positions dimmer than upcoming ones; nothing moves; fades follow the tempo. The phase line reads "A minor · Shape 1 · Ascending".
+- **While practicing:** exactly the Scale walk fretboard (§13.3): no big letter; the current position lit in gold; the next move as a faint gradient; played positions dimmer than upcoming ones; nothing moves; fades follow the tempo. The phase line reads "A minor · Shape 1 · Ascending", with the variant added when there is a choice ("E minor · Shape 1 · Open · Ascending").
+- **Open strings** (open variant): drawn as hollow dots, and the nut a little stronger.
 - **Roots:** the positions that are the key's root (A in A minor) carry a subtle mark (a thin second ring), always, so the shape can be anchored to its root.
 - **Fret range:** the shape's own frets, widened to at least 5 so every shape has the same geometry (extra fret above; below if that would pass fret 16).
 - **Eye:** as in Scale walk. Open: the whole route and the next move. Closed: only the first position, so the rest is played from memory.

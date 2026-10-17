@@ -7,7 +7,7 @@
   const BASE_MIDI = 48;            // start note always in octave 3 (C3–B3)
 
   // Scale theory and fretboard walks live in theory.js (tested in tests/)
-  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaShape } = Theory;
+  const { MAJOR, KEYS, scaleNames, semis, STRING_NAMES, boardWalk, createStartPicker, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape } = Theory;
 
   const $ = id => document.getElementById(id);
   const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
@@ -16,7 +16,7 @@
   const keyBtn = $("keyBtn"), keyPanel = $("keyPanel"), keyGrid = $("keyGrid");
   const keyCount = $("keyCount"), keysAllBtn = $("keysAll"), keysClearBtn = $("keysClear");
   const walkSetup = $("walkSetup"), pentaSetup = $("pentaSetup"), shapeGrid = $("shapeGrid"), shapeKey = $("shapeKey");
-  const pentaKeyGrid = $("pentaKeyGrid");
+  const pentaKeyGrid = $("pentaKeyGrid"), placeRow = $("placeRow"), placeGrid = $("placeGrid"), openHint = $("openHint");
   const roundKeyEl = $("roundKey");
   const bpmRange = $("bpmRange"), toggleBtn = $("toggle");
   const boardBtn = $("boardBtn"), boardPanel = $("boardPanel"), boardSwitch = $("boardSwitch");
@@ -66,6 +66,7 @@
   let exercise = "walk";               // "walk" | "penta"
   let shapeNo = 1;                     // Pentatonic shape, 1–5
   let pentaKey = 0;                    // Pentatonic minor key: index into MINOR_KEYS (A minor)
+  let pentaPlace = {};                 // chosen placement per "key:shape" (its first fret), when there are two
   // Fretboard (SPEC §13): on by default (aids start on, players turn them off); a zone spans at least ZONE_MIN frets
   const FRET_FIRST_MAX = 15, FRET_LAST_MAX = 19, ZONE_MIN = 5;
   const ZONE_DEFAULT = 2;              // frets 2–6
@@ -92,7 +93,7 @@
       localStorage.setItem("scaleWalkLight", JSON.stringify({
         bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
         keys, order, key: keys[0], showAll: showAll, lang: langEl.value,
-        board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo, pentaKey
+        board, fretFrom, fretTo, guideSeen, exercise, pentaShape: shapeNo, pentaKey, pentaPlace
       }));
     } catch (e) {}
   }
@@ -111,6 +112,7 @@
       if (s.exercise === "penta") exercise = "penta";
       if (PENTA_SHAPES[s.pentaShape]) shapeNo = Number(s.pentaShape);
       if (MINOR_KEYS[s.pentaKey]) pentaKey = Number(s.pentaKey);
+      if (s.pentaPlace && typeof s.pentaPlace === "object") for (const k in s.pentaPlace) if (Number.isInteger(s.pentaPlace[k])) pentaPlace[k] = s.pentaPlace[k];
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }
   } catch (e) {}
@@ -211,10 +213,22 @@
     shapeKey.textContent = T.minorName(MINOR_KEYS[pentaKey].name);
     for (const b of pentaKeyGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.key) === pentaKey));
     for (const b of shapeGrid.children) {
-      const n = Number(b.dataset.shape), sh = pentaShape(n, pentaKey);
+      const n = Number(b.dataset.shape), sh = pentaShape(n, pentaKey, placeAt(pentaKey, n));
       b.setAttribute("aria-pressed", String(n === shapeNo));
       b.setAttribute("aria-label", T.shapeAria(n, sh.from, sh.to));
       b.querySelector("small").textContent = `${sh.from}–${sh.to}`;
+    }
+    // Variant: shown only when this key and shape fit in two places (SPEC §15.2)
+    const places = pentaPlacements(shapeNo, pentaKey), cur = pentaShape(shapeNo, pentaKey, placeAt(pentaKey, shapeNo));
+    placeRow.hidden = places.length < 2;
+    openHint.hidden = !places.some(p => p.open);
+    placeGrid.textContent = "";
+    for (const p of places) {
+      const b = document.createElement("button");
+      b.dataset.from = p.from;
+      b.setAttribute("aria-pressed", String(p.from === cur.from));
+      b.textContent = `${T[variantOf(p, places)]} (${p.from}–${p.to})`;
+      placeGrid.appendChild(b);
     }
     for (const b of keyGrid.children) b.setAttribute("aria-pressed", String(keys.includes(Number(b.dataset.key))));
     keyCount.textContent = T.keysCount(keys.length, KEYS.length);
@@ -287,6 +301,23 @@
     const b = e.target.closest("[data-ex]");
     if (!b || b.dataset.ex === exercise) return;
     exercise = b.dataset.ex;
+    renderKeys();
+    showIdle();
+    save();
+  });
+  // Name of a variant among a combination's placements: open/closed, or low/high octave; null if there is no choice
+  const variantOf = (p, places) => places.length < 2 ? null
+    : places.some(q => q.open) ? (p.open ? "variantOpen" : "variantClosed")
+    : p.from === places[0].from ? "variantLow" : "variantHigh";
+  // The chosen placement of a key and shape, if it is still valid; otherwise the default (lowest movable)
+  const placeAt = (k, n) => {
+    const v = pentaPlace[`${k}:${n}`];
+    return pentaPlacements(n, k).some(p => p.from === v) ? v : undefined;
+  };
+  placeGrid.addEventListener("click", e => {
+    const b = e.target.closest("[data-from]");
+    if (!b) return;
+    pentaPlace[`${pentaKey}:${shapeNo}`] = Number(b.dataset.from);
     renderKeys();
     showIdle();
     save();
@@ -452,8 +483,8 @@
 
   // Pentatonic shapes (SPEC §15.3): the complete shape up, then back down without repeating its top note.
   // Always the same route. The fretboard shows the shape's frets, widened to at least 5.
-  function shapeRound(n, k = pentaKey) {
-    const sh = pentaShape(n, k);
+  function shapeRound(n, k = pentaKey, at = placeAt(k, n)) {
+    const sh = pentaShape(n, k, at);
     const up = sh.positions.map(p => ({ midi: p.midi, name: p.name, st: p.st, f: p.f, root: p.root }));
     const walk = up.concat(up.slice(0, -1).reverse());
     let from = sh.from, to = sh.to;
@@ -463,13 +494,14 @@
     }
     const prep = Number(inputs.prep.value), wait = Number(inputs.wait.value);
     return { walk, peak: up.length - 1, prep, wait, total: prep + walk.length + wait, penta: true, shape: n,
-             key: { name: sh.key }, frets: [sh.from, sh.to], board: { from, to } };
+             key: { name: sh.key }, frets: [sh.from, sh.to], board: { from, to },
+             variant: variantOf(sh, pentaPlacements(n, k)) };
   }
   // The round's name on the phase line: "C major", or "A minor · Shape 1"
-  const roundLabel = r => r.penta ? `${T.minorName(r.key.name)} · ${T.shapeName(r.shape)}` : T.keyName(r.key.name);
+  const roundLabel = r => r.penta ? `${T.minorName(r.key.name)} · ${T.shapeName(r.shape)}${r.variant ? ` · ${T[r.variant]}` : ""}` : T.keyName(r.key.name);
 
   function newRound() {
-    if (session.exercise === "penta") return shapeRound(session.shape, session.pentaKey);
+    if (session.exercise === "penta") return shapeRound(session.shape, session.pentaKey, session.pentaAt);
     // The next key is drawn one round early so the wait ticks can announce it
     const keyIdx = session.upcoming ?? pickKey();
     session.upcoming = pickKey();
@@ -594,11 +626,13 @@
       const g = el("g", { class: "pos", transform: `translate(${bx(round, p.f)} ${by(p.st)})` }, boardEl);
       el("circle", { class: "dot", r: 6 }, g);
       if (p.root) el("circle", { class: "ring", r: 8.6 }, g);   // roots: a thin second ring (SPEC §15.4)
+      if (p.f === 0) g.classList.add("open");                    // open string: hollow dot
       const lit = el("g", { class: "lit" }, g);
       el("circle", { r: 9 }, lit);
       el("text", {}, lit).textContent = p.name;
       return g;
     });
+    boardEl.classList.toggle("open-pos", up.some(p => p.f === 0));
     boardParts = { path, segs, active, grad, pos };
     boardEl.removeAttribute("hidden");   // SVG has no .hidden property
     mainEl.classList.add("with-board");
@@ -722,7 +756,7 @@
     closeBoard(false);
     session = { keys: keys.slice(), order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
                 board: board ? { from: fretFrom, to: fretTo } : null, pickStart: createStartPicker(),
-                exercise, shape: shapeNo, pentaKey };
+                exercise, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo) };
     keyBtn.disabled = true;
     boardBtn.disabled = true;
     document.body.classList.add("practicing");

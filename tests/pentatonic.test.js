@@ -1,7 +1,7 @@
 // Minor pentatonic shapes (SPEC §15.2) and their transposition to every minor key (§15.6). Run: node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { OPEN_MIDI, STRING_NAMES, MINOR_PENTA, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaShape } = require("../js/theory.js");
+const { OPEN_MIDI, STRING_NAMES, MINOR_PENTA, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape } = require("../js/theory.js");
 
 const SHAPES = [1, 2, 3, 4, 5];
 const A = 9;                                          // pitch class of A
@@ -111,4 +111,42 @@ test("notes are in each key's pentatonic and spelled after its key signature", (
   assert.equal(notes("B♭"), "B♭ D♭ E♭ F A♭");
   assert.equal(notes("E"), "E G A B D");
   assert.equal(notes("F"), "F A♭ B♭ C E♭");
+});
+
+// ---- Choosing the placement (SPEC §15.2) ----
+const keyOf = name => MINOR_KEYS.findIndex(k => k.name === name);
+
+test("open-position placements exist for exactly the five classic ones", () => {
+  const open = [];
+  for (const k of KEY_IDS) for (const n of SHAPES) if (pentaPlacements(n, k).some(p => p.open)) open.push(`${MINOR_KEYS[k].name}${n}`);
+  assert.deepEqual(open.sort(), ["A4", "C3", "D2", "E1", "G5"]);
+  const e = pentaShape(1, keyOf("E"), 0);
+  assert.equal(show(e), "E0 E3 A0 A2 D0 D2 G0 G2 B0 B3 e0 e3");
+  assert.ok(e.open);
+});
+
+test("nine combinations can be played in two places; all others in one", () => {
+  let two = 0;
+  for (const k of KEY_IDS) for (const n of SHAPES) {
+    const places = pentaPlacements(n, k);
+    assert.ok(places.length === 1 || places.length === 2, `${MINOR_KEYS[k].name} minor, shape ${n}`);
+    if (places.length === 2) { two++; assert.equal(places[1].from - places[0].from, 12, "an octave apart"); }
+  }
+  assert.equal(two, 9);
+});
+
+test("any placement keeps the geometry; the default is the lowest movable one", () => {
+  for (const k of KEY_IDS) for (const n of SHAPES) {
+    const places = pentaPlacements(n, k), def = pentaShape(n, k);
+    assert.equal(def.from, places.find(p => !p.open).from, "default");
+    for (const p of places) {
+      const s = pentaShape(n, k, p.from), shift = s.positions[0].f - def.positions[0].f;
+      s.positions.forEach((q, i) => {
+        assert.equal(q.st, def.positions[i].st);
+        assert.equal(q.f - def.positions[i].f, shift);
+        assert.equal(q.name, def.positions[i].name, "same note names");
+      });
+    }
+  }
+  assert.equal(pentaShape(1, keyOf("E"), 7), null, "a placement that does not exist");
 });

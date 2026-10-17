@@ -303,6 +303,22 @@ select.quiet:disabled { opacity: .35; }
 }
 .kp-exercise button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
 .kp-shapes { margin-top: .9rem; }
+/* Variant: only when the key and shape fit in two places (open/closed, or low/high octave) */
+.kp-place { display: flex; align-items: center; gap: .6rem; margin-top: .75rem; color: var(--muted); font-size: .9rem; }
+#placeGrid { display: flex; gap: .4rem; flex: 1; }
+#placeGrid button {
+  flex: 1;
+  min-height: 2.3rem;
+  padding: .25rem .5rem;
+  border: 0;
+  border-radius: 10px;
+  background: #3a2d26;
+  color: var(--muted);
+  font: 600 .9rem "Instrument Sans", system-ui, sans-serif;
+  cursor: pointer;
+}
+#placeGrid button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+.kp-hint { margin: .5rem 0 0; color: var(--muted); font-size: .8rem; }
 /* Shape tiles: number, a small diagram of the shape and its frets */
 #shapeGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem; }
 #shapeGrid button {
@@ -451,6 +467,9 @@ select.quiet:disabled { opacity: .35; }
 #board .pos.cur .lit { opacity: 1; }
 /* Roots (Pentatonic shapes): a thin second ring, always there; the gold layer covers it when current */
 #board .pos .ring { fill: none; stroke: var(--brass); stroke-opacity: .55; stroke-width: 1.1; }
+/* Open strings: a hollow dot, and a slightly stronger nut when the route uses them */
+#board .pos.open .dot { fill: var(--wood); stroke-opacity: .75; stroke-width: 1.6; }
+#board.open-pos .nut { opacity: .9; }
 #board .lit circle { fill: var(--brass); }
 #board .lit text { fill: var(--wood); font-size: 9.5px; dominant-baseline: central; }
 @media (prefers-reduced-motion: reduce) { #board { --fade: 0ms !important; } }

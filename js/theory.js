@@ -125,32 +125,41 @@
     { name: "D♯", pc: 3, relative: 6 },  { name: "B♭", pc: 10, relative: 1 }, { name: "F", pc: 5, relative: 8 },
     { name: "C", pc: 0, relative: 3 },   { name: "G", pc: 7, relative: 10 },  { name: "D", pc: 2, relative: 5 },
   ];
-  // Transposed shapes keep their geometry: every fret moves by the same amount. Of the octave placements,
-  // the lowest one with no open string (a movable shape) that ends at or below PENTA_MAX_FRET.
+  // Transposed shapes keep their geometry: every fret moves by the same amount. A shape can fit at more than
+  // one octave: its placements are those between fret 0 and PENTA_MAX_FRET. By default, the lowest movable
+  // one (no open string); an open-position one (lowest fret 0) or a higher octave can be asked for.
   const PENTA_MAX_FRET = 16;
-  // Shape n in minor key k (index into MINOR_KEYS, A minor by default): its positions in ascending order,
-  // each with string, fret, MIDI pitch, note name, degree (1 ♭3 4 5 ♭7), whether it is the root, and its
-  // index in the route; plus its fret range. null if the shape does not fit the neck in that key.
-  function pentaShape(n, k = 0) {
+  // Placements of shape n in minor key k, lowest first: { from, to, open }
+  function pentaPlacements(n, k = 0) {
     const route = PENTA_SHAPES[n], key = MINOR_KEYS[k];
-    if (!route || !key) return null;
-    const base = route.map(p => p[1]), lo = Math.min(...base), hi = Math.max(...base);
-    let shift = null;
+    if (!route || !key) return [];
+    const base = route.map(p => p[1]), lo = Math.min(...base), hi = Math.max(...base), out = [];
     for (let s = (key.pc - 9 + 12) % 12 - 24; s <= 24; s += 12) {
-      if (lo + s >= 1 && hi + s <= PENTA_MAX_FRET) { shift = s; break; }
+      if (lo + s >= 0 && hi + s <= PENTA_MAX_FRET) out.push({ from: lo + s, to: hi + s, open: lo + s === 0 });
     }
-    if (shift === null) return null;
+    return out;
+  }
+  // Shape n in minor key k (index into MINOR_KEYS, A minor by default), at the placement starting on fret
+  // `at` (default: the lowest movable one): its positions in ascending order, each with string, fret, MIDI
+  // pitch, note name, degree (1 ♭3 4 5 ♭7), whether it is the root, and its index in the route; plus its
+  // fret range and whether it is in open position. null if there is no such placement.
+  function pentaShape(n, k = 0, at) {
+    const route = PENTA_SHAPES[n], key = MINOR_KEYS[k];
+    const places = pentaPlacements(n, k);
+    const place = at == null ? places.find(p => !p.open) : places.find(p => p.from === at);
+    if (!place) return null;
+    const shift = place.from - Math.min(...route.map(p => p[1]));
     const major = KEYS[key.relative];
     const names = new Map(scaleNames(major).map((name, d) => [(major.pc + MAJOR[d]) % 12, name]));
     const positions = route.map(([st, f0], index) => {
       const f = f0 + shift, midi = OPEN_MIDI[st] + f, step = (midi - key.pc + 120) % 12, d = MINOR_PENTA.indexOf(step);
       return { st, f, midi, name: names.get(midi % 12), degree: PENTA_DEGREES[d], root: step === 0, index };
     });
-    return { shape: n, key: key.name, positions, from: lo + shift, to: hi + shift };
+    return { shape: n, key: key.name, positions, from: place.from, to: place.to, open: place.open };
   }
 
   const api = { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk, createStartPicker,
-    MINOR_PENTA, PENTA_DEGREES, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaShape };
+    MINOR_PENTA, PENTA_DEGREES, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.Theory = api;
 })(this);
