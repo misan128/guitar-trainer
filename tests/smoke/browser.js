@@ -1,24 +1,11 @@
-// Shared setup for the smoke tests: a tiny static server on the repo and Chromium with a phone viewport.
+// Shared setup for the smoke tests: the local server (scripts/serve.js) and Chromium with a phone viewport.
 // Each page collects its errors, so a test can assert there were none.
 const { chromium, devices } = require("playwright");
-const http = require("node:http");
-const fs = require("node:fs");
-const path = require("node:path");
-
-const root = path.join(__dirname, "..", "..");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".svg": "image/svg+xml",
-  ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
+const { createServer } = require("../../scripts/serve.js");
 
 async function launch() {
   const requests = [];
-  const server = http.createServer((req, res) => {
-    const file = path.join(root, decodeURIComponent(req.url.split("?")[0]).replace(/\/$/, "/index.html"));
-    requests.push(req.url.split("?")[0]);
-    fs.readFile(file, (err, data) => {
-      res.writeHead(err ? 404 : 200, { "content-type": TYPES[path.extname(file)] || "text/plain" });
-      res.end(data);
-    });
-  });
+  const server = createServer(p => requests.push(p));
   await new Promise(ok => server.listen(0, ok));
   const base = `http://localhost:${server.address().port}/`;
   const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });

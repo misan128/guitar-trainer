@@ -66,19 +66,21 @@ GitHub runs the same check, and `node --test`, on every push to `main` (`.github
 
 ## Running the app locally
 
-Serve the folder over HTTP, or use VS Code Live Preview. Opening `index.html` as a file does not work: the app is made of ES modules, which browsers only load over HTTP(S).
+From the repo root (Node only, nothing to install):
 
 ```sh
-python3 -m http.server 8000
+npm start
 ```
 
-Then open `http://localhost:8000/`. `localhost` counts as secure, so the service worker and Wake Lock work.
+Then open `http://localhost:8000/` (`?debug` for dev mode). Another port: `npm start -- 8001`. Ctrl+C stops it. It serves the repo as it is, without caching, so a reload shows your changes. VS Code Live Preview works too. Opening `index.html` as a file does not: the app is made of ES modules, which browsers only load over HTTP(S). `localhost` counts as secure, so the service worker and Wake Lock work.
+
+It also prints the address on your network, for a phone on the same Wi-Fi; there the app runs, but offline and screen lock do not (they need HTTPS). Under WSL 2 that address belongs to the Linux virtual machine and the phone cannot reach it, unless WSL uses mirrored networking.
 
 To start clean, as a first-time user: DevTools → *Application* → *Storage* → *Clear site data*. That brings back the first-use guide and the default settings.
 
 ## Dev mode
 
-Add `?debug` to the URL: `http://localhost:8000/?debug`, or with VS Code Live Preview `…/index.html?vscode-livepreview=true&debug`. Without `?debug` none of this exists, so users never see it: the tool is `js/debug.js`, and `js/app/main.js` only loads it, and exposes the small bridge it uses, with `?debug`.
+Add `?debug` to the URL: `http://localhost:8000/?debug` (with `npm start`), or with VS Code Live Preview `…/index.html?vscode-livepreview=true&debug`. Without `?debug` none of this exists, so users never see it: the tool is `js/debug.js`, and `js/app/main.js` only loads it, and exposes the small bridge it uses, with `?debug`.
 
 The idea: the panel is a cursor over the round. Whatever you change shows, and sounds, at once; from there you can pause, step, or play on.
 
