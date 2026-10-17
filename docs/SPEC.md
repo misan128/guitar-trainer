@@ -65,13 +65,16 @@ index.html
 sw.js
 manifest.webmanifest
 css/styles.css
-js/app.js
+js/app/
 js/debug.js
 js/strings.js
 js/theory.js
 icons/
 fonts/
 tests/
+scripts/
+.github/workflows/
+package.json
 docs/SPEC.md
 docs/TESTING.md
 README.md
@@ -83,11 +86,12 @@ LICENSE
 - **`.gitignore`:** system files, editors, `node_modules/`, logs, `*.zip`, AI agent directories and the loose versions folder (`.tmp/`).
 - **`LICENSE`:** MIT, held by Michael Sandoval.
 - **`README.md`:** in English. Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
-- **`index.html`:** markup only. **`css/styles.css`:** all the styles. **`js/app.js`:** the app (UI, audio, scheduler, fretboard drawing, panels and guide), one plain script with no modules, so `index.html` still opens straight from disk.
+- **`index.html`:** markup only. **`css/styles.css`:** all the styles. **`js/app/`:** the app, as native ES modules with no build step, entered through `main.js` (`<script type="module">`): `dom.js` (the page's elements), `state.js` (settings, saved settings, language, shared playback state), `audio.js` (clicks and plucked notes), `rounds.js` (which key or shape comes next, and each round's notes), `board.js` (fretboard drawing, the slide and the neck bar), `player.js` (scheduler, drawing synced to the sound, start and stop, idle view), `controls.js` (BPM and ticks, eye, language), `panels.js` (setup and fretboard panels) and `guide.js` (first-use guide). Modules need the page served over HTTP(S), as GitHub Pages does; opening `index.html` straight from disk no longer works.
 - **`js/theory.js`:** scale theory, start-note selection (§3) and fretboard walks (§13.2), with no DOM, so the tests can load it. In the browser it defines `Theory`; in Node it is a CommonJS module.
 - **`tests/`:** run with `node --test` from the repo root (Node 18+, no dependencies). They check start-note selection (§3), every fretboard walk against acceptance criterion 11, known fingerings, scale spelling, and that every language has the same texts.
+- **Smoke tests and release check:** `tests/smoke/` drives the app in Chromium with Playwright (`npm run smoke`), the only dependency, for development only, declared in `package.json`. `scripts/check-cache.js` checks that a release that changes a precached file also bumps the service-worker cache; `.github/workflows/` runs it, and the unit tests, on every push to `main`.
 - **`docs/TESTING.md`:** how to run the tests, run the app locally, the dev mode, and the manual checklist for the phone.
-- **Dev mode:** `?debug` in the URL adds a small **dbg** panel and a `dbg` object in the console: a cursor over the round to pause, step, seek along the walk and swap the round's key and degree, each applied and sounded at once. It lives in **`js/debug.js`**, which `js/app.js` only loads with `?debug`, after exposing a small bridge (`ScaleTrainerDev`: getters and setters for the playback state, plus the few functions the tool calls). The tool touches the app only through that bridge. Without `?debug` neither the bridge nor the file exists. It is a development tool, not a feature: its texts are English only and stay out of `strings.js`, the one exception to §5.
+- **Dev mode:** `?debug` in the URL adds a small **dbg** panel and a `dbg` object in the console: a cursor over the round to pause, step, seek along the walk and swap the round's key and degree, each applied and sounded at once. It lives in **`js/debug.js`**, which `js/app/main.js` only loads with `?debug`, after exposing a small bridge (`ScaleTrainerDev`: getters and setters for the playback state, plus the few functions the tool calls). The tool touches the app only through that bridge. Without `?debug` neither the bridge nor the file exists. It is a development tool, not a feature: its texts are English only and stay out of `strings.js`, the one exception to §5.
 - **`docs/SPEC.md`:** this document. Describes state and decisions, not one-off steps.
 - **Repo description** (GitHub "About" field, set by the user): *Guitar practice with a metronome, on the fretboard: scale walks in any major key and the five minor pentatonic shapes in any minor key. Static web app, no dependencies.*
 
