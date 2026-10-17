@@ -261,7 +261,7 @@ A short guided tour that explains the unlabeled controls where they are.
 | --- | --- | --- |
 | 0 | Language selector | **Idioma:** elige el idioma de la guía y de la app; puedes cambiarlo después arriba a la derecha. The bubble has one button per language, each written in its own language (English · Español · Euskara), the current one highlighted; tapping one switches the whole app at once. |
 | 1 | The pick / note | **Una ronda:** una nota al azar de la tonalidad. Tras unos clics de preparación, subes una octava y vuelves a bajar al ritmo del metrónomo. |
-| 2 | Keys button | **Tonalidades:** elige una o varias, y si las rondas van al azar o en orden. |
+| 2 | Setup button | **Ejercicio y tonalidad:** elige el ejercicio: recorrido de escala o formas pentatónicas. Luego sus tonalidades, o la tonalidad y la forma. |
 | 3 | Eye | **Ayudas:** toca el ojo para cerrarlo poco a poco, de más ayuda a menos. Below the text, the four eyes with their level: *Todas las notas · Solo la actual · Solo la forma · Solo el inicio*. |
 | 4 | Guitar | **Diapasón:** muestra el recorrido en el mástil, dentro de la zona de trastes que elijas. |
 | 5 | **?** | **Ayuda:** con **?** vuelves a ver esta guía cuando quieras. |
