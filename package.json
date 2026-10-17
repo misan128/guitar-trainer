@@ -1,0 +1,14 @@
+{
+  "name": "scale-trainer",
+  "private": true,
+  "description": "Guitar scale practice app. No build step: these scripts only run the checks.",
+  "scripts": {
+    "test": "node --test",
+    "smoke:setup": "playwright install chromium",
+    "smoke": "node --test tests/smoke/*.smoke.js",
+    "check-cache": "node scripts/check-cache.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}
