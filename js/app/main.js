@@ -9,6 +9,7 @@ import { queue, render, playTick, start, stop, stopScheduler, startScheduler } f
 import { closePanel, closeBoard, renderBoardPanel } from "./panels.js";
 import { applyLang, setBpm, syncRange } from "./controls.js";
 import { guideOpen, openGuide, closeGuide } from "./guide.js";
+import { tunerOpen, closeTuner } from "./tuner.js";
 
 load();
 syncRange();
@@ -21,8 +22,8 @@ document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeGuide();
     return;
   }
-  if (!keyPanel.hidden || !boardPanel.hidden) {   // shortcuts are off while a panel is open
-    if (e.key === "Escape") { closePanel(true); closeBoard(true); }
+  if (!keyPanel.hidden || !boardPanel.hidden || tunerOpen()) {   // shortcuts are off while a panel is open
+    if (e.key === "Escape") { closePanel(true); closeBoard(true); closeTuner(true); }
     return;
   }
   if (e.code === "Space") { e.preventDefault(); if (!e.repeat) play.running ? stop() : start(); }

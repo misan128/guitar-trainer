@@ -66,7 +66,8 @@ function pluckBuffer(midi) {
   pluckCache.set(midi, buf);
   return buf;
 }
-export function playNote(midi, time, duration) {
+// out: where it sounds; the session's bus by default
+export function playNote(midi, time, duration, out = audio.master) {
   const { ctx } = audio;
   const src = ctx.createBufferSource();
   const gain = ctx.createGain();
@@ -76,7 +77,16 @@ export function playNote(midi, time, duration) {
     gain.gain.setValueAtTime(0.7, time + duration * 0.92);
     gain.gain.linearRampToValueAtTime(0.0001, time + duration);
   }
-  src.connect(gain).connect(audio.master);
+  src.connect(gain).connect(out);
   src.start(time);
   src.stop(time + (duration || src.buffer.duration));
+}
+// Tuner: an open string to tune by ear, outside any practice session (its own bus, always open)
+let refBus = null;
+export function playReference(midi) {
+  if (!refBus) {
+    refBus = audio.ctx.createGain();
+    refBus.connect(audio.ctx.destination);
+  }
+  playNote(midi, audio.ctx.currentTime + 0.02, 0, refBus);
 }

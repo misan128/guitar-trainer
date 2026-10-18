@@ -278,7 +278,7 @@ select.quiet:disabled { opacity: .35; }
 #keyBtn:disabled { opacity: .35; cursor: not-allowed; }
 
 /* Panels (keys, fretboard): open under the top-left buttons */
-#keyPanel, #boardPanel {
+#keyPanel, #boardPanel, #tunerPanel {
   position: absolute;
   top: calc(env(safe-area-inset-top, 0px) + 3.25rem);
   left: .75rem;
@@ -291,7 +291,7 @@ select.quiet:disabled { opacity: .35; }
 }
 /* Exercise row, first in the setup panel (SPEC §15.1) */
 .kp-exercise { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-bottom: .9rem; padding-bottom: .9rem; border-bottom: 1px solid var(--wire); }
-.kp-exercise button {
+.kp-exercise button, .tn-tunings button {
   min-height: 2.5rem;
   padding: .3rem .5rem;
   border: 0;
@@ -301,7 +301,11 @@ select.quiet:disabled { opacity: .35; }
   font: 600 .9rem "Instrument Sans", system-ui, sans-serif;
   cursor: pointer;
 }
-.kp-exercise button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+.kp-exercise button[aria-pressed="true"], .tn-tunings button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+/* Tuner: the tuning, three choices in a row (SPEC §16) */
+.tn-tunings { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.tn-tunings button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem; }
+.tn-tunings small { font-weight: 400; font-size: .75rem; letter-spacing: .08em; opacity: .8; }
 .kp-shapes { margin-top: .9rem; }
 /* Variant: only when the key and shape fit in two places (open/closed, or low/high octave) */
 .kp-place { display: flex; align-items: center; gap: .6rem; margin-top: .75rem; color: var(--muted); font-size: .9rem; }
@@ -423,7 +427,7 @@ select.quiet:disabled { opacity: .35; }
 .bp-frets { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .bp-frets select { background-color: #3a2d26; }
 .bp-hint { margin: .75rem 0 0; color: var(--muted); font-size: .85rem; }
-#boardDone {
+#boardDone, #tunerDone {
   width: 100%;
   height: 2.75rem;
   margin-top: 1rem;
@@ -503,6 +507,60 @@ main.with-board { padding-top: 3.25rem; }
 main.with-board .display { display: none; }
 main.with-board #phase { margin-top: 0; }
 main.with-board #board { max-width: 34rem; margin-top: .75rem; }
+
+/* Tuner (SPEC §16): a quiet tuning fork before "?", and its panel under the top-right buttons */
+#tunerBtn {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: .55rem;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  opacity: .7;
+  cursor: pointer;
+}
+#tunerBtn svg { display: block; width: 100%; height: 100%; }
+#tunerBtn:hover, #tunerBtn[aria-expanded="true"] { opacity: 1; }
+#tunerBtn[aria-expanded="true"] { box-shadow: inset 0 0 0 1.5px var(--brass); color: var(--brass); }
+#tunerBtn:disabled { opacity: .35; cursor: not-allowed; }
+#tunerPanel { left: auto; right: .75rem; }
+.tn-state { color: var(--muted); font-size: .85rem; text-align: right; }
+.tn-read { padding: 1rem 0 .4rem; text-align: center; }
+.tn-note { font: 400 3.6rem/1 "Young Serif", Georgia, serif; color: var(--bone); transition: color .15s, opacity .5s ease; }
+.tn-oct { margin-left: .15rem; font: 600 1.1rem "Instrument Sans", system-ui, sans-serif; color: var(--muted); }
+.tn-meter { display: flex; align-items: center; gap: .6rem; margin-top: .9rem; color: var(--muted); font-size: 1rem; }
+.tn-scale { position: relative; flex: 1; height: 1.6rem; border-bottom: 1px solid var(--wire); }
+/* In tune: ±5 cents around the centre, a dark gold band behind the needle */
+.tn-zone { position: absolute; left: 45%; bottom: 0; width: 10%; height: 100%; border-radius: 3px 3px 0 0; background: rgba(209, 166, 90, .16); }
+.tn-center { position: absolute; left: 50%; bottom: 0; width: 2px; height: 100%; margin-left: -1px; background: var(--wire); }
+/* The needle: positioned from the cents in tuner.js; faded at the centre without a reading */
+.tn-needle { position: absolute; left: 50%; bottom: 0; width: 3px; height: 100%; margin-left: -1.5px; border-radius: 2px; background: var(--bone); transition: left .08s linear, background-color .15s, opacity .5s ease; }
+.tn-read.off .tn-needle { opacity: .25; }
+.tn-read.tuned .tn-note, .tn-read.tuned .tn-cents { color: var(--brass); }
+.tn-read.tuned .tn-needle { background: var(--brass); }
+/* The string has faded: its last reading stays a moment, dimmed */
+.tn-read.held .tn-note, .tn-read.held .tn-needle, .tn-read.held .tn-cents { opacity: .45; }
+/* …and then fades out before the meter goes back to rest */
+.tn-read.gone .tn-note, .tn-read.gone .tn-needle, .tn-read.gone .tn-cents { opacity: 0; }
+/* Microphone level: how loud the input is, brighter once it is loud enough to read */
+.tn-level { height: 3px; margin: .5rem 0 .2rem; border-radius: 2px; background: var(--wire); overflow: hidden; }
+.tn-level i { display: block; width: 0; height: 100%; background: var(--muted); transition: width .05s linear; }
+.tn-level i.heard { background: var(--bone); }
+.tn-cents { min-height: 1.2em; margin-top: .35rem; color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; transition: opacity .5s ease; }
+.tn-ref { display: grid; grid-template-columns: repeat(6, 1fr); gap: .35rem; }
+.tn-ref button {
+  height: 2.6rem;
+  border: 0;
+  border-radius: 10px;
+  background: #3a2d26;
+  color: var(--bone);
+  font: 600 1rem "Instrument Sans", system-ui, sans-serif;
+  cursor: pointer;
+}
+.tn-ref button.near { box-shadow: inset 0 0 0 1.5px var(--brass); color: var(--brass); }
+@media (prefers-reduced-motion: reduce) { .tn-needle { transition: none; } }
 
 /* Help button: a quiet "?" beside the language */
 #helpBtn {

@@ -3,12 +3,13 @@
 const { chromium, devices } = require("playwright");
 const { createServer } = require("../../scripts/serve.js");
 
-async function launch() {
+// args: extra Chromium flags (the tuner test feeds it a fake microphone)
+async function launch(args = []) {
   const requests = [];
   const server = createServer(p => requests.push(p));
   await new Promise(ok => server.listen(0, ok));
   const base = `http://localhost:${server.address().port}/`;
-  const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required"] });
+  const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required", ...args] });
 
   // settings: saved settings to start from (the app's localStorage), merged over "guide already seen"
   async function open(query = "", settings = {}) {

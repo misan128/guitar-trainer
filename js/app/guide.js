@@ -1,7 +1,8 @@
 // First-use guide (SPEC §14): a cutout around each control with a short text
-import { $, langEl, mainEl, boardEl, keyBtn, showAllEl, boardBtn, helpBtn } from "./dom.js";
+import { $, langEl, mainEl, boardEl, keyBtn, showAllEl, boardBtn, helpBtn, tunerBtn } from "./dom.js";
 import { settings, play, T, save } from "./state.js";
 import { closePanel, closeBoard } from "./panels.js";
+import { closeTuner } from "./tuner.js";
 import { applyLang } from "./controls.js";
 
 const guideEl = $("guide"), guideSpot = $("guideSpot"), guideTip = $("guideTip"), guideNext = $("guideNext");
@@ -12,6 +13,7 @@ const GUIDE = [
   { target: () => keyBtn, key: "guideKeys" },
   { target: () => showAllEl, key: "guideEye", legend: true },
   { target: () => boardBtn, key: "guideBoard", skip: () => boardBtn.hidden },
+  { target: () => tunerBtn, key: "guideTuner" },
   { target: () => helpBtn, key: "guideHelp" },
 ];
 let steps = GUIDE, guideStep = 0, guideFromHelp = false;
@@ -67,6 +69,7 @@ export function openGuide(fromHelp) {
   if (play.running) return;
   closePanel(false);
   closeBoard(false);
+  closeTuner(false);
   guideStep = 0;
   guideFromHelp = fromHelp;
   steps = GUIDE.filter(s => !(fromHelp && s.langs) && !(s.skip && s.skip()));
