@@ -1,7 +1,7 @@
 // Rounds: which key or shape comes next, and the notes of each round
 import { inputs } from "./dom.js";
-import { settings, play, T, WALK_PEAK, ZONE_MIN } from "./state.js";
-const { MAJOR, KEYS, scaleNames, semis, boardWalk, PENTA_MAX_FRET, pentaPlacements, pentaShape } = Theory;
+import { settings, play, T, WALK_PEAK, ZONE_MIN, voicingOf } from "./state.js";
+const { MAJOR, KEYS, scaleNames, semis, boardWalk, PENTA_MAX_FRET, pentaPlacements, pentaShape, PROGRESSIONS, progressionChords, CHORD_ROOTS } = Theory;
 
 const BASE_MIDI = 48;                  // start note always in octave 3 (C3–B3)
 
@@ -75,9 +75,26 @@ export function shapeRound(n, k = settings.pentaKey, at = placeAt(k, n), prep = 
 export const roundLabel = r => r.chords ? r.key.name : r.penta ? `${T.minorName(r.key.name)} · ${T.shapeName(r.shape)}${r.variant ? ` · ${T[r.variant]}` : ""}` : T.keyName(r.key.name);
 
 // Chord changes (SPEC §17.3): one round is the whole sequence, chord A then chord B; prep only before the first
-export function chordRound(seq, prep) {
+// Chord changes: what gets played, from the settings. Two chords, or a progression in its key with the position
+// chosen for each chord (SPEC §17.5). seq: [{ name, v, beats }]; perBar: the ticks of one bar
+export const progName = p => (p.id === "andalusian" ? T.progAndalusian : p.id === "blues" ? T.progBlues : p.name);
+export const progKeyLabel = (p, key = settings.progKey) => CHORD_ROOTS.find(([, pc]) => pc === key)[0] + (p.minor ? "m" : "");
+export function chordPlan() {
+  const s = settings, per = s.chordBeats;
+  if (s.chordMode === "prog") {
+    const p = PROGRESSIONS.find(x => x.id === s.progId);
+    const seq = progressionChords(p.id, s.progKey).map(c => ({ name: c.name, v: c.v, beats: c.bars * per }));
+    // Labelled by its chords, each once ("C · G · Am · F", the blues "A7 · D7 · E7"): plainer than "I–V–vi–IV"
+    return { seq, label: [...new Set(seq.map(c => c.name))].join(" · "), perBar: per, prog: true };
+  }
+  const seq = [s.chordA, s.chordB].map(name => ({ name, v: voicingOf(name), beats: per }));
+  return { seq, label: `${s.chordA} ↔ ${s.chordB}`, perBar: per, prog: false };
+}
+
+// label: what the phase line calls it ("Am ↔ C", or the progression and its key)
+export function chordRound(seq, prep, label, perBar, prog) {
   const total = prep + seq.reduce((n, c) => n + c.beats, 0);
-  return { chords: true, seq, prep, wait: 0, total, announce: false, key: { name: seq.map(c => c.name).join(" ↔ ") } };
+  return { chords: true, seq, prep, wait: 0, total, announce: false, perBar, prog, key: { name: label } };
 }
 
 export function newRound() {
@@ -85,7 +102,7 @@ export function newRound() {
   if (session.exercise === "chords") {
     const first = !session.started;
     session.started = true;
-    return chordRound(session.seq, first ? Number(inputs.prep.value) : 0);
+    return chordRound(session.seq, first ? Number(inputs.prep.value) : 0, session.chordLabel, session.perBar, session.prog);
   }
   // Pentatonic (SPEC §15.3): the path is fixed, so rounds follow each other without a wait; the reference
   // note and the prep ticks only come before the first one

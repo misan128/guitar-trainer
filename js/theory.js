@@ -231,6 +231,37 @@
     const fretted = v.frets.filter(f => f > 0);
     return [v.kind === "open" ? 0 : Math.min(...fretted), Math.max(...fretted)];
   }
+  // ---- Progressions (SPEC §17.5) ----
+  // Ready-made, in degrees: each step is [semitones above the key's root, quality, bars]. A minor progression
+  // reads the key as minor (its root is the tonic of the minor key).
+  const PROGRESSIONS = [
+    { id: "pop", name: "I–V–vi–IV", steps: [[0, "", 1], [7, "", 1], [9, "m", 1], [5, "", 1]] },
+    { id: "145", name: "I–IV–V", steps: [[0, "", 1], [5, "", 1], [7, "", 1]] },
+    { id: "sad", name: "vi–IV–I–V", steps: [[9, "m", 1], [5, "", 1], [0, "", 1], [7, "", 1]] },
+    { id: "251", name: "ii–V–I", steps: [[2, "m", 1], [7, "", 1], [0, "", 2]] },
+    { id: "andalusian", name: "i–♭VII–♭VI–V", minor: true, steps: [[0, "m", 1], [10, "", 1], [8, "", 1], [7, "", 1]] },
+    { id: "blues", name: "I7–IV7–V7", steps: [[0, "7", 1], [0, "7", 1], [0, "7", 1], [0, "7", 1], [5, "7", 1], [5, "7", 1],
+                                               [0, "7", 1], [0, "7", 1], [7, "7", 1], [5, "7", 1], [0, "7", 1], [7, "7", 1]] },
+  ];
+  // A progression in the key whose root is pitch class `key`: its chords with the position chosen for each
+  // (open when the chord has one; otherwise the one starting closest on the neck to the previous chord, the
+  // easiest on a tie) and its length in bars: [{ name, v, bars }]
+  function progressionChords(id, key) {
+    const p = PROGRESSIONS.find(x => x.id === id);
+    let prev = null;
+    return p.steps.map(([semi, quality, bars]) => {
+      const name = CHORD_ROOTS.find(([, pc]) => pc === (key + semi) % 12)[0] + quality, vs = CHORDS[name].voicings;
+      let v = vs.findIndex(x => x.kind === "open");
+      if (v < 0) {
+        const at = i => voicingFrets(vs[i])[0];
+        v = 0;
+        if (prev != null) for (let i = 1; i < vs.length; i++) if (Math.abs(at(i) - prev) < Math.abs(at(v) - prev)) v = i;
+      }
+      prev = voicingFrets(vs[v])[0];
+      return { name, v, bars };
+    });
+  }
+
   // The sounding notes of a chord's voicing, low to high (muted strings left out)
   function chordNotes(name, v = 0) {
     const { frets } = CHORDS[name].voicings[v];
@@ -249,7 +280,7 @@
 
   const api = { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk, createStartPicker,
     MINOR_PENTA, PENTA_DEGREES, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape, pentaNeckOrder, createNeckWalk,
-    CHORD_QUALITIES, CHORD_ROOTS, CHORDS, CHORD_NAMES, voicingFrets, chordNotes, chordAt };
+    CHORD_QUALITIES, CHORD_ROOTS, CHORDS, CHORD_NAMES, voicingFrets, chordNotes, chordAt, PROGRESSIONS, progressionChords };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.Theory = api;
 })(this);

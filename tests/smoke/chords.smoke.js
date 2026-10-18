@@ -117,3 +117,55 @@ test("no eye in Chords: both chords always in full, whatever the saved level; de
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });
+
+test("progressions: chosen with their key, a strip with every step, the chords following it", async () => {
+  const page = await app.open("", { ...CHORDS, chordBeats: 2 });
+  await page.click("#keyBtn");
+  await page.click('#chordMode [data-mode="prog"]');
+  assert.equal(await page.isVisible("#pairSetup"), false, "the tiles give way to the progression's setup");
+  assert.equal(await page.textContent("#beatsLabel"), "Ticks per bar");
+  assert.equal(await page.textContent("#keyBtn"), "C · G · Am · F", "labelled by its chords");
+  assert.equal(await page.textContent('#progGrid [data-prog="pop"] small'), "C G Am F", "each progression shows its chords in the key");
+  assert.equal(await page.textContent("#chordStrip"), "CGAmF", "the strip behind the panel");
+  assert.equal(await page.textContent("#progKeyName"), "C major");
+  await page.click('#progGrid [data-prog="blues"]');
+  await page.click('#progKeyGrid [data-pc="9"]');
+  assert.equal(await page.textContent('#progGrid [data-prog="blues"] small'), "A7 D7 E7");
+  assert.equal(await page.textContent("#chordStrip"), "A7×4D7×2A7×2E7D7A7E7", "the blues' twelve bars, repeats grouped on one line");
+  await page.click('#progGrid [data-prog="andalusian"]');
+  assert.equal(await page.textContent("#progKeyName"), "A minor", "a minor progression reads the key as minor");
+  assert.equal(await page.textContent("#keyBtn"), "Am · G · F · E");
+  assert.equal(await names(page), "Am G");
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("scaleWalkLight")));
+  assert.deepEqual([saved.chordMode, saved.progId, saved.progKey], ["prog", "andalusian", 9]);
+  await page.keyboard.press("Escape");
+  await page.click("#toggle");
+  await page.waitForFunction(() => document.querySelector(".ch-now .ch-name").textContent === "G", null, { timeout: 4000 });
+  assert.equal(await names(page), "G F");
+  assert.equal(await page.textContent("#chordStrip .on"), "G", "the strip marks the current step");
+  await page.waitForFunction(() => document.querySelector(".ch-now .ch-name").textContent === "F", null, { timeout: 4000 });
+  assert.equal(await page.locator(".ch-now .barre").count(), 1, "F as the small F, chosen for you");
+  await page.click("#toggle");
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
+test("progressions: a two-bar chord keeps one bar of dots, ringed only in its last bar", async () => {
+  const page = await app.open("?debug", { ...CHORDS, chordBeats: 2, chordMode: "prog", progId: "251", progKey: 0, bpm: "120" });
+  await page.waitForFunction(() => window.dbg);
+  await page.click("#toggle");
+  await page.waitForFunction(() => document.querySelector(".ch-now .ch-name").textContent === "C", null, { timeout: 6000 });
+  await page.evaluate(() => dbg.pause());
+  const shown = async () => {
+    const d = await page.$$eval("#chordBeatsShown i", is => is.map(i => (i.classList.contains("on") ? "●" : "○") + (i.classList.contains("last") ? "|" : "")).join(""));
+    await page.evaluate(() => dbg.step());
+    return d;
+  };
+  const seen = [await shown(), await shown(), await shown(), await shown()];
+  assert.ok(seen.every(d => d.replace(/\|/g, "").length === 2), `two dots per bar: ${seen}`);
+  assert.ok(seen.some(d => !d.includes("|")) && seen.some(d => d.includes("|")), `ringed only in the last bar: ${seen}`);
+  await page.evaluate(() => dbg.resume());
+  await page.click("#toggle");
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});

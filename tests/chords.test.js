@@ -2,7 +2,7 @@
 // chords lands its changes on the right ticks. Run: node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { OPEN_MIDI, STRING_NAMES, CHORD_QUALITIES, CHORDS, CHORD_NAMES, voicingFrets, chordNotes, chordAt } = require("../js/theory.js");
+const { OPEN_MIDI, STRING_NAMES, CHORD_QUALITIES, CHORDS, CHORD_NAMES, voicingFrets, chordNotes, chordAt, PROGRESSIONS, progressionChords } = require("../js/theory.js");
 
 const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 const show = v => v.frets.map(f => (f < 0 ? "x" : f)).join("");
@@ -131,4 +131,39 @@ test("any length per chord, and a long session never drifts off the boundaries",
   const seq = [{ name: "C", beats: 4 }, { name: "G", beats: 2 }, { name: "Am", beats: 2 }];
   assert.deepEqual([0, 3, 4, 5, 6, 7, 8].map(w => seq[chordAt(seq, w).i].name), ["C", "C", "G", "G", "Am", "Am", "C"]);
   assert.equal(chordAt(seq, 7).next, 0);
+});
+
+// ---- Progressions (SPEC §17.5) ----
+const names = (id, key) => progressionChords(id, key).map(c => c.name + (c.bars > 1 ? `×${c.bars}` : "")).join(" ");
+
+test("progressions: the six, transposed to the key", () => {
+  assert.deepEqual(PROGRESSIONS.map(p => p.id), ["pop", "145", "sad", "251", "andalusian", "blues"]);
+  assert.equal(names("pop", 0), "C G Am F");
+  assert.equal(names("145", 7), "G C D");
+  assert.equal(names("sad", 0), "Am F C G");
+  assert.equal(names("251", 0), "Dm G C×2", "ii–V–I: two bars on I");
+  assert.equal(names("andalusian", 9), "Am G F E", "a minor progression reads the key as minor");
+  assert.equal(names("blues", 9), "A7 A7 A7 A7 D7 D7 A7 A7 E7 D7 A7 E7", "twelve bars");
+  assert.equal(names("pop", 3), "E♭ B♭ Cm A♭");
+  for (const p of PROGRESSIONS) for (let key = 0; key < 12; key++) {
+    const chords = progressionChords(p.id, key);
+    assert.equal(chords.length, p.steps.length);
+    for (const c of chords) assert.ok(CHORDS[c.name] && CHORDS[c.name].voicings[c.v], `${p.id} in ${key}: ${c.name} exists with its position`);
+  }
+});
+
+test("progressions: positions chosen for you, open when there is one, otherwise close to the previous chord", () => {
+  const kinds = (id, key) => progressionChords(id, key).map(c => CHORDS[c.name].voicings[c.v].kind);
+  assert.deepEqual(kinds("pop", 0), ["open", "open", "open", "root4"], "C G Am and the small F");
+  assert.deepEqual(kinds("blues", 9), Array(12).fill("open"));
+  for (const p of PROGRESSIONS) for (let key = 0; key < 12; key++) {
+    const chords = progressionChords(p.id, key);
+    chords.forEach((c, i) => {
+      const vs = CHORDS[c.name].voicings, at = j => voicingFrets(vs[j])[0];
+      if (vs.some(v => v.kind === "open")) return assert.equal(vs[c.v].kind, "open", `${p.id} ${key}: ${c.name} open`);
+      if (i === 0) return assert.equal(c.v, 0, `${p.id} ${key}: the first chord at its lowest`);
+      const prev = voicingFrets(CHORDS[chords[i - 1].name].voicings[chords[i - 1].v])[0];
+      for (let j = 0; j < vs.length; j++) assert.ok(Math.abs(at(c.v) - prev) <= Math.abs(at(j) - prev), `${p.id} ${key}: ${c.name} is the closest to the chord before`);
+    });
+  }
 });
