@@ -291,7 +291,7 @@ select.quiet:disabled { opacity: .35; }
 }
 /* Exercise row, first in the setup panel (SPEC §15.1) */
 .kp-exercise { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-bottom: .9rem; padding-bottom: .9rem; border-bottom: 1px solid var(--wire); }
-.kp-exercise button {
+.kp-exercise button, .tn-tunings button {
   min-height: 2.5rem;
   padding: .3rem .5rem;
   border: 0;
@@ -301,7 +301,11 @@ select.quiet:disabled { opacity: .35; }
   font: 600 .9rem "Instrument Sans", system-ui, sans-serif;
   cursor: pointer;
 }
-.kp-exercise button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+.kp-exercise button[aria-pressed="true"], .tn-tunings button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+/* Tuner: the tuning, three choices in a row (SPEC §16) */
+.tn-tunings { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.tn-tunings button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem; }
+.tn-tunings small { font-weight: 400; font-size: .75rem; letter-spacing: .08em; opacity: .8; }
 .kp-shapes { margin-top: .9rem; }
 /* Variant: only when the key and shape fit in two places (open/closed, or low/high octave) */
 .kp-place { display: flex; align-items: center; gap: .6rem; margin-top: .75rem; color: var(--muted); font-size: .9rem; }

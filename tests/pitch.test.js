@@ -2,7 +2,7 @@
 // overtones are louder than the fundamental, and from a plucked string. Run: node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { detectPitch, noteOf } = require("../js/pitch.js");
+const { detectPitch, noteOf, TUNINGS } = require("../js/pitch.js");
 const { OPEN_MIDI, STRING_NAMES } = require("../js/theory.js");
 
 const SR = 48000, N = 4096;                          // the tuner's analyser: 4096 samples at 48 kHz
@@ -83,4 +83,21 @@ test("note names, octaves and cents", () => {
   const sharp = noteOf(440 * Math.pow(2, 20 / 1200)), flat = noteOf(440 * Math.pow(2, -45 / 1200));
   assert.ok(Math.abs(sharp.cents - 20) < 1e-6 && sharp.name === "A");
   assert.ok(Math.abs(flat.cents + 45) < 1e-6 && flat.name === "A");
+});
+
+test("tunings: standard, half a step down, drop D and e → D, each name matching its pitch", () => {
+  const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  const pc = name => (PC[name[0].toUpperCase()] + (name.includes("♭") ? -1 : name.includes("♯") ? 1 : 0) + 12) % 12;
+  assert.deepEqual(Object.keys(TUNINGS), ["standard", "halfDown", "dropD", "highD"]);
+  assert.deepEqual(TUNINGS.standard.midi, OPEN_MIDI, "standard is the app's tuning");
+  assert.deepEqual(TUNINGS.standard.names, STRING_NAMES);
+  assert.deepEqual(TUNINGS.halfDown.midi, OPEN_MIDI.map(m => m - 1));
+  assert.deepEqual(TUNINGS.dropD.midi, [38, 45, 50, 55, 59, 64], "D A D G B e");
+  assert.deepEqual(TUNINGS.highD.midi, [40, 45, 50, 55, 59, 62], "E A D G B d");
+  for (const [id, t] of Object.entries(TUNINGS)) {
+    assert.equal(t.midi.length, 6);
+    assert.equal(t.names.length, 6);
+    t.midi.forEach((m, st) => assert.equal(pc(t.names[st]), m % 12, `${id}: string ${st + 1} is named ${t.names[st]}`));
+    for (const m of t.midi) assert.ok(hz(m) > 70 && hz(m) < 1000, `${id}: every string is within the tuner's range`);
+  }
 });

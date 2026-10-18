@@ -8,6 +8,14 @@
   const NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
   const MIN_HZ = 70;          // below low E (82 Hz), so drop D still reads
   const MAX_HZ = 1000;        // above the high e string's 12th fret (659 Hz)
+  // Tunings for the tuner's reference strings (SPEC §16), low string to high: MIDI notes and their names.
+  // The common ones, and "e → D": standard with the high e down to D.
+  const TUNINGS = {
+    standard: { midi: [40, 45, 50, 55, 59, 64], names: ["E", "A", "D", "G", "B", "e"] },
+    halfDown: { midi: [39, 44, 49, 54, 58, 63], names: ["E♭", "A♭", "D♭", "G♭", "B♭", "e♭"] },
+    dropD: { midi: [38, 45, 50, 55, 59, 64], names: ["D", "A", "D", "G", "B", "e"] },
+    highD: { midi: [40, 45, 50, 55, 59, 62], names: ["E", "A", "D", "G", "B", "d"] },
+  };
   const THRESHOLD = 0.2;      // YIN: how aperiodic a period may be and still count (a fading string is noisier)
   const SILENCE = 0.003;      // RMS below this is silence: no reading (a phone microphone hears a fading string quietly)
 
@@ -60,5 +68,5 @@
     return { midi, name: NAMES[((midi % 12) + 12) % 12], octave: Math.floor(midi / 12) - 1, cents: (exact - midi) * 100 };
   }
 
-  return { NAMES, MIN_HZ, MAX_HZ, SILENCE, detectPitch, noteOf };
+  return { NAMES, MIN_HZ, MAX_HZ, SILENCE, TUNINGS, detectPitch, noteOf };
 });
