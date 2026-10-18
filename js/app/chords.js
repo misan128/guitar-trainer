@@ -16,7 +16,7 @@ function el(tag, attrs, parent) {
 
 export const chordView = $("chordView");
 const cards = { now: chordView.querySelector(".ch-now"), next: chordView.querySelector(".ch-next") };
-const beatsEl = $("chordBeatsShown");
+const beatsEl = $("chordBeatsShown"), stripEl = $("chordStrip");
 
 // The fixed grid: six strings, four frets and the nut; a layer for the chord's marks on top
 function buildDiagram(svg) {
@@ -64,7 +64,8 @@ function drawChord(d, name, vi, show, numbers) {
 // now, next: { name, v } (chord and voicing). Both always drawn in full, with finger numbers: no eye in this
 // exercise (SPEC §17.4)
 let shown = null;
-export function drawChords(now, next, beat, beats) {
+// dots: the ticks of one bar; beat: the current one (-1 none); lastBar: whether the chord ends with this bar
+export function drawChords(now, next, beat, dots, lastBar = true) {
   const key = `${now.name}:${now.v}|${next.name}:${next.v}`;
   if (key !== shown) {
     shown = key;
@@ -73,14 +74,38 @@ export function drawChords(now, next, beat, beats) {
     drawChord(diagrams.now, now.name, now.v, true, true);
     drawChord(diagrams.next, next.name, next.v, true, true);
   }
-  // One dot per tick of the chord: the current one filled, the last one marked (the change comes after it)
-  if (beatsEl.childElementCount !== beats) {
+  // One dot per tick of the bar: the current one filled; the last one ringed when the change comes after it
+  if (beatsEl.childElementCount !== dots) {
     beatsEl.textContent = "";
-    for (let i = 0; i < beats; i++) beatsEl.appendChild(document.createElement("i")).classList.toggle("last", i === beats - 1);
+    for (let i = 0; i < dots; i++) beatsEl.appendChild(document.createElement("i"));
   }
-  [...beatsEl.children].forEach((b, i) => b.classList.toggle("on", i === beat));
+  [...beatsEl.children].forEach((b, i) => {
+    b.classList.toggle("on", i === beat);
+    b.classList.toggle("last", lastBar && i === dots - 1);
+  });
+}
+// Progression: its steps in a row, repeats grouped ("A7×4 D7×2 …", one line even for the blues), the one holding
+// step i (-1 none) marked. seq null hides it (two chords)
+let strip = null, groups = [];
+export function drawStrip(seq, i) {
+  chordView.classList.toggle("with-strip", !!seq);
+  stripEl.hidden = !seq;
+  if (!seq) { strip = null; return; }
+  const key = seq.map(c => `${c.name}:${c.v}`).join(" ");
+  if (key !== strip) {
+    strip = key;
+    groups = [];
+    seq.forEach((c, j) => {
+      const g = groups[groups.length - 1];
+      if (g && g.name === c.name && g.v === c.v) g.to = j;
+      else groups.push({ name: c.name, v: c.v, from: j, to: j });
+    });
+    stripEl.textContent = "";
+    for (const g of groups) stripEl.appendChild(document.createElement("span")).textContent = g.to > g.from ? `${g.name}×${g.to - g.from + 1}` : g.name;
+  }
+  groups.forEach((g, j) => stripEl.children[j].classList.toggle("on", i >= g.from && i <= g.to));
 }
 export function showChordView(on) {
   chordView.hidden = !on;
-  if (!on) shown = null;
+  if (!on) { shown = strip = null; chordView.classList.remove("with-strip"); }
 }

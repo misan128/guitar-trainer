@@ -3,12 +3,12 @@
 import { noteEl, pickEl, phaseEl, trackEl, inputs, roundKeyEl, toggleBtn, keyBtn, boardBtn, helpBtn, tunerBtn, boardEl, mainEl } from "./dom.js";
 import { settings, play, T, WALK, WALK_PEAK, clampInput, voicingOf } from "./state.js";
 import { audio, wakeAudio, openBus, closeBus, click, playNote, strum } from "./audio.js";
-import { newRound, shapeRound, placeAt, roundLabel } from "./rounds.js";
+import { newRound, shapeRound, placeAt, roundLabel, chordPlan } from "./rounds.js";
 import { view, buildBoard, drawBoard, slideBoard, drawBar, hideBoard } from "./board.js";
 import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
 import { closeMenu } from "./menu.js";
-import { drawChords, showChordView } from "./chords.js";
+import { drawChords, drawStrip, showChordView } from "./chords.js";
 const { PENTA_SHAPES, createStartPicker, pentaNeckOrder, createNeckWalk, chordNotes, chordAt } = Theory;
 
 const LOOKAHEAD_MS = 25;
@@ -24,8 +24,10 @@ export function playTick(r, st, time, beat) {
     const w = st - r.prep;
     if (w < 0) return click(time, false, false);
     const c = chordAt(r.seq, w);
-    click(time, c.beat === 0, false);
-    if (c.beat === 0) strum(chordNotes(r.seq[c.i].name, r.seq[c.i].v), time, beat * c.beats);
+    const cur = r.seq[c.i], prev = r.seq[(c.i + r.seq.length - 1) % r.seq.length];
+    click(time, c.beat % r.perBar === 0, false);                     // every bar starts accented
+    // The strum only when the chord changes (in the blues the same chord can last several bars)
+    if (c.beat === 0 && (w === 0 || prev.name !== cur.name || prev.v !== cur.v)) strum(chordNotes(cur.name, cur.v), time, beat * c.beats);
     return;
   }
   if (st === 0 && r.announce !== false) playNote(r.walk[0].midi, time);   // reference note
@@ -115,13 +117,16 @@ export function render(tick) {
 function renderChords({ step, round }) {
   shownRound = round;
   const w = step - round.prep, label = roundLabel(round);
+  const prog = round.prog ? round.seq : null, per = round.perBar;
   if (w < 0) {
     phaseEl.textContent = `${label} · ${T.phasePrep(round.prep - step)}`;
-    return drawChords(round.seq[0], round.seq[1 % round.seq.length], -1, round.seq[0].beats);
+    drawStrip(prog, -1);
+    return drawChords(round.seq[0], round.seq[1 % round.seq.length], -1, per);
   }
   const c = chordAt(round.seq, w);
   phaseEl.textContent = label;
-  drawChords(round.seq[c.i], round.seq[c.next], c.beat, c.beats);
+  drawStrip(prog, c.i);
+  drawChords(round.seq[c.i], round.seq[c.next], c.beat % per, per, c.beat >= c.beats - per);
 }
 
 // Bars: flat for prep and wait; rise and fall during the walk, peaking at its top note
@@ -171,12 +176,13 @@ export function showIdle() {
   const chords = settings.exercise === "chords";
   mainEl.classList.toggle("with-chords", chords);
   showChordView(chords);
-  if (chords) {                        // at rest: chord A now, chord B next, to study them
+  if (chords) {                        // at rest: the first chord now and the second next, to study them
     hideBoard();
     pickEl.setAttribute("hidden", "");
-    phaseEl.textContent = `${settings.chordA} ↔ ${settings.chordB}`;
-    const A = settings.chordA, B = settings.chordB;
-    drawChords({ name: A, v: voicingOf(A) }, { name: B, v: voicingOf(B) }, -1, settings.chordBeats);
+    const plan = chordPlan();
+    phaseEl.textContent = plan.label;
+    drawStrip(plan.prog ? plan.seq : null, -1);
+    drawChords(plan.seq[0], plan.seq[1], -1, plan.perBar);
   } else if (settings.exercise === "penta") {
     const r = shapeRound(settings.shapeNo);
     r.neckBar = settings.neckWalk;
@@ -207,7 +213,7 @@ export async function start() {
                    exercise: s.exercise, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo),
                    neck: s.exercise === "penta" && s.neckWalk ? createNeckWalk(pentaNeckOrder(pentaKey, n => placeAt(pentaKey, n)), shapeNo) : null,
                    neckNext: null,
-                   seq: [s.chordA, s.chordB].map(name => ({ name, v: voicingOf(name), beats: s.chordBeats })) };
+                   ...(({ seq, label, perBar, prog }) => ({ seq, chordLabel: label, perBar, prog }))(chordPlan()) };
   keyBtn.disabled = true;
   boardBtn.disabled = true;
   document.body.classList.add("practicing");

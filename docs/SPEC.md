@@ -381,7 +381,7 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 
 ## 17. Chord changes
 
-**Status: phase 1 built (two chords); chords in every key and their positions on the neck built (v5.1).** A third exercise: learning chord fingerings and practising the change between two chords with the metronome. The metronome says **when** to change; how and when to strum is up to the player (no strumming patterns, no listening to what is played).
+**Status: two chords (phase 1), chords in every key with their positions (v5.1) and progressions (v5.2) built.** A third exercise: learning chord fingerings and practising the change between two chords with the metronome. The metronome says **when** to change; how and when to strum is up to the player (no strumming patterns, no listening to what is played).
 
 ### 17.1 Setup
 
@@ -417,14 +417,35 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 - **At rest:** chord A as now and chord B as next, to study the fingerings.
 - **No eye:** both diagrams are always drawn in full, with finger numbers. Hiding the fingering added nothing here (tried, then dropped), so the eye button is hidden in this exercise and the guide skips its step; the saved level is kept for the other exercises.
 
-### 17.5 Later phases (not decided)
+### 17.5 Progressions
 
-- **Phase 2, progressions (next, v5.2):** ready-made progressions in degrees transposed to the chosen key (I–V–vi–IV, I–IV–V, vi–IV–I–V, ii–V–I, the Andalusian cadence, the 12-bar blues with 7th chords), each chord with its own length; each chord's position chosen automatically (open when there is one, otherwise the closest to the previous chord), and a strip with the whole progression and the current chord marked.
+- **Mode:** at the top of the Chords setup, *Two chords · Progression*. Two chords is everything above; Progression replaces the tiles with its own setup. Saved as `chordMode`.
+- **Ready-made, no editor:** six progressions, written in degrees and transposed to the chosen key. Each step lasts one or more bars:
+
+  | Progression | Degrees | Example |
+  | --- | --- | --- |
+  | I–V–vi–IV | I · V · vi · IV | C: C G Am F |
+  | I–IV–V | I · IV · V | G: G C D |
+  | vi–IV–I–V | vi · IV · I · V | C: Am F C G |
+  | ii–V–I | ii · V · I (two bars) | C: Dm G C |
+  | Andalusian cadence (minor) | i · ♭VII · ♭VI · V | A minor: Am G F E |
+  | 12-bar blues (7th chords) | I7 ×4 · IV7 ×2 · I7 ×2 · V7 · IV7 · I7 · V7 | A: A7 … D7 … E7 |
+
+- **Key:** the 12 roots; a minor progression reads it as a minor key ("A minor"). Each progression remembers no key of its own: one key for all (`progKey`), C by default, so switching progression keeps it.
+- **Bars:** one bar is the setup's ticks (2, 4 or 8, labelled *Ticks per bar* in this mode); a two-bar step lasts twice as long.
+- **Positions chosen for you:** each chord's position comes from the progression, not from the two-chord choices: the open one when the chord has it; otherwise the one closest on the neck to the previous chord (by the fret it starts on; on a tie, the easiest), so the hand moves as little as possible. Pure and tested (`progressionChords` in `theory.js`).
+- **Button label and phase line:** the progression's chords, each once: "C · G · Am · F", the blues "A7 · D7 · E7". ("I–V–vi–IV · C" was tried first: right for a musician, cryptic at a glance.) The progression's name stays on its button in the panel.
+- **Playing:** the same loop as two chords (§17.3): the sequence is the progression's steps, each with its own length. Every bar starts with an accented click; the soft strum only when the chord changes (in the blues the same chord can last several bars).
+- **Display:** as in two chords (now, next), plus a **strip** above the diagrams with the progression's steps, the current one in gold. Repeats are grouped so it stays on one line: the blues reads "A7×4 D7×2 A7×2 E7 D7 A7 E7" (twelve bars on two lines pushed the controls off small screens; grouped, it also shows how long each chord lasts). The tick dots show one bar; a chord of two bars ticks through them twice, ringing the last dot only in its last bar. With the strip, the diagrams give up a little height so everything fits on an iPhone SE.
+- **Not now:** choosing each chord's position by hand, editing progressions, more progressions (they are data: adding one is a row).
+
+### 17.6 Later (not decided)
+
 - **More positions:** the other shapes of each chord along the neck, presented as positions like the ones here. The CAGED system as a concept (the five shapes and how they link with the pentatonic boxes) would be a space of its own, later.
 
-### 17.6 Texts
+### 17.7 Texts
 
-In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks per chord, Now, Next, Root, Type, the chord types (major, minor, 7th), Position and the position names (open, 6th, 5th and 4th string), and the guide's updated exercise step.
+In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks per chord, Now, Next, Root, Type, the chord types (major, minor, 7th), Position and the position names (open, 6th, 5th and 4th string), the two modes, Progression, Key, Ticks per bar, the names of the Andalusian cadence and the 12-bar blues, "minor" for a minor key, and the guide's updated exercise step.
 
 ## 18. Menu, themes and About
 

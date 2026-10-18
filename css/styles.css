@@ -404,6 +404,22 @@ select:disabled { opacity: .5; cursor: not-allowed; }
 .kt-name { font: 400 1.6rem/1.15 "Young Serif", Georgia, serif; color: var(--brass); }
 .kp-tile .kt-diagram { width: 62%; max-height: none; margin: .15rem 0 .2rem; }
 .kt-pos { color: var(--muted); font-weight: 400; }
+/* Two chords · Progression (SPEC §17.5), and the progression's setup */
+.kp-mode { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-bottom: .9rem; }
+.kp-mode button, .cp-progs button {
+  min-height: 2.4rem;
+  border: 0;
+  border-radius: 10px;
+  background: var(--tile);
+  color: var(--muted);
+  font: 600 .9rem "Instrument Sans", system-ui, sans-serif;
+  cursor: pointer;
+}
+.kp-mode button[aria-pressed="true"], .cp-progs button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
+.cp-progs { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.cp-progs button { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: .35rem .3rem; font-size: .85rem; }
+.cp-progs small { font-weight: 400; font-size: .72rem; opacity: .85; }
+#progSetup .cp-roots { margin-bottom: .9rem; }
 /* The picker: replaces the panel's content while a chord is chosen */
 #keyPanel.picking > :not(#chordPicker) { display: none; }
 .cp-head { display: flex; align-items: center; gap: .75rem; margin-bottom: .8rem; font-weight: 600; font-size: 1.05rem; }
@@ -617,6 +633,13 @@ main.with-chords .display, main.with-chords #track { display: none; }
 main.with-chords #phase { margin-top: 0; }
 .ch-view { display: grid; grid-template-columns: 1.65fr 1fr; gap: 1.25rem; align-items: start; width: 100%; max-width: 30rem; margin-top: .75rem; }
 .ch-view[hidden] { display: none; }
+/* Progression: every step, the current one in gold (SPEC §17.5) */
+.ch-strip { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: center; gap: .25rem .35rem; margin-bottom: -.6rem; color: var(--muted); font-size: .8rem; font-weight: 600; }
+.ch-strip span { padding: .05rem .3rem; border-radius: 6px; transition: color .08s, background-color .08s; }
+/* With the strip, the diagrams give up a little height so everything still fits */
+.ch-view.with-strip .ch-now .ch-diagram { max-height: 21dvh; }
+.ch-view.with-strip .ch-next .ch-diagram { max-height: 13dvh; }
+.ch-strip span.on { background: var(--brass-soft); color: var(--brass); }
 .ch-card { display: flex; flex-direction: column; align-items: center; }
 .ch-label { color: var(--muted); font-size: .7rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
 .ch-name { font: 400 2.6rem/1.1 "Young Serif", Georgia, serif; color: var(--brass); }
@@ -648,6 +671,11 @@ main.with-chords #phase { margin-top: 0; }
 }
 /* Very short screens (iPhone SE): smaller diagrams, and the fretboard capped, so nothing scrolls */
 @media (max-height: 600px) {
+  .ch-view.with-strip .ch-now .ch-diagram { max-height: 15dvh; }
+  .ch-view.with-strip .ch-next .ch-diagram { max-height: 10dvh; }
+  .cp-progs button { min-height: 2.1rem; padding: .2rem .3rem; }
+  #progSetup .cp-roots { margin-bottom: .6rem; }
+  .cp-roots button { min-height: 2.2rem; }
   .ch-view { margin-top: .35rem; }
   .ch-name { font-size: 1.8rem; }
   .ch-diagram { max-height: 19dvh; }
