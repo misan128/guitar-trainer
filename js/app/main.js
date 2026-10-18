@@ -10,8 +10,10 @@ import { closePanel, closeBoard, renderBoardPanel } from "./panels.js";
 import { applyLang, setBpm, syncRange } from "./controls.js";
 import { guideOpen, openGuide, closeGuide } from "./guide.js";
 import { tunerOpen, closeTuner } from "./tuner.js";
+import { menuOpen, closeMenu, applyTheme } from "./menu.js";
 
 load();
+applyTheme();
 syncRange();
 
 document.addEventListener("keydown", e => {
@@ -22,8 +24,8 @@ document.addEventListener("keydown", e => {
     if (e.key === "Escape") closeGuide();
     return;
   }
-  if (!keyPanel.hidden || !boardPanel.hidden || tunerOpen()) {   // shortcuts are off while a panel is open
-    if (e.key === "Escape") { closePanel(true); closeBoard(true); closeTuner(true); }
+  if (!keyPanel.hidden || !boardPanel.hidden || tunerOpen() || menuOpen()) {   // shortcuts are off while a panel is open
+    if (e.key === "Escape") { closePanel(true); closeBoard(true); closeTuner(true); closeMenu(true); }
     return;
   }
   if (e.code === "Space") { e.preventDefault(); if (!e.repeat) play.running ? stop() : start(); }

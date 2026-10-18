@@ -1,5 +1,5 @@
 // First-use guide (SPEC §14): a cutout around each control with a short text
-import { $, langEl, mainEl, boardEl, keyBtn, showAllEl, boardBtn, helpBtn, tunerBtn } from "./dom.js";
+import { $, mainEl, boardEl, keyBtn, showAllEl, boardBtn, menuBtn, tunerBtn } from "./dom.js";
 import { settings, play, T, save } from "./state.js";
 import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
@@ -8,13 +8,13 @@ import { applyLang } from "./controls.js";
 const guideEl = $("guide"), guideSpot = $("guideSpot"), guideTip = $("guideTip"), guideNext = $("guideNext");
 // The language step comes first so the rest is read in the chosen language; it is skipped when reopened with ?
 const GUIDE = [
-  { target: () => langEl, key: "guideLangPick", langs: true },
+  { target: () => menuBtn, key: "guideLangPick", langs: true },
   { target: () => mainEl.classList.contains("with-board") ? boardEl : mainEl.classList.contains("with-chords") ? $("chordView") : document.querySelector(".display"), key: "guideRound" },
   { target: () => keyBtn, key: "guideKeys" },
   { target: () => showAllEl, key: "guideEye", legend: true, skip: () => showAllEl.hidden },
   { target: () => boardBtn, key: "guideBoard", skip: () => boardBtn.hidden },
   { target: () => tunerBtn, key: "guideTuner" },
-  { target: () => helpBtn, key: "guideHelp" },
+  { target: () => menuBtn, key: "guideHelp" },
 ];
 let steps = GUIDE, guideStep = 0, guideFromHelp = false;
 const guideLangs = $("guideLangs");
@@ -81,7 +81,7 @@ export function closeGuide() {
   guideEl.hidden = true;
   settings.guideSeen = true;
   save();
-  if (guideFromHelp) helpBtn.focus();
+  if (guideFromHelp) menuBtn.focus();
 }
 guideNext.addEventListener("click", () => {
   if (guideStep === steps.length - 1) return closeGuide();
@@ -89,7 +89,6 @@ guideNext.addEventListener("click", () => {
   showStep();
 });
 $("guideSkip").addEventListener("click", closeGuide);
-helpBtn.addEventListener("click", () => openGuide(true));
 window.addEventListener("resize", placeGuide);
 
 export const guideOpen = () => !guideEl.hidden;
