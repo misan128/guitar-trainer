@@ -38,7 +38,7 @@ The app in a real browser: Chromium with an iPhone 13 viewport, driven by Playwr
 | Eye | Four taps go through levels 2, 3, 4, 1, and the level is saved. |
 | Language | Spanish and Basque change the texts; the choice is saved. |
 | Dev mode | `?debug` loads `dbg`; pause, step and back return to the same tick. |
-| Chord changes | At rest: Am now and C next, Am's three fingers with their numbers, two open and one muted string, two tick dots, no bars, no fretboard button, Ticks after disabled. Setup: choosing the other's chord swaps them, ticks per chord, saved; back to Scale walk hides the chords. Playing: C becomes current with Am next, then Am again, one tick lit. The eye: level 3 hides the current fingering but not the next, level 4 both, with the chord labels; dev mode runs. |
+| Chord changes | At rest: Am now and C next, Am's three fingers with their numbers, two open and one muted string, two tick dots, no bars, no fretboard button, Ticks after disabled. Setup: choosing the other's chord swaps them, ticks per chord, saved; back to Scale walk hides the chords. Playing: C becomes current with Am next, then Am again, one tick lit. No eye in Chords, both chords in full with finger numbers whatever the saved level, and the eye back in Scale walk; dev mode runs. |
 | Tuner | With a fake microphone playing the A string 12 cents sharp: the panel reads A2, settling at +9 to +15 cents, marks the A reference and shows the level as heard, and closes. The reference buttons follow the tuning (E A D G B e · E♭ A♭ D♭ G♭ B♭ e♭ · D A D G B e · E A D G B d), each tuning button shows its notes, and the choice is saved; they play; Esc closes; the tuner is disabled while practising. |
 
 Once, from the repo root:

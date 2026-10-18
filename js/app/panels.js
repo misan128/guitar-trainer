@@ -1,12 +1,11 @@
 // The setup panel (exercise; keys for Scale walk; key, shape, variant and "along the neck" for Pentatonic)
 // and the fretboard panel (Scale walk)
-import { $, keyBtn, keyPanel, keyGrid, keyCount, keysAllBtn, keysClearBtn, walkSetup, pentaSetup, shapeGrid, shapeKey,
+import { $, showAllEl, keyBtn, keyPanel, keyGrid, keyCount, keysAllBtn, keysClearBtn, walkSetup, pentaSetup, shapeGrid, shapeKey,
          pentaKeyGrid, placeRow, placeGrid, openHint, neckSwitch, inputs, boardBtn, boardPanel, boardSwitch,
          fretFromEl, fretToEl } from "./dom.js";
 import { settings, T, save, setZone, FIFTHS, DEFAULT_KEY, FRET_FIRST_MAX, FRET_LAST_MAX, ZONE_MIN } from "./state.js";
 import { variantOf, placeAt } from "./rounds.js";
 import { showIdle } from "./player.js";
-import { setAid } from "./controls.js";
 const { KEYS, PENTA_SHAPES, MINOR_KEYS, pentaPlacements, pentaShape, CHORD_NAMES } = Theory;
 const chordSetup = $("chordSetup"), chordSel = { A: $("chordA"), B: $("chordB") }, beatsGrid = $("beatsGrid");
 
@@ -27,6 +26,7 @@ export function renderKeys() {
   pentaSetup.hidden = !penta;
   chordSetup.hidden = !chords;
   boardBtn.hidden = ex !== "walk";     // in Pentatonic the fretboard is the exercise, in Chords there is none
+  showAllEl.hidden = chords;           // Chords: the diagrams are always shown in full (SPEC §17.4)
   chordSel.A.value = settings.chordA;
   chordSel.B.value = settings.chordB;
   for (const b of beatsGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.beats) === settings.chordBeats));
@@ -128,7 +128,6 @@ keyPanel.querySelector(".kp-exercise").addEventListener("click", e => {
   if (!b || b.dataset.ex === settings.exercise) return;
   settings.exercise = b.dataset.ex;
   renderKeys();
-  setAid(settings.aid);                // the eye's label says what it shows in this exercise
   showIdle();
   save();
 });

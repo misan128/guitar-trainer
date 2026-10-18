@@ -1,7 +1,6 @@
 // Chord changes (SPEC §17.4): two vertical chord diagrams, now (large) and next (small, muted), and the
 // ticks of the current chord. The grid of a diagram is built once; changing chord only redraws its dots.
 import { $ } from "./dom.js";
-import { settings } from "./state.js";
 const { CHORDS } = Theory;
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -48,16 +47,16 @@ function drawChord(d, name, show, numbers) {
   });
 }
 
-// What the eye shows here (SPEC §17.4): 1 numbers, 2 dots, 3 next only, 4 names only
+// Both chords always drawn in full, with finger numbers: no eye in this exercise (SPEC §17.4)
 let shown = null;
 export function drawChords(now, next, beat, beats) {
-  const aid = settings.aid, key = `${now}|${next}|${aid}`;
+  const key = `${now}|${next}`;
   if (key !== shown) {
     shown = key;
     cards.now.querySelector(".ch-name").textContent = now;
     cards.next.querySelector(".ch-name").textContent = next;
-    drawChord(diagrams.now, now, aid <= 2, aid === 1);
-    drawChord(diagrams.next, next, aid <= 3, aid === 1);
+    drawChord(diagrams.now, now, true, true);
+    drawChord(diagrams.next, next, true, true);
   }
   // One dot per tick of the chord: the current one filled, the last one marked (the change comes after it)
   if (beatsEl.childElementCount !== beats) {

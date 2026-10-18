@@ -406,7 +406,7 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 - **Two vertical chord diagrams** in place of the note and the fretboard, side by side: **now** on the left, large, its name in gold; **next** on the right, smaller and muted, already showing the coming chord. Six strings, four frets, the nut; finger positions as dots with their finger number; ○ open and × muted strings above the nut. The geometry never changes between chords: only the dots do. A first fret above 1 shows as "5fr" beside the diagram, without the nut.
 - **Ticks:** under the current chord, one dot per tick of the chord, the current one filled; the last one marked, since the change comes after it. They replace the bars of the other exercises.
 - **At rest:** chord A as now and chord B as next, to study the fingerings.
-- **The eye**, from more help to less: 1 both diagrams with finger numbers; 2 dots without numbers; 3 the current chord by name only, the next one still drawn so it can be prepared; 4 names only. Hidden diagrams keep their grid. The eye's labels and the guide's legend describe these levels in this exercise.
+- **No eye:** both diagrams are always drawn in full, with finger numbers. Hiding the fingering added nothing here (tried, then dropped), so the eye button is hidden in this exercise and the guide skips its step; the saved level is kept for the other exercises.
 
 ### 17.5 Later phases (not decided)
 
@@ -415,7 +415,7 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 
 ### 17.6 Texts
 
-In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks per chord, Now, Next, the four eye levels for chords, and the guide's updated exercise step.
+In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks per chord, Now, Next, and the guide's updated exercise step.
 
 ## Appendix A. Design notes
 

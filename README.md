@@ -38,7 +38,7 @@ Learn chord fingerings and practise changing between two of them in time.
 - **Ticks per chord:** 2, 4 or 8.
 - **A round:** chord A for its ticks, then chord B, again and again. The prep ticks only come before the first chord. Each change gets an accented click and a soft strum of the new chord; how you strum is up to you.
 - **On screen:** the current chord large, with its name in gold and its fingering (finger numbers in the dots, ○ open and × muted strings), and the next chord smaller beside it, so you can prepare the move. Dots under the current chord count its ticks; the last one is ringed, the change comes after it. At rest, both chords are shown to study them.
-- **Aids:** the eye goes from finger numbers, to dots only, to the current chord from memory (the next one still drawn), to names only.
+- No eye here: both chords are always shown in full.
 
 Practice keeps going until you stop it.
 

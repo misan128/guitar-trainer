@@ -1,4 +1,4 @@
-// Smoke test for Chord changes (SPEC §17): the setup, the diagrams at rest, the changes while playing, the eye
+// Smoke test for Chord changes (SPEC §17): the setup, the diagrams at rest, the changes while playing, no eye,
 // and dev mode. Run: npm run smoke (see docs/TESTING.md).
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
@@ -59,18 +59,19 @@ test("playing: the chords change on their boundaries, the next one always shown"
   await page.context().close();
 });
 
-test("the eye: level 3 hides the current fingering, level 4 both; dev mode runs", async () => {
-  const page = await app.open("?debug", { ...CHORDS, aid: 3 });
+test("no eye in Chords: both chords always in full, whatever the saved level; dev mode runs", async () => {
+  const page = await app.open("?debug", { ...CHORDS, aid: 4 });
   await page.waitForFunction(() => window.dbg);
-  assert.equal(await page.locator(".ch-now .dot").count(), 0, "current from memory");
-  assert.equal(await page.locator(".ch-next .dot").count(), 3, "next still shown");
-  await page.click("#showAll");
-  assert.equal(await page.locator(".ch-next .dot").count(), 0, "names only");
-  assert.equal(await page.getAttribute("#showAll", "aria-label"), "Aids: Names only");
+  assert.equal(await page.isVisible("#showAll"), false, "no eye");
+  assert.equal(await page.locator(".ch-now .dot text").count(), 3, "current: dots with finger numbers");
+  assert.equal(await page.locator(".ch-next .dot text").count(), 3, "next: the same");
   await page.click("#toggle");
   await page.waitForTimeout(800);
   assert.match(await page.evaluate(() => dbg.state().key), /Am ↔ C/);
   await page.click("#toggle");
+  await page.click("#keyBtn");
+  await page.click('[data-ex="walk"]');
+  assert.equal(await page.isVisible("#showAll"), true, "the eye is back in Scale walk");
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });

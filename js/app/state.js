@@ -45,8 +45,6 @@ export const settings = {
 };
 
 export let T = STRINGS.en;
-// The eye's label for level n: what it shows in the current exercise
-export const aidText = n => T[(settings.exercise === "chords" ? "aidChord" : "aid") + n];
 export function setLang(code) {
   settings.lang = code;
   T = STRINGS[code];
