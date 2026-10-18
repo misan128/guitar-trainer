@@ -52,6 +52,7 @@
 </div>
 <div id="keyPanel" role="dialog" data-i18n-aria="keysTitle" hidden>
   <div class="kp-exercise" role="group" data-i18n-aria="exercise">
+    <button data-ex="chords" data-i18n="exChords"></button>
     <button data-ex="walk" data-i18n="exWalk"></button>
     <button data-ex="penta" data-i18n="exPenta"></button>
   </div>
@@ -67,6 +68,18 @@
       <label><input type="radio" name="order" value="random"><span data-i18n="orderRandom"></span></label>
       <label><input type="radio" name="order" value="sequential"><span data-i18n="orderSequential"></span></label>
     </fieldset>
+  </div>
+  <div id="chordSetup" hidden>
+    <div class="kp-chords">
+      <div class="field"><label for="chordA" data-i18n="chordA"></label><select id="chordA"></select></div>
+      <div class="field"><label for="chordB" data-i18n="chordB"></label><select id="chordB"></select></div>
+    </div>
+    <div class="kp-place">
+      <span id="beatsLabel" data-i18n="chordBeats"></span>
+      <div id="beatsGrid" class="kp-choice" role="group" aria-labelledby="beatsLabel">
+        <button data-beats="2">2</button><button data-beats="4">4</button><button data-beats="8">8</button>
+      </div>
+    </div>
   </div>
   <div id="pentaSetup" hidden>
     <div class="kp-head"><span data-i18n="minorKey"></span><span id="shapeKey"></span></div>
@@ -138,6 +151,19 @@
     </div>
     <div id="phase"></div>
     <svg id="board" role="img" hidden></svg>
+    <div id="chordView" class="ch-view" hidden>
+      <div class="ch-card ch-now">
+        <div class="ch-label" data-i18n="chordNow"></div>
+        <div class="ch-name"></div>
+        <svg class="ch-diagram" aria-hidden="true"></svg>
+        <div id="chordBeatsShown" class="ch-beats" aria-hidden="true"></div>
+      </div>
+      <div class="ch-card ch-next">
+        <div class="ch-label" data-i18n="chordNext"></div>
+        <div class="ch-name"></div>
+        <svg class="ch-diagram" aria-hidden="true"></svg>
+      </div>
+    </div>
   </section>
 
   <div id="track" aria-hidden="true"></div>

@@ -20,10 +20,10 @@
     if (!Number.isInteger(d) || d < 1 || d > 7) throw new Error("Degree goes from 1 (tonic) to 7.");
     return d - 1;
   };
-  const phaseOf = (r, st) => st < r.prep ? "prep" : st < r.prep + r.walk.length ? (st - r.prep <= r.peak ? "up" : "down") : "wait";
+  const phaseOf = (r, st) => st < r.prep ? "prep" : r.chords ? "chords" : st < r.prep + r.walk.length ? (st - r.prep <= r.peak ? "up" : "down") : "wait";
   // The route up to its top note, as string + fret (or note names without the fretboard)
-  const fingering = r => r.walk.slice(0, r.peak + 1).map(p => p.st != null ? STRING_NAMES[p.st] + p.f : p.name).join(" ");
-  const lastNote = r => r.walk.length - 1;
+  const fingering = r => r.chords ? r.seq.map(c => `${c.name}×${c.beats}`).join(" ") : r.walk.slice(0, r.peak + 1).map(p => p.st != null ? STRING_NAMES[p.st] + p.f : p.name).join(" ");
+  const lastNote = r => r.chords ? r.total - r.prep - 1 : r.walk.length - 1;
   const beatLen = () => 60 / Number(inputs.bpm.value);
   let cursor = null;                   // { round, step } while paused
   // Paused: put the cursor on a tick, draw it and play it now
@@ -97,7 +97,7 @@
       return `walk ${n}`;
     },
     round(name, deg) {
-      if (A.round && A.round.penta) return "Pentatonic shapes: the round is the selected shape.";
+      if (A.round && (A.round.penta || A.round.chords)) return "Only for Scale walk: in Pentatonic and Chords the round is fixed.";
       if (!A.running) return "Start first (stopped: dbg.walk draws without playing).";
       const k = keyIndex(name), d = degree(deg);
       const r = A.buildRound(k, d);
@@ -123,7 +123,7 @@
         running: A.running, paused: A.paused,
         phase: t ? phaseOf(t.round, t.step) : null,
         tick: t ? `${t.step + 1}/${t.round.total}` : null,
-        key: t ? (t.round.penta ? `${t.round.key.name} minor, shape ${t.round.shape}${t.round.nextShape ? ` → shape ${t.round.nextShape}` : ""}`
+        key: t ? (t.round.chords ? t.round.key.name : t.round.penta ? `${t.round.key.name} minor, shape ${t.round.shape}${t.round.nextShape ? ` → shape ${t.round.nextShape}` : ""}`
           : `${t.round.key.name} major, degree ${t.round.deg + 1}`) : null,
         walk: t ? fingering(t.round) : null,
         settings: { bpm: Number(inputs.bpm.value), prep: Number(inputs.prep.value), wait: Number(inputs.wait.value),
@@ -198,7 +198,7 @@
   };
   const current = () => { const t = A.paused ? cursor : A.lastShown; return A.running && t ? t : null; };
   // Pentatonic shapes: key and degree do not apply (the round is the selected shape); the slider steps through it
-  const pentaNow = () => { const t = current(); return t ? !!t.round.penta : A.settings.exercise === "penta"; };
+  const pentaNow = () => { const t = current(); return t ? !!(t.round.penta || t.round.chords) : A.settings.exercise !== "walk"; };
   // Stopped: preview the selected key's walk from the tonic
   function previewWalk() {
     degSel.value = String(degreeAt(0, Number(idx.value)) + 1);
@@ -225,7 +225,7 @@
   idx.addEventListener("input", () => {
     const t = current();
     if (!t) return pentaNow() ? undefined : previewWalk();
-    if (!t.round.penta) degSel.value = String(degreeAt(t.round.deg, Number(idx.value)) + 1);
+    if (!t.round.penta && !t.round.chords) degSel.value = String(degreeAt(t.round.deg, Number(idx.value)) + 1);
     say(dbg.seek(idx.value));
   });
   // The state line is printed to the console whenever it changes, panel open or not.
@@ -247,7 +247,7 @@
       const w = Math.min(lastNote(t.round), Math.max(0, t.step - t.round.prep));   // prep shows the first note, wait the last
       idx.max = lastNote(t.round);
       idx.value = w;
-      if (!t.round.penta) {
+      if (!t.round.penta && !t.round.chords) {
         keySel.value = t.round.key.name;
         degSel.value = String(degreeAt(t.round.deg, w) + 1);
       }

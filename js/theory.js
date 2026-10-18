@@ -180,8 +180,41 @@
     };
   }
 
+  // ---- Chord changes (SPEC §17) ----
+  // A chord is what it is (root and quality); a voicing is one way to finger it. Each chord has a list of
+  // voicings so others (barre, movable) can be added later; the app uses the first. Strings low E to high e:
+  // frets (-1 muted, 0 open) and fingers (1 index … 4 little; 0 none). base: the diagram's first fret.
+  const CHORD_QUALITIES = { "": [0, 4, 7], m: [0, 3, 7] };
+  const CHORDS = {
+    C: { root: "C", quality: "", voicings: [{ frets: [-1, 3, 2, 0, 1, 0], fingers: [0, 3, 2, 0, 1, 0], base: 1 }] },
+    D: { root: "D", quality: "", voicings: [{ frets: [-1, -1, 0, 2, 3, 2], fingers: [0, 0, 0, 1, 3, 2], base: 1 }] },
+    E: { root: "E", quality: "", voicings: [{ frets: [0, 2, 2, 1, 0, 0], fingers: [0, 2, 3, 1, 0, 0], base: 1 }] },
+    G: { root: "G", quality: "", voicings: [{ frets: [3, 2, 0, 0, 0, 3], fingers: [2, 1, 0, 0, 0, 3], base: 1 }] },
+    A: { root: "A", quality: "", voicings: [{ frets: [-1, 0, 2, 2, 2, 0], fingers: [0, 0, 1, 2, 3, 0], base: 1 }] },
+    Am: { root: "A", quality: "m", voicings: [{ frets: [-1, 0, 2, 2, 1, 0], fingers: [0, 0, 2, 3, 1, 0], base: 1 }] },
+    Dm: { root: "D", quality: "m", voicings: [{ frets: [-1, -1, 0, 2, 3, 1], fingers: [0, 0, 0, 2, 3, 1], base: 1 }] },
+    Em: { root: "E", quality: "m", voicings: [{ frets: [0, 2, 2, 0, 0, 0], fingers: [0, 2, 3, 0, 0, 0], base: 1 }] },
+  };
+  const CHORD_NAMES = Object.keys(CHORDS);
+  // The sounding notes of a chord's voicing, low to high (muted strings left out)
+  function chordNotes(name, v = 0) {
+    const { frets } = CHORDS[name].voicings[v];
+    return frets.map((f, st) => f < 0 ? null : OPEN_MIDI[st] + f).filter(m => m != null);
+  }
+  // Where tick w (0 = first tick after prep) falls in a sequence of chords [{ name, beats }], which repeats:
+  // the chord's index, the beat within it, its length, and the index of the next chord
+  function chordAt(seq, w) {
+    const cycle = seq.reduce((n, c) => n + c.beats, 0);
+    let t = ((w % cycle) + cycle) % cycle;
+    for (let i = 0; i < seq.length; i++) {
+      if (t < seq[i].beats) return { i, beat: t, beats: seq[i].beats, next: (i + 1) % seq.length };
+      t -= seq[i].beats;
+    }
+  }
+
   const api = { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk, createStartPicker,
-    MINOR_PENTA, PENTA_DEGREES, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape, pentaNeckOrder, createNeckWalk };
+    MINOR_PENTA, PENTA_DEGREES, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape, pentaNeckOrder, createNeckWalk,
+    CHORD_QUALITIES, CHORDS, CHORD_NAMES, chordNotes, chordAt };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.Theory = api;
 })(this);

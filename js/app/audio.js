@@ -66,20 +66,24 @@ function pluckBuffer(midi) {
   pluckCache.set(midi, buf);
   return buf;
 }
-// out: where it sounds; the session's bus by default
-export function playNote(midi, time, duration, out = audio.master) {
+// out: where it sounds; the session's bus by default. level: its loudness
+export function playNote(midi, time, duration, out = audio.master, level = 0.7) {
   const { ctx } = audio;
   const src = ctx.createBufferSource();
   const gain = ctx.createGain();
   src.buffer = pluckBuffer(midi);
-  gain.gain.setValueAtTime(0.7, time);
+  gain.gain.setValueAtTime(level, time);
   if (duration) {                      // mute when the next note arrives
-    gain.gain.setValueAtTime(0.7, time + duration * 0.92);
+    gain.gain.setValueAtTime(level, time + duration * 0.92);
     gain.gain.linearRampToValueAtTime(0.0001, time + duration);
   }
   src.connect(gain).connect(out);
   src.start(time);
   src.stop(time + (duration || src.buffer.duration));
+}
+// Chord changes: a soft strum, low string to high, lasting until the next chord
+export function strum(midis, time, duration) {
+  midis.forEach((m, i) => playNote(m, time + i * 0.014, duration - i * 0.014, audio.master, 0.22));
 }
 // Tuner: an open string to tune by ear, outside any practice session (its own bus, always open)
 let refBus = null;

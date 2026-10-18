@@ -9,9 +9,9 @@ const guideEl = $("guide"), guideSpot = $("guideSpot"), guideTip = $("guideTip")
 // The language step comes first so the rest is read in the chosen language; it is skipped when reopened with ?
 const GUIDE = [
   { target: () => langEl, key: "guideLangPick", langs: true },
-  { target: () => mainEl.classList.contains("with-board") ? boardEl : document.querySelector(".display"), key: "guideRound" },
+  { target: () => mainEl.classList.contains("with-board") ? boardEl : mainEl.classList.contains("with-chords") ? $("chordView") : document.querySelector(".display"), key: "guideRound" },
   { target: () => keyBtn, key: "guideKeys" },
-  { target: () => showAllEl, key: "guideEye", legend: true },
+  { target: () => showAllEl, key: "guideEye", legend: true, skip: () => showAllEl.hidden },
   { target: () => boardBtn, key: "guideBoard", skip: () => boardBtn.hidden },
   { target: () => tunerBtn, key: "guideTuner" },
   { target: () => helpBtn, key: "guideHelp" },
