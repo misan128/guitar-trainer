@@ -16,6 +16,7 @@ const PRECACHE = [
   "js/app/guide.js",
   "js/app/tuner.js",
   "js/app/chords.js",
+  "js/app/menu.js",
   "js/strings.js",
   "js/theory.js",
   "js/pitch.js",

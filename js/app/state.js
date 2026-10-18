@@ -39,6 +39,7 @@ export const settings = {
   chordA: "Am", chordB: "C",           // Chord changes (SPEC §17): the two chords, never the same…
   chordBeats: 4,                       // …and the ticks each one lasts: 2, 4 or 8
   guideSeen: false,
+  theme: "sepia",                      // SPEC §18: sepia | maple | steel
   tuning: "standard",                  // the tuner's reference strings (SPEC §16): standard | halfDown | dropD | highD
   board: true, fretFrom: ZONE_DEFAULT, fretTo: ZONE_DEFAULT + ZONE_MIN - 1,
   lang: browserLang(),                 // overridden by saved settings
@@ -77,7 +78,7 @@ export function save() {
       bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
       keys: s.keys, order: s.order, key: s.keys[0], aid: s.aid, showAll: s.showAll, lang: s.lang,
       board: s.board, fretFrom: s.fretFrom, fretTo: s.fretTo, guideSeen: s.guideSeen, exercise: s.exercise,
-      pentaShape: s.shapeNo, pentaKey: s.pentaKey, pentaPlace: s.pentaPlace, pentaNeck: s.neckWalk, tuning: s.tuning,
+      pentaShape: s.shapeNo, pentaKey: s.pentaKey, pentaPlace: s.pentaPlace, pentaNeck: s.neckWalk, tuning: s.tuning, theme: s.theme,
       chordA: s.chordA, chordB: s.chordB, chordBeats: s.chordBeats
     }));
   } catch (e) {}
@@ -104,6 +105,8 @@ export function load() {
       if (MINOR_KEYS[s.pentaKey]) settings.pentaKey = Number(s.pentaKey);
       settings.neckWalk = s.pentaNeck === true;
       if (Pitch.TUNINGS[s.tuning]) settings.tuning = s.tuning;
+      const theme = { dark: "sepia", rosewood: "sepia", light: "maple", material: "steel" }[s.theme] || s.theme;   // earlier names
+      if (["sepia", "maple", "steel"].includes(theme)) settings.theme = theme;
       if (s.pentaPlace && typeof s.pentaPlace === "object") for (const k in s.pentaPlace) if (Number.isInteger(s.pentaPlace[k])) settings.pentaPlace[k] = s.pentaPlace[k];
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }

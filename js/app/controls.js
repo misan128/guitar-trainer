@@ -1,16 +1,14 @@
-// Shared controls: BPM and ticks (steppers and slider), the eye (aid level) and the language
-import { inputs, bpmRange, showAllEl, langEl, toggleBtn } from "./dom.js";
+// Shared controls: BPM and ticks (steppers and slider), the eye (aid level) and applying the language
+import { inputs, bpmRange, showAllEl, toggleBtn } from "./dom.js";
 import { settings, play, T, setLang, save, clampInput } from "./state.js";
 import { renderKeys } from "./panels.js";
 import { render, showIdle, drawTrack } from "./player.js";
 import { refreshGuide } from "./guide.js";
-
-for (const code in STRINGS) langEl.add(new Option(code.toUpperCase(), code));
+import { renderMenu } from "./menu.js";
 
 // Everything that shows text, in the chosen language
 export function applyLang(code = settings.lang) {
   setLang(code);
-  langEl.value = code;
   document.documentElement.lang = code;
   document.title = T.title;
   document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = T[el.dataset.i18n]; });
@@ -19,10 +17,10 @@ export function applyLang(code = settings.lang) {
   renderKeys();
   setAid(settings.aid);
   refreshGuide();
+  renderMenu();
   if (play.running && play.lastShown) render(play.lastShown);
   else if (!play.running) showIdle();
 }
-langEl.addEventListener("change", () => { applyLang(langEl.value); save(); });
 
 export function setAid(v) {
   settings.aid = v;

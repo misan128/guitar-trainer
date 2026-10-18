@@ -36,7 +36,9 @@ The app in a real browser: Chromium with an iPhone 13 viewport, driven by Playwr
 | Scale walk | Start lights a position on the fretboard; stop hides it. |
 | Pentatonic along the neck | From A minor shape 1, the neck bar shows 1, points to 2 on the way down, slides to 2, and only one zone is left. |
 | Eye | Four taps go through levels 2, 3, 4, 1, and the level is saved. |
-| Language | Spanish and Basque change the texts; the choice is saved. |
+| Menu: language | Spanish and Basque, chosen in the menu, change the texts (the menu's too); the choice is saved. |
+| Menu: themes, About, guide | Maple changes the background and is saved; Steel has a background of its own and its teal accent reaches the pick; About shows the text and the coffee link; Help opens the guide and closes the menu. |
+| Theme at first paint | A saved Maple theme is already applied when the page loads, and a theme saved under its earlier name (Material) comes back as Steel. |
 | Dev mode | `?debug` loads `dbg`; pause, step and back return to the same tick. |
 | Chord changes | At rest: Am now and C next, Am's three fingers with their numbers, two open and one muted string, two tick dots, no bars, no fretboard button, Ticks after disabled. Setup: choosing the other's chord swaps them, ticks per chord, saved; back to Scale walk hides the chords. Playing: C becomes current with Am next, then Am again, one tick lit. No eye in Chords, both chords in full with finger numbers whatever the saved level, and the eye back in Scale walk; dev mode runs. |
 | Tuner | With a fake microphone playing the A string 12 cents sharp: the panel reads A2, settling at +9 to +15 cents, marks the A reference and shows the level as heard, and closes. The reference buttons follow the tuning (E A D G B e · E♭ A♭ D♭ G♭ B♭ e♭ · D A D G B e · E A D G B d), each tuning button shows its notes, and the choice is saved; they play; Esc closes; the tuner is disabled while practising. |
@@ -123,7 +125,7 @@ Do it on the phone after changes to the UI, audio or service worker, and before 
 
 **First use**
 - [ ] The guide opens with the language step; choosing a language switches the whole app at once.
-- [ ] Next, Skip and `Esc` work; after finishing it does not come back on reload; **?** reopens it without the language step.
+- [ ] Next, Skip and `Esc` work; after finishing it does not come back on reload; **Help** in the menu reopens it without the language step.
 
 **Practice**
 - [ ] Start: the reference note sounds, then prep clicks, 8 notes up and 7 down, then the wait. Clicks and notes stay in time at 60 and at 240 BPM.
@@ -154,6 +156,11 @@ Do it on the phone after changes to the UI, audio or service worker, and before 
 - [ ] Each open string reads as its note (E2 A2 D3 G3 B3 E4) and the needle settles quickly; turning the peg moves it the right way; gold within 5 cents.
 - [ ] Closing the tuner turns off the browser's recording indicator; switching to another app does too.
 - [ ] iPhone: after using the tuner, practice still plays with the silent switch on.
+
+**Menu and themes**
+- [ ] Maple and Steel: everything is readable (fretboard, chord diagrams, tuner, panels, the guide's dimming); nothing keeps the gold or the dark of another theme.
+- [ ] No flash of Sepia on load with Maple or Steel saved.
+- [ ] About: the coffee button and the GitHub link open in a new tab.
 
 **Phone**
 - [ ] Everything fits on one screen without scrolling, with and without the fretboard.
