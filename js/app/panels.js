@@ -4,10 +4,11 @@ import { $, showAllEl, keyBtn, keyPanel, keyGrid, keyCount, keysAllBtn, keysClea
          pentaKeyGrid, placeRow, placeGrid, openHint, neckSwitch, inputs, boardBtn, boardPanel, boardSwitch,
          fretFromEl, fretToEl } from "./dom.js";
 import { settings, T, save, setZone, voicingOf, FIFTHS, DEFAULT_KEY, FRET_FIRST_MAX, FRET_LAST_MAX, ZONE_MIN } from "./state.js";
-import { variantOf, placeAt } from "./rounds.js";
+import { variantOf, placeAt, chordPlan, progName, progKeyLabel } from "./rounds.js";
 import { showIdle } from "./player.js";
 import { miniDiagram } from "./chords.js";
-const { KEYS, PENTA_SHAPES, MINOR_KEYS, pentaPlacements, pentaShape, CHORDS, CHORD_ROOTS, voicingFrets } = Theory;
+const { KEYS, PENTA_SHAPES, MINOR_KEYS, pentaPlacements, pentaShape, CHORDS, CHORD_ROOTS, voicingFrets, PROGRESSIONS, progressionChords } = Theory;
+const modeRow = $("chordMode"), pairSetup = $("pairSetup"), progSetup = $("progSetup"), progGrid = $("progGrid"), progKeyGrid = $("progKeyGrid");
 const chordSetup = $("chordSetup"), beatsGrid = $("beatsGrid"), tiles = { A: $("tileA"), B: $("tileB") };
 const picker = $("chordPicker"), rootGrid = $("rootGrid"), typeRow = $("typeRow"), posGrid = $("posGrid");
 const CHORD_TYPES = [["", "chordMajor"], ["m", "chordMinor"], ["7", "chord7"]];
@@ -24,7 +25,7 @@ for (const idx of FIFTHS) {
 }
 export function renderKeys() {
   const names = settings.keys.map(i => KEYS[i].name), ex = settings.exercise, penta = ex === "penta", chords = ex === "chords";
-  keyBtn.textContent = chords ? `${settings.chordA} ↔ ${settings.chordB}` : penta ? shapeLabel(settings.shapeNo)
+  keyBtn.textContent = chords ? chordPlan().label : penta ? shapeLabel(settings.shapeNo)
     : settings.keys.length === 1 ? T.keyName(names[0]) : settings.keys.length === 2 ? names.join(", ") : T.keysSummary(settings.keys.length);
   keyBtn.setAttribute("aria-label", `${chords ? T.exChords : penta ? T.shape : T.key}: ${keyBtn.textContent}`);
   for (const b of keyPanel.querySelectorAll("[data-ex]")) b.setAttribute("aria-pressed", String(b.dataset.ex === ex));
@@ -33,6 +34,22 @@ export function renderKeys() {
   chordSetup.hidden = !chords;
   boardBtn.hidden = ex !== "walk";     // in Pentatonic the fretboard is the exercise, in Chords there is none
   showAllEl.hidden = chords;           // Chords: the diagrams are always shown in full (SPEC §17.4)
+  // Two chords or a progression (SPEC §17.5)
+  const prog = settings.chordMode === "prog";
+  for (const b of modeRow.children) b.setAttribute("aria-pressed", String(b.dataset.mode === settings.chordMode));
+  pairSetup.hidden = prog;
+  progSetup.hidden = !prog;
+  $("beatsLabel").textContent = prog ? T.progBeats : T.chordBeats;
+  // Each progression: its name and its chords in the chosen key (each chord once: the blues is "A7 D7 E7")
+  for (const b of progGrid.children) {
+    const p = PROGRESSIONS.find(x => x.id === b.dataset.prog);
+    b.setAttribute("aria-pressed", String(p.id === settings.progId));
+    b.querySelector("span").textContent = progName(p);
+    b.querySelector("small").textContent = [...new Set(progressionChords(p.id, settings.progKey).map(c => c.name))].join(" ");
+  }
+  const curProg = PROGRESSIONS.find(x => x.id === settings.progId), root = progKeyLabel(curProg).replace(/m$/, "");
+  $("progKeyName").textContent = curProg.minor ? T.minorName(root) : T.keyName(root);
+  for (const b of progKeyGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.pc) === settings.progKey));
   // Each chord as a tile: its name, a small diagram of its position, and the position below
   for (const k of ["A", "B"]) {
     const name = settings["chord" + k], vi = voicingOf(name), [pos, frets] = posText(CHORDS[name].voicings[vi]);
@@ -189,12 +206,36 @@ function renderPicker() {
     posGrid.appendChild(b);
   });
 }
-for (const [root] of CHORD_ROOTS) {
+for (const [root, pc] of CHORD_ROOTS) {
   const b = document.createElement("button");
   b.dataset.root = root;
   b.textContent = root;
   rootGrid.appendChild(b);
+  const k = b.cloneNode(true);          // the progression's key: the same twelve roots
+  delete k.dataset.root;
+  k.dataset.pc = pc;
+  progKeyGrid.appendChild(k);
 }
+for (const p of PROGRESSIONS) {
+  const b = document.createElement("button");
+  b.dataset.prog = p.id;
+  b.append(document.createElement("span"), document.createElement("small"));
+  progGrid.appendChild(b);
+}
+// Mode, progression and key: each tap applies at once
+const chordsChanged = () => { renderKeys(); showIdle(); save(); };
+modeRow.addEventListener("click", e => {
+  const b = e.target.closest("[data-mode]");
+  if (b && b.dataset.mode !== settings.chordMode) { settings.chordMode = b.dataset.mode; chordsChanged(); }
+});
+progGrid.addEventListener("click", e => {
+  const b = e.target.closest("[data-prog]");
+  if (b) { settings.progId = b.dataset.prog; chordsChanged(); }
+});
+progKeyGrid.addEventListener("click", e => {
+  const b = e.target.closest("[data-pc]");
+  if (b) { settings.progKey = Number(b.dataset.pc); chordsChanged(); }
+});
 for (const [quality] of CHORD_TYPES) {
   const b = document.createElement("button");
   b.dataset.quality = quality;

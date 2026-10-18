@@ -79,7 +79,15 @@
     </fieldset>
   </div>
   <div id="chordSetup" hidden>
-    <div class="kp-tiles">
+    <div id="chordMode" class="kp-mode" role="group" data-i18n-aria="exChords">
+      <button data-mode="pair" data-i18n="modePair"></button><button data-mode="prog" data-i18n="modeProg"></button>
+    </div>
+    <div id="progSetup" hidden>
+      <div id="progGrid" class="cp-progs" role="group" data-i18n-aria="modeProg"></div>
+      <div class="bp-title"><span data-i18n="progKey"></span> · <span id="progKeyName"></span></div>
+      <div id="progKeyGrid" class="cp-roots" role="group" data-i18n-aria="progKey"></div>
+    </div>
+    <div id="pairSetup" class="kp-tiles">
       <button id="tileA" class="kp-tile" data-k="A">
         <span class="kt-label" data-i18n="chordA"></span><span class="kt-name"></span>
         <svg class="ch-diagram kt-diagram" aria-hidden="true"></svg><small class="kt-pos"></small>
@@ -203,6 +211,7 @@
     <div id="phase"></div>
     <svg id="board" role="img" hidden></svg>
     <div id="chordView" class="ch-view" hidden>
+      <div id="chordStrip" class="ch-strip" aria-hidden="true" hidden></div>
       <div class="ch-card ch-now">
         <div class="ch-label" data-i18n="chordNow"></div>
         <div class="ch-name"></div>
