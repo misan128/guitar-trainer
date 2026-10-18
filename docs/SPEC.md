@@ -1,4 +1,4 @@
-# Scale Trainer — Specification
+# Guitar Trainer — Specification
 
 ## 1. Context
 
@@ -91,7 +91,7 @@ LICENSE
 - **`tests/`:** run with `node --test` from the repo root (Node 18+, no dependencies). They check start-note selection (§3), every fretboard walk against acceptance criterion 11, known fingerings, scale spelling, and that every language has the same texts.
 - **Smoke tests and release check:** `tests/smoke/` drives the app in Chromium with Playwright (`npm run smoke`), the only dependency, for development only, declared in `package.json`. `scripts/check-cache.js` checks that a release that changes a precached file also bumps the service-worker cache; `.github/workflows/` runs it, and the unit tests, on every push to `main`.
 - **`docs/TESTING.md`:** how to run the tests, run the app locally, the dev mode, and the manual checklist for the phone.
-- **Dev mode:** `?debug` in the URL adds a small **dbg** panel and a `dbg` object in the console: a cursor over the round to pause, step, seek along the walk and swap the round's key and degree, each applied and sounded at once. It lives in **`js/debug.js`**, which `js/app/main.js` only loads with `?debug`, after exposing a small bridge (`ScaleTrainerDev`: getters and setters for the playback state, plus the few functions the tool calls). The tool touches the app only through that bridge. Without `?debug` neither the bridge nor the file exists. It is a development tool, not a feature: its texts are English only and stay out of `strings.js`, the one exception to §5.
+- **Dev mode:** `?debug` in the URL adds a small **dbg** panel and a `dbg` object in the console: a cursor over the round to pause, step, seek along the walk and swap the round's key and degree, each applied and sounded at once. It lives in **`js/debug.js`**, which `js/app/main.js` only loads with `?debug`, after exposing a small bridge (`GuitarTrainerDev`: getters and setters for the playback state, plus the few functions the tool calls). The tool touches the app only through that bridge. Without `?debug` neither the bridge nor the file exists. It is a development tool, not a feature: its texts are English only and stay out of `strings.js`, the one exception to §5.
 - **`docs/SPEC.md`:** this document. Describes state and decisions, not one-off steps.
 - **Repo description** (GitHub "About" field, set by the user): *Guitar practice with a metronome, on the fretboard: scale walks in any major key and the five minor pentatonic shapes in any minor key. Static web app, no dependencies.*
 
@@ -110,8 +110,8 @@ LICENSE
 Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it offline. The same manifest, icons (including maskable) and service worker also make it installable from Chrome on **Android** ("Install app").
 
 ### 6.1 Manifest
-- `name` and `short_name`: **Scale Trainer** (same in every language). iOS may truncate it under the icon; that is accepted.
-- `display: standalone`, `start_url: "./"` and `scope: "./"`. All paths must be **relative**, because the site is served from a subdirectory (`/scale-trainer/`).
+- `name` and `short_name`: **Guitar Trainer** (same in every language). iOS may truncate it under the icon; that is accepted.
+- `display: standalone`, `start_url: "./"` and `scope: "./"`. All paths must be **relative**, because the site is served from a subdirectory (`/guitar-trainer/`).
 - `background_color` and `theme_color`: the app background (`#1d1613`).
 - Icons at 192, 512 and 512 *maskable*.
 
@@ -123,13 +123,13 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 ### 6.3 Tags in `index.html`
 - `<link rel="manifest">`, `<link rel="apple-touch-icon">`, `<meta name="theme-color">`.
 - `apple-mobile-web-app-capable` and `apple-mobile-web-app-status-bar-style` (`black-translucent`, consistent with the current use of `safe-area-inset`).
-- `apple-mobile-web-app-title`: Scale Trainer.
+- `apple-mobile-web-app-title`: Guitar Trainer.
 - Service worker registration.
 
 ### 6.4 Service worker
 - Precaches `index.html`, `css/styles.css`, the scripts in `js/` (not `debug.js`, which only loads with `?debug`), the manifest, the icons and the fonts.
 - Fonts are self-hosted in `fonts/` (latin subsets, OFL); the app makes no third-party requests.
-- The cache name is versioned (`scale-trainer-v1`, etc.). Old caches are deleted on activate. **Every published change bumps the version.**
+- The cache name is versioned (`guitar-trainer-v1`, etc.; `scale-trainer-v…` before the rename). Old caches are deleted on activate. **Every published change bumps the version.**
 - Strategy for app files (`index.html`, `css/`, `js/`, …): network first, falling back to cache, so updates arrive without reinstalling.
 
 ### 6.5 Mobile behavior
@@ -140,8 +140,9 @@ Goal: install it on an **iPhone** from Safari ("Add to Home Screen") and use it 
 ## 7. Deployment
 
 - **GitHub Pages**, **public** repository, publishing from `main` / root.
-- URL: `https://misan128.github.io/scale-trainer/`.
-- No GitHub Actions, no build step.
+- URL: `https://misan128.github.io/guitar-trainer/`.
+- **Name:** *Guitar Trainer* since 4.2.0. It was *Scale Trainer* while it was only scale walks; with chords and a tuner the name no longer fit, so the app and the repository were renamed together (the old address, `…/scale-trainer/`, stopped working; there was one user). The settings key `scaleWalkLight` keeps its old name on purpose: renaming it would lose saved settings.
+- No build step. GitHub Actions only runs the release checks (§4.2), it does not build or deploy.
 
 ## 8. Status
 
@@ -290,7 +291,7 @@ Goal: memorize the five minor pentatonic shapes as **physical patterns**: where 
 ### 15.1 Exercises and setup
 
 - **Two exercises:** *Scale walk* (everything in §3, §12 and §13) and *Pentatonic shapes*. Switching exercise feels like changing the activity, not the app: same screen, same controls.
-- **Selector inside the setup panel:** the top-left button opens one panel whose first row is the exercise (*Scale walk · Pentatonic*); below it, that exercise's setup. For Scale walk, the key panel as it is (§12). For Pentatonic, the 12 minor keys as tiles (circle-of-fifths order: A E B F♯ C♯ G♯ D♯ B♭ F C G D, one always selected), then the five shapes as tiles, each with a small diagram of the shape and its fret range in that key, and, only when the key and shape fit in two places, a **Variant** choice between them: *Open (0–3) · Closed (12–15)* for the open-position ones, with a one-line hint ("Same shape, with open strings."), or *Low (1–4) · High (13–16)* for two movable octaves. A variant is the same shape, never a different shape number. No new button in the top bar.
+- **Selector inside the setup panel:** the top-left button opens one panel whose first row, under a small *Exercise* heading and set apart from what follows, is the exercise (*Scale walk · Pentatonic*); below it, that exercise's setup. For Scale walk, the key panel as it is (§12). For Pentatonic, the 12 minor keys as tiles (circle-of-fifths order: A E B F♯ C♯ G♯ D♯ B♭ F C G D, one always selected), then the five shapes as tiles, each with a small diagram of the shape and its fret range in that key, and, only when the key and shape fit in two places, a **Variant** choice between them: *Open (0–3) · Closed (12–15)* for the open-position ones, with a one-line hint ("Same shape, with open strings."), or *Low (1–4) · High (13–16)* for two movable octaves. A variant is the same shape, never a different shape number. No new button in the top bar.
 - **Button label:** Scale walk as in §12 ("C major", "C, G", "n keys"); Pentatonic "A minor · Shape 1". One key per session: no automatic key changes between rounds.
 - **Shared:** BPM, prep ticks, the eye, language and guide; the wait ticks only apply to Scale walk (§15.3). **Per exercise:** Scale walk keeps keys, order, fretboard on/off and zone; Pentatonic keeps its key and shape.
 - **Fretboard button:** shown only in Scale walk. In Pentatonic the fretboard is always on: it is the exercise.

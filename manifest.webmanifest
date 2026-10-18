@@ -1,6 +1,6 @@
 {
-  "name": "Scale Trainer",
-  "short_name": "Scale Trainer",
+  "name": "Guitar Trainer",
+  "short_name": "Guitar Trainer",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

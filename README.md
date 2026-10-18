@@ -1,10 +1,10 @@
-# Scale Trainer
+# Guitar Trainer
 
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-misan128-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/misan128)
 
 Guitar practice with a metronome: scale walks from a random note in any major key, the five minor pentatonic shapes in any minor key, and changes between two chords; plus a tuner. Static web app, no dependencies.
 
-**Use it:** https://misan128.github.io/scale-trainer/
+**Use it:** https://misan128.github.io/guitar-trainer/
 
 ## Three exercises
 
@@ -67,7 +67,7 @@ Settings are saved in the browser.
 
 ## Install on iPhone
 
-1. Open https://misan128.github.io/scale-trainer/ in Safari.
+1. Open https://misan128.github.io/guitar-trainer/ in Safari.
 2. Tap **Share → Add to Home Screen**.
 3. Open it from the home screen icon. It runs full screen and works offline after the first load.
 
@@ -75,7 +75,7 @@ The screen stays on while practice is running. It plays even with the phone on s
 
 ## Install on Android
 
-1. Open https://misan128.github.io/scale-trainer/ in Chrome.
+1. Open https://misan128.github.io/guitar-trainer/ in Chrome.
 2. Tap the **⋮** menu → **Install app** (or **Add to Home screen**). Chrome may also offer it on its own.
 3. Open it from the app icon. It runs full screen, appears in the app drawer and works offline after the first load.
 

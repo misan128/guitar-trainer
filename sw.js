@@ -1,5 +1,5 @@
 // Bump the version on every published change so clients drop the old cache.
-const CACHE = "scale-trainer-v25";
+const CACHE = "guitar-trainer-v25";
 const PRECACHE = [
   "./",
   "index.html",

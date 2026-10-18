@@ -1,4 +1,4 @@
-// Scale Trainer: loads the settings, wires the keyboard, draws the first view. The rest lives in the
+// Guitar Trainer: loads the settings, wires the keyboard, draws the first view. The rest lives in the
 // other modules of js/app/; music theory in js/theory.js and the texts in js/strings.js (classic scripts).
 import { inputs, keyPanel, boardPanel } from "./dom.js";
 import { settings, play, load, FIFTHS, ZONE_MIN } from "./state.js";
@@ -40,7 +40,7 @@ applyLang();                           // also draws the idle view
 // Exposes just what the dev tool needs, then loads it. Without ?debug nothing is exposed or loaded.
 if (new URLSearchParams(location.search).has("debug")) {
   const s = settings;
-  window.ScaleTrainerDev = {
+  window.GuitarTrainerDev = {
     ZONE_MIN, FIFTHS, inputs,
     get running() { return play.running; },
     get paused() { return play.dbgPaused; }, set paused(v) { play.dbgPaused = v; },

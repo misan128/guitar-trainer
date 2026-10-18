@@ -2,10 +2,10 @@
 // Pause stops the scheduler on a tick; from there, stepping, seeking along the walk or swapping the
 // round's key and degree shows and sounds at once, and resume plays on from the cursor. While running,
 // the same changes apply on the fly. English only: it is a dev tool (SPEC §4.2).
-// It only touches the app through the bridge js/app/main.js exposes as ScaleTrainerDev, and main.js only
+// It only touches the app through the bridge js/app/main.js exposes as GuitarTrainerDev, and main.js only
 // loads this file with ?debug in the URL. See docs/TESTING.md.
 (() => {
-  const A = window.ScaleTrainerDev;
+  const A = window.GuitarTrainerDev;
   if (!A) return;
   const { KEYS, scaleNames, STRING_NAMES, boardWalk } = Theory;
   const { ZONE_MIN, FIFTHS, inputs } = A;
@@ -132,7 +132,7 @@
       };
     },
   };
-  console.info("Scale Trainer dev mode. dbg.help() lists the commands.");
+  console.info("Guitar Trainer dev mode. dbg.help() lists the commands.");
 
   // Overlay: a small "dbg" pill that opens a panel with the same controls. English only: dev tool.
   const css = document.createElement("style");
