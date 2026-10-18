@@ -1,7 +1,7 @@
 // Practising: the lookahead scheduler on the audio clock, the screen drawn in sync with what is heard,
 // the bars under it, start and stop, and the idle view in between
 import { noteEl, pickEl, phaseEl, trackEl, inputs, roundKeyEl, toggleBtn, keyBtn, boardBtn, helpBtn, tunerBtn, boardEl, mainEl } from "./dom.js";
-import { settings, play, T, WALK, WALK_PEAK, clampInput } from "./state.js";
+import { settings, play, T, WALK, WALK_PEAK, clampInput, voicingOf } from "./state.js";
 import { audio, wakeAudio, openBus, closeBus, click, playNote, strum } from "./audio.js";
 import { newRound, shapeRound, placeAt, roundLabel } from "./rounds.js";
 import { view, buildBoard, drawBoard, slideBoard, drawBar, hideBoard } from "./board.js";
@@ -25,7 +25,7 @@ export function playTick(r, st, time, beat) {
     if (w < 0) return click(time, false, false);
     const c = chordAt(r.seq, w);
     click(time, c.beat === 0, false);
-    if (c.beat === 0) strum(chordNotes(r.seq[c.i].name), time, beat * c.beats);
+    if (c.beat === 0) strum(chordNotes(r.seq[c.i].name, r.seq[c.i].v), time, beat * c.beats);
     return;
   }
   if (st === 0 && r.announce !== false) playNote(r.walk[0].midi, time);   // reference note
@@ -117,11 +117,11 @@ function renderChords({ step, round }) {
   const w = step - round.prep, label = roundLabel(round);
   if (w < 0) {
     phaseEl.textContent = `${label} · ${T.phasePrep(round.prep - step)}`;
-    return drawChords(round.seq[0].name, round.seq[1 % round.seq.length].name, -1, round.seq[0].beats);
+    return drawChords(round.seq[0], round.seq[1 % round.seq.length], -1, round.seq[0].beats);
   }
   const c = chordAt(round.seq, w);
   phaseEl.textContent = label;
-  drawChords(round.seq[c.i].name, round.seq[c.next].name, c.beat, c.beats);
+  drawChords(round.seq[c.i], round.seq[c.next], c.beat, c.beats);
 }
 
 // Bars: flat for prep and wait; rise and fall during the walk, peaking at its top note
@@ -175,7 +175,8 @@ export function showIdle() {
     hideBoard();
     pickEl.setAttribute("hidden", "");
     phaseEl.textContent = `${settings.chordA} ↔ ${settings.chordB}`;
-    drawChords(settings.chordA, settings.chordB, -1, settings.chordBeats);
+    const A = settings.chordA, B = settings.chordB;
+    drawChords({ name: A, v: voicingOf(A) }, { name: B, v: voicingOf(B) }, -1, settings.chordBeats);
   } else if (settings.exercise === "penta") {
     const r = shapeRound(settings.shapeNo);
     r.neckBar = settings.neckWalk;
@@ -206,7 +207,7 @@ export async function start() {
                    exercise: s.exercise, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo),
                    neck: s.exercise === "penta" && s.neckWalk ? createNeckWalk(pentaNeckOrder(pentaKey, n => placeAt(pentaKey, n)), shapeNo) : null,
                    neckNext: null,
-                   seq: [{ name: s.chordA, beats: s.chordBeats }, { name: s.chordB, beats: s.chordBeats }] };
+                   seq: [s.chordA, s.chordB].map(name => ({ name, v: voicingOf(name), beats: s.chordBeats })) };
   keyBtn.disabled = true;
   boardBtn.disabled = true;
   document.body.classList.add("practicing");
