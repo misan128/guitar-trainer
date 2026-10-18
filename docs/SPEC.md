@@ -77,6 +77,7 @@ scripts/
 package.json
 docs/SPEC.md
 docs/TESTING.md
+docs/images/
 README.md
 LICENSE
 .gitignore
@@ -85,7 +86,7 @@ LICENSE
 - **Layout:** `index.html`, `sw.js` and `manifest.webmanifest` stay at the root: Pages serves `index.html` there, and a service worker only controls its own folder and below. Styles go in `css/`, scripts in `js/`, and `icons/`, `fonts/`, `docs/` and `tests/` keep their folders. No `src/`: there is no build step.
 - **`.gitignore`:** system files, editors, `node_modules/`, logs, `*.zip`, AI agent directories and the loose versions folder (`.tmp/`).
 - **`LICENSE`:** MIT, held by Michael Sandoval.
-- **`README.md`:** in English. Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
+- **`README.md`:** in English, with screenshots of the real app (`docs/images/`, captured at phone size mid-practice with the automated browser; re-taken when the screens change). Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
 - **`index.html`:** markup only. **`css/styles.css`:** all the styles. **`js/app/`:** the app, as native ES modules with no build step, entered through `main.js` (`<script type="module">`): `dom.js` (the page's elements), `state.js` (settings, saved settings, language, shared playback state), `audio.js` (clicks and plucked notes), `rounds.js` (which key or shape comes next, and each round's notes), `board.js` (fretboard drawing, the slide and the neck bar), `player.js` (scheduler, drawing synced to the sound, start and stop, idle view), `controls.js` (BPM and ticks, eye, language), `panels.js` (setup and fretboard panels) and `guide.js` (first-use guide). Modules need the page served over HTTP(S), as GitHub Pages does; opening `index.html` straight from disk no longer works.
 - **`js/theory.js`:** scale theory, start-note selection (§3) and fretboard walks (§13.2), with no DOM, so the tests can load it. In the browser it defines `Theory`; in Node it is a CommonJS module.
 - **`tests/`:** run with `node --test` from the repo root (Node 18+, no dependencies). They check start-note selection (§3), every fretboard walk against acceptance criterion 11, known fingerings, scale spelling, and that every language has the same texts.
