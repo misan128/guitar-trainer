@@ -3,11 +3,17 @@
 import { $, showAllEl, keyBtn, keyPanel, keyGrid, keyCount, keysAllBtn, keysClearBtn, walkSetup, pentaSetup, shapeGrid, shapeKey,
          pentaKeyGrid, placeRow, placeGrid, openHint, neckSwitch, inputs, boardBtn, boardPanel, boardSwitch,
          fretFromEl, fretToEl } from "./dom.js";
-import { settings, T, save, setZone, FIFTHS, DEFAULT_KEY, FRET_FIRST_MAX, FRET_LAST_MAX, ZONE_MIN } from "./state.js";
+import { settings, T, save, setZone, voicingOf, FIFTHS, DEFAULT_KEY, FRET_FIRST_MAX, FRET_LAST_MAX, ZONE_MIN } from "./state.js";
 import { variantOf, placeAt } from "./rounds.js";
 import { showIdle } from "./player.js";
-const { KEYS, PENTA_SHAPES, MINOR_KEYS, pentaPlacements, pentaShape, CHORD_NAMES } = Theory;
-const chordSetup = $("chordSetup"), chordSel = { A: $("chordA"), B: $("chordB") }, beatsGrid = $("beatsGrid");
+import { miniDiagram } from "./chords.js";
+const { KEYS, PENTA_SHAPES, MINOR_KEYS, pentaPlacements, pentaShape, CHORDS, CHORD_ROOTS, voicingFrets } = Theory;
+const chordSetup = $("chordSetup"), beatsGrid = $("beatsGrid"), tiles = { A: $("tileA"), B: $("tileB") };
+const picker = $("chordPicker"), rootGrid = $("rootGrid"), typeRow = $("typeRow"), posGrid = $("posGrid");
+const CHORD_TYPES = [["", "chordMajor"], ["m", "chordMinor"], ["7", "chord7"]];
+const POS_TEXT = { open: "posOpen", root6: "posRoot6", root5: "posRoot5", root4: "posRoot4" };
+// A position's name and frets: "Open 0–2", "4th string 1–3"
+const posText = v => { const [a, b] = voicingFrets(v); return [T[POS_TEXT[v.kind]], `${a}–${b}`]; };
 
 // Key tiles, circle-of-fifths order
 for (const idx of FIFTHS) {
@@ -27,8 +33,15 @@ export function renderKeys() {
   chordSetup.hidden = !chords;
   boardBtn.hidden = ex !== "walk";     // in Pentatonic the fretboard is the exercise, in Chords there is none
   showAllEl.hidden = chords;           // Chords: the diagrams are always shown in full (SPEC §17.4)
-  chordSel.A.value = settings.chordA;
-  chordSel.B.value = settings.chordB;
+  // Each chord as a tile: its name, a small diagram of its position, and the position below
+  for (const k of ["A", "B"]) {
+    const name = settings["chord" + k], vi = voicingOf(name), [pos, frets] = posText(CHORDS[name].voicings[vi]);
+    tiles[k].querySelector(".kt-name").textContent = name;
+    tiles[k].querySelector(".kt-pos").textContent = `${pos} ${frets}`;
+    tiles[k].setAttribute("aria-label", `${T["chord" + k]}: ${name}, ${pos} ${frets}`);
+    miniDiagram(tiles[k].querySelector("svg"), name, vi);
+  }
+  if (!picker.hidden) renderPicker();
   for (const b of beatsGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.beats) === settings.chordBeats));
   shapeKey.textContent = T.minorName(MINOR_KEYS[settings.pentaKey].name);
   for (const b of pentaKeyGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.key) === settings.pentaKey));
@@ -75,6 +88,7 @@ function openPanel() {
 }
 export function closePanel(refocus) {
   if (keyPanel.hidden) return;
+  showPicker(null);
   keyPanel.hidden = true;
   keyBtn.setAttribute("aria-expanded", "false");
   if (refocus) keyBtn.focus();
@@ -131,18 +145,80 @@ keyPanel.querySelector(".kp-exercise").addEventListener("click", e => {
   showIdle();
   save();
 });
-// Chords (SPEC §17.1): the library in both dropdowns; choosing in one the other's chord swaps them
-for (const k of ["A", "B"]) {
-  for (const name of CHORD_NAMES) chordSel[k].add(new Option(name, name));
-  chordSel[k].addEventListener("change", () => {
-    const other = k === "A" ? "B" : "A", v = chordSel[k].value;
-    if (v === settings["chord" + other]) settings["chord" + other] = settings["chord" + k];
-    settings["chord" + k] = v;
-    renderKeys();
-    showIdle();
-    save();
+// Chords (SPEC §17.1): tapping a tile opens the picker in the panel: the root, the type, and the positions as
+// small diagrams. Every tap applies at once; choosing the other chord's chord swaps them.
+let picking = null;                    // "A" | "B" while the picker is open
+let pickedFrom = null;                 // its chord when the picker opened: what the other gets on a swap
+function showPicker(k) {
+  picking = k;
+  pickedFrom = k && settings["chord" + k];
+  picker.hidden = !k;
+  keyPanel.classList.toggle("picking", !!k);
+  if (k) { renderPicker(); (rootGrid.querySelector("[aria-pressed=true]") || rootGrid.firstChild).focus(); }
+}
+function setChord(name) {
+  const other = picking === "A" ? "B" : "A";
+  // Reaching the other's chord swaps them; the other gets this one's chord from before (not a step on the way)
+  if (name === settings["chord" + other]) settings["chord" + other] = pickedFrom;
+  settings["chord" + picking] = name;
+  renderKeys();
+  showIdle();
+  save();
+}
+function renderPicker() {
+  const name = settings["chord" + picking], c = CHORDS[name];
+  $("pickerTitle").textContent = T["chord" + picking];
+  for (const b of rootGrid.children) b.setAttribute("aria-pressed", String(b.dataset.root === c.root));
+  for (const b of typeRow.children) {
+    b.setAttribute("aria-pressed", String(b.dataset.quality === c.quality));
+    b.querySelector("span").textContent = T[CHORD_TYPES.find(([q]) => q === b.dataset.quality)[1]];
+    b.querySelector("small").textContent = c.root + b.dataset.quality;
+  }
+  const cur = voicingOf(name);
+  posGrid.textContent = "";
+  c.voicings.forEach((v, i) => {
+    const b = document.createElement("button"), [pos, frets] = posText(v);
+    b.dataset.v = i;
+    b.setAttribute("aria-pressed", String(i === cur));
+    b.setAttribute("aria-label", `${name}: ${pos} ${frets}`);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "ch-diagram");
+    svg.setAttribute("aria-hidden", "true");
+    b.append(svg, Object.assign(document.createElement("span"), { textContent: pos }), Object.assign(document.createElement("small"), { textContent: frets }));
+    miniDiagram(svg, name, i);
+    posGrid.appendChild(b);
   });
 }
+for (const [root] of CHORD_ROOTS) {
+  const b = document.createElement("button");
+  b.dataset.root = root;
+  b.textContent = root;
+  rootGrid.appendChild(b);
+}
+for (const [quality] of CHORD_TYPES) {
+  const b = document.createElement("button");
+  b.dataset.quality = quality;
+  b.append(document.createElement("span"), document.createElement("small"));
+  typeRow.appendChild(b);
+}
+for (const k of ["A", "B"]) tiles[k].addEventListener("click", () => showPicker(k));
+$("pickerBack").addEventListener("click", () => { const k = picking; showPicker(null); tiles[k].focus(); });
+rootGrid.addEventListener("click", e => {
+  const b = e.target.closest("[data-root]");
+  if (b) setChord(b.dataset.root + CHORDS[settings["chord" + picking]].quality);
+});
+typeRow.addEventListener("click", e => {
+  const b = e.target.closest("[data-quality]");
+  if (b) setChord(CHORDS[settings["chord" + picking]].root + b.dataset.quality);
+});
+posGrid.addEventListener("click", e => {
+  const b = e.target.closest("[data-v]");
+  if (!b) return;
+  settings.chordPos[settings["chord" + picking]] = Number(b.dataset.v);
+  renderKeys();
+  showIdle();
+  save();
+});
 beatsGrid.addEventListener("click", e => {
   const b = e.target.closest("[data-beats]");
   if (!b) return;

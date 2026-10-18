@@ -79,9 +79,15 @@
     </fieldset>
   </div>
   <div id="chordSetup" hidden>
-    <div class="kp-chords">
-      <div class="field"><label for="chordA" data-i18n="chordA"></label><select id="chordA"></select></div>
-      <div class="field"><label for="chordB" data-i18n="chordB"></label><select id="chordB"></select></div>
+    <div class="kp-tiles">
+      <button id="tileA" class="kp-tile" data-k="A">
+        <span class="kt-label" data-i18n="chordA"></span><span class="kt-name"></span>
+        <svg class="ch-diagram kt-diagram" aria-hidden="true"></svg><small class="kt-pos"></small>
+      </button>
+      <button id="tileB" class="kp-tile" data-k="B">
+        <span class="kt-label" data-i18n="chordB"></span><span class="kt-name"></span>
+        <svg class="ch-diagram kt-diagram" aria-hidden="true"></svg><small class="kt-pos"></small>
+      </button>
     </div>
     <div class="kp-place">
       <span id="beatsLabel" data-i18n="chordBeats"></span>
@@ -89,6 +95,14 @@
         <button data-beats="2">2</button><button data-beats="4">4</button><button data-beats="8">8</button>
       </div>
     </div>
+  </div>
+  <!-- Chord picker (SPEC §17.1): replaces the panel's content while choosing chord A or B -->
+  <div id="chordPicker" hidden>
+    <div class="cp-head"><button id="pickerBack" class="mp-back" data-i18n="back"></button><span id="pickerTitle"></span></div>
+    <div id="rootGrid" class="cp-roots" role="group" data-i18n-aria="chordRoot"></div>
+    <div id="typeRow" class="cp-types" role="group" data-i18n-aria="chordType"></div>
+    <div class="bp-title" data-i18n="position"></div>
+    <div id="posGrid" class="cp-pos" role="group" data-i18n-aria="position"></div>
   </div>
   <div id="pentaSetup" hidden>
     <div class="kp-head"><span data-i18n="minorKey"></span><span id="shapeKey"></span></div>
