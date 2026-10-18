@@ -72,10 +72,21 @@ export function shapeRound(n, k = settings.pentaKey, at = placeAt(k, n), prep = 
            variant: variantOf(sh, pentaPlacements(n, k)) };
 }
 // The round's name on the phase line: "C major", or "A minor · Shape 1"
-export const roundLabel = r => r.penta ? `${T.minorName(r.key.name)} · ${T.shapeName(r.shape)}${r.variant ? ` · ${T[r.variant]}` : ""}` : T.keyName(r.key.name);
+export const roundLabel = r => r.chords ? r.key.name : r.penta ? `${T.minorName(r.key.name)} · ${T.shapeName(r.shape)}${r.variant ? ` · ${T[r.variant]}` : ""}` : T.keyName(r.key.name);
+
+// Chord changes (SPEC §17.3): one round is the whole sequence, chord A then chord B; prep only before the first
+export function chordRound(seq, prep) {
+  const total = prep + seq.reduce((n, c) => n + c.beats, 0);
+  return { chords: true, seq, prep, wait: 0, total, announce: false, key: { name: seq.map(c => c.name).join(" ↔ ") } };
+}
 
 export function newRound() {
   const { session } = play;
+  if (session.exercise === "chords") {
+    const first = !session.started;
+    session.started = true;
+    return chordRound(session.seq, first ? Number(inputs.prep.value) : 0);
+  }
   // Pentatonic (SPEC §15.3): the path is fixed, so rounds follow each other without a wait; the reference
   // note and the prep ticks only come before the first one
   if (session.exercise === "penta") {

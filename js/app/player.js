@@ -1,13 +1,14 @@
 // Practising: the lookahead scheduler on the audio clock, the screen drawn in sync with what is heard,
 // the bars under it, start and stop, and the idle view in between
-import { noteEl, pickEl, phaseEl, trackEl, inputs, roundKeyEl, toggleBtn, keyBtn, boardBtn, helpBtn, tunerBtn, boardEl } from "./dom.js";
+import { noteEl, pickEl, phaseEl, trackEl, inputs, roundKeyEl, toggleBtn, keyBtn, boardBtn, helpBtn, tunerBtn, boardEl, mainEl } from "./dom.js";
 import { settings, play, T, WALK, WALK_PEAK, clampInput } from "./state.js";
-import { audio, wakeAudio, openBus, closeBus, click, playNote } from "./audio.js";
+import { audio, wakeAudio, openBus, closeBus, click, playNote, strum } from "./audio.js";
 import { newRound, shapeRound, placeAt, roundLabel } from "./rounds.js";
 import { view, buildBoard, drawBoard, slideBoard, drawBar, hideBoard } from "./board.js";
 import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
-const { PENTA_SHAPES, createStartPicker, pentaNeckOrder, createNeckWalk } = Theory;
+import { drawChords, showChordView } from "./chords.js";
+const { PENTA_SHAPES, createStartPicker, pentaNeckOrder, createNeckWalk, chordNotes, chordAt } = Theory;
 
 const LOOKAHEAD_MS = 25;
 const SCHEDULE_AHEAD = 0.1;
@@ -18,6 +19,14 @@ export const queue = [];
 
 // The sound of tick `st` of round `r` at `time`: reference note on announce, then clicks and walk notes
 export function playTick(r, st, time, beat) {
+  if (r.chords) {                            // a click every tick; on each change, accented, with the new chord
+    const w = st - r.prep;
+    if (w < 0) return click(time, false, false);
+    const c = chordAt(r.seq, w);
+    click(time, c.beat === 0, false);
+    if (c.beat === 0) strum(chordNotes(r.seq[c.i].name), time, beat * c.beats);
+    return;
+  }
   if (st === 0 && r.announce !== false) playNote(r.walk[0].midi, time);   // reference note
   const w = st - r.prep;
   if (w >= 0 && w < r.walk.length) {
@@ -57,6 +66,7 @@ export function startScheduler() { scheduler(); rafId = requestAnimationFrame(dr
 export function render(tick) {
   const { step, round } = tick;
   play.lastShown = tick;
+  if (round.chords) return renderChords(tick);
   if (round !== shownRound) {
     shownRound = round;
     buildTrack(round.prep, round.wait, round.walk.length, round.peak);
@@ -98,6 +108,19 @@ export function render(tick) {
     }
   } else if (!boardEl.hasAttribute("hidden")) hideBoard();
   drawTrack(step);
+}
+
+// Chord changes: during prep the first chord waits as "now"; then the sequence, tick by tick
+function renderChords({ step, round }) {
+  shownRound = round;
+  const w = step - round.prep, label = roundLabel(round);
+  if (w < 0) {
+    phaseEl.textContent = `${label} · ${T.phasePrep(round.prep - step)}`;
+    return drawChords(round.seq[0].name, round.seq[1 % round.seq.length].name, -1, round.seq[0].beats);
+  }
+  const c = chordAt(round.seq, w);
+  phaseEl.textContent = label;
+  drawChords(round.seq[c.i].name, round.seq[c.next].name, c.beat, c.beats);
 }
 
 // Bars: flat for prep and wait; rise and fall during the walk, peaking at its top note
@@ -144,7 +167,15 @@ document.addEventListener("visibilitychange", () => {
 
 // ---- Idle view: the pick for Scale walk; the selected shape on the fretboard for Pentatonic ----
 export function showIdle() {
-  if (settings.exercise === "penta") {
+  const chords = settings.exercise === "chords";
+  mainEl.classList.toggle("with-chords", chords);
+  showChordView(chords);
+  if (chords) {                        // at rest: chord A now, chord B next, to study them
+    hideBoard();
+    pickEl.setAttribute("hidden", "");
+    phaseEl.textContent = `${settings.chordA} ↔ ${settings.chordB}`;
+    drawChords(settings.chordA, settings.chordB, -1, settings.chordBeats);
+  } else if (settings.exercise === "penta") {
     const r = shapeRound(settings.shapeNo);
     r.neckBar = settings.neckWalk;
     buildBoard(r);
@@ -172,7 +203,8 @@ export async function start() {
                    board: s.board ? { from: s.fretFrom, to: s.fretTo } : null, pickStart: createStartPicker(),
                    exercise: s.exercise, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo),
                    neck: s.exercise === "penta" && s.neckWalk ? createNeckWalk(pentaNeckOrder(pentaKey, n => placeAt(pentaKey, n)), shapeNo) : null,
-                   neckNext: null };
+                   neckNext: null,
+                   seq: [{ name: s.chordA, beats: s.chordBeats }, { name: s.chordB, beats: s.chordBeats }] };
   keyBtn.disabled = true;
   boardBtn.disabled = true;
   document.body.classList.add("practicing");

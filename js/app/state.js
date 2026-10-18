@@ -1,7 +1,7 @@
 // Settings (saved in localStorage), the current language, and the state shared while practising.
 // Other modules read and change `settings` and `play`; T follows the language (setLang).
 import { inputs } from "./dom.js";
-const { KEYS, PENTA_SHAPES, MINOR_KEYS } = Theory;
+const { KEYS, PENTA_SHAPES, MINOR_KEYS, CHORDS } = Theory;
 
 // A round's route: `walk` (its notes, up then back down) and `peak` (index of the top note).
 // Scale walk: 8 up + 7 down. Other exercises bring their own length (SPEC §15).
@@ -31,11 +31,13 @@ export const settings = {
   keys: [DEFAULT_KEY],                 // selected key indices, circle-of-fifths order; never empty
   order: "random",                     // "random" | "sequential"
   // Exercise (SPEC §15.1): BPM, ticks, eye, language and guide are shared; keys and fretboard belong to Scale walk
-  exercise: "walk",                    // "walk" | "penta"
+  exercise: "walk",                    // "walk" | "penta" | "chords"
   shapeNo: 1,                          // Pentatonic shape, 1–5
   pentaKey: 0,                         // Pentatonic minor key: index into MINOR_KEYS (A minor)
   pentaPlace: {},                      // chosen placement per "key:shape" (its first fret), when there are two
   neckWalk: false,                     // Pentatonic: move to the neighbouring shape each round (SPEC §15.6)
+  chordA: "Am", chordB: "C",           // Chord changes (SPEC §17): the two chords, never the same…
+  chordBeats: 4,                       // …and the ticks each one lasts: 2, 4 or 8
   guideSeen: false,
   tuning: "standard",                  // the tuner's reference strings (SPEC §16): standard | halfDown | dropD | highD
   board: true, fretFrom: ZONE_DEFAULT, fretTo: ZONE_DEFAULT + ZONE_MIN - 1,
@@ -75,7 +77,8 @@ export function save() {
       bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
       keys: s.keys, order: s.order, key: s.keys[0], aid: s.aid, showAll: s.showAll, lang: s.lang,
       board: s.board, fretFrom: s.fretFrom, fretTo: s.fretTo, guideSeen: s.guideSeen, exercise: s.exercise,
-      pentaShape: s.shapeNo, pentaKey: s.pentaKey, pentaPlace: s.pentaPlace, pentaNeck: s.neckWalk, tuning: s.tuning
+      pentaShape: s.shapeNo, pentaKey: s.pentaKey, pentaPlace: s.pentaPlace, pentaNeck: s.neckWalk, tuning: s.tuning,
+      chordA: s.chordA, chordB: s.chordB, chordBeats: s.chordBeats
     }));
   } catch (e) {}
 }
@@ -94,7 +97,9 @@ export function load() {
       if (STRINGS[s.lang]) settings.lang = s.lang;
       if (typeof s.board === "boolean") settings.board = s.board;   // older settings get the default
       settings.guideSeen = s.guideSeen === true;
-      if (s.exercise === "penta") settings.exercise = "penta";
+      if (s.exercise === "penta" || s.exercise === "chords") settings.exercise = s.exercise;
+      if (CHORDS[s.chordA] && CHORDS[s.chordB] && s.chordA !== s.chordB) { settings.chordA = s.chordA; settings.chordB = s.chordB; }
+      if ([2, 4, 8].includes(s.chordBeats)) settings.chordBeats = s.chordBeats;
       if (PENTA_SHAPES[s.pentaShape]) settings.shapeNo = Number(s.pentaShape);
       if (MINOR_KEYS[s.pentaKey]) settings.pentaKey = Number(s.pentaKey);
       settings.neckWalk = s.pentaNeck === true;

@@ -4,7 +4,7 @@
 
 A small tool to practice guitar scales **now**, while a much larger project is developed separately. This repository is independent of that project. Nothing from it should be anticipated here.
 
-**Scope:** exercises on the same practice loop (metronome, prep and wait ticks, fretboard): **Scale walk** (§3, §12–§13) and **Pentatonic shapes** (§15), with **Chord changes** planned next; and a **tuner** (§16). The app keeps changing only as using it shows a need, each change recorded here before or as it is built. Improvisation, progress tracking and other instruments belong to the larger project (§11).
+**Scope:** exercises on the same practice loop (metronome, prep and wait ticks, fretboard): **Scale walk** (§3, §12–§13), **Pentatonic shapes** (§15) and **Chord changes** (§17); and a **tuner** (§16). The app keeps changing only as using it shows a need, each change recorded here before or as it is built. Improvisation, progress tracking and other instruments belong to the larger project (§11).
 
 **Guiding principle:** get it working and in use as soon as possible. When in doubt, pick the simplest option. If something is not decided in this document, **ask the user before making it up** (see §9).
 
@@ -169,6 +169,7 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 14. Pentatonic shapes (§15): every shape matches §15.2, each round plays the complete shape up and down with the fretboard in sync, rounds follow each other with no wait (prep only before the first), and switching back to Scale walk leaves it exactly as it was.
 15. Along the neck (§15.6): consecutive rounds move to the neighbouring shape on the neck and turn at both ends, with no wait between shapes.
 16. Tuner (§16): a string played into the microphone reads as its note within a few cents, flat or sharp shown on the meter; each reference button plays its open string; closing the tuner releases the microphone.
+17. Chord changes (§17): the eight chords match §17.2; the current chord changes exactly on the tick after its last beat, the next one is always shown, and Scale walk and Pentatonic are as before.
 
 ## 11. Out of scope
 
@@ -374,6 +375,47 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 - **Tuning:** four choices in a 2×2 grid, each with its name and its notes underneath, remembered: *Standard* (E A D G B E), *½ step down* (E♭ A♭ D♭ G♭ B♭ E♭), *Drop D* (D A D G B E) and *e → D* (E A D G B D: standard with the high e down to D; it has no common name, so it is named after the change). The tuning only changes the tuner: the exercises keep standard tuning.
 - **Reference tones:** a row with the tuning's six open strings, low to high; tapping one plays it with the app's plucked-string sound, to tune by ear. They work without the microphone.
 - **Texts:** in `strings.js` for every language: the tuner's name, Done, the listening states (listening, no microphone, microphone blocked), "Tuning" and its four names, "Reference", flat and sharp for screen readers, and a guide step.
+
+## 17. Chord changes
+
+**Status: phase 1 built (two chords).** A third exercise: learning chord fingerings and practising the change between two chords with the metronome. The metronome says **when** to change; how and when to strum is up to the player (no strumming patterns, no listening to what is played).
+
+### 17.1 Setup
+
+- **Exercise row:** a third button, *Chords*, in the setup panel's exercise row (§15.1), which now reads *Chords · Scale walk · Pentatonic*. Same rules: it can only be changed while stopped.
+- **Chord A and Chord B:** two dropdowns with the library (§17.2), Am and C by default. They are never the same: choosing in one the chord the other has swaps them.
+- **Ticks per chord:** 2 · 4 · 8, 4 by default; the same for both chords.
+- **Button label:** "Am ↔ C". No fretboard button (as in Pentatonic). **Ticks after** is disabled: the change is continuous.
+- **Shared:** BPM, prep ticks, the eye, language and guide. Saved in the same settings: `chordA`, `chordB`, `chordBeats`.
+
+### 17.2 Chords and voicings
+
+- **Library:** the eight open chords C, D, E, G, A, Am, Dm, Em, with their standard fingerings (x32010, xx0232, 022100, 320003, x02220, x02210, xx0231, 022000) and finger numbers.
+- **A chord and its voicings are separate:** a chord is its root and quality; each has a list of voicings (frets per string, −1 muted and 0 open, fingers 1–4, and the diagram's first fret), and the app uses the first. Barre chords and alternative fingerings can be added as more voicings later.
+- In `js/theory.js`, tested: every sounding note is in the chord, every chord tone sounds, the root is in the bass, one finger per fretted string within four frets.
+
+### 17.3 A round
+
+- **The sequence:** chord A for its ticks, then chord B for its ticks, again and again until Stop. Each chord in the sequence carries its own length, so progressions (phase 2) need no new model.
+- **Prep:** the shared prep ticks before the first chord only; no wait between chords.
+- **Sound:** a normal click on every tick, accented on the first tick of each chord (the change), with a soft strum of the new chord, low to high, so the ear hears it too.
+- **Timing:** the same scheduler as the other exercises (§4): the changes are tick positions in the sequence (`chordAt`), so they never drift.
+
+### 17.4 Display
+
+- **Two vertical chord diagrams** in place of the note and the fretboard, side by side: **now** on the left, large, its name in gold; **next** on the right, smaller and muted, already showing the coming chord. Six strings, four frets, the nut; finger positions as dots with their finger number; ○ open and × muted strings above the nut. The geometry never changes between chords: only the dots do. A first fret above 1 shows as "5fr" beside the diagram, without the nut.
+- **Ticks:** under the current chord, one dot per tick of the chord, the current one filled; the last one marked, since the change comes after it. They replace the bars of the other exercises.
+- **At rest:** chord A as now and chord B as next, to study the fingerings.
+- **No eye:** both diagrams are always drawn in full, with finger numbers. Hiding the fingering added nothing here (tried, then dropped), so the eye button is hidden in this exercise and the guide skips its step; the saved level is kept for the other exercises.
+
+### 17.5 Later phases (not decided)
+
+- **Phase 2, progressions:** three or more chords repeating, as ready-made presets rather than an editor, each chord with its own length.
+- **Phase 3:** barre and movable chords, alternative fingerings.
+
+### 17.6 Texts
+
+In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks per chord, Now, Next, and the guide's updated exercise step.
 
 ## Appendix A. Design notes
 
