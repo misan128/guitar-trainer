@@ -61,13 +61,54 @@ test("the eye steps through the four aid levels and remembers it", async () => {
   await page.context().close();
 });
 
-test("changing the language changes the texts", async () => {
+test("the menu: language changes the texts, and the choice is saved", async () => {
   const page = await app.open();
-  await page.selectOption("#lang", "es");
+  await page.click("#menuBtn");
+  await page.click('#langRow [data-lang="es"]');
   assert.equal(await page.textContent("#toggle"), "Empezar");
-  await page.selectOption("#lang", "eu");
+  assert.equal(await page.textContent("#helpBtn"), "Ayuda", "the menu follows the language");
+  await page.click('#langRow [data-lang="eu"]');
   assert.equal(await page.textContent("#toggle"), "Hasi");
   assert.equal((await settings(page)).lang, "eu");
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
+test("the menu: themes, About, and the guide", async () => {
+  const page = await app.open();
+  const theme = () => page.evaluate(() => document.documentElement.dataset.theme);
+  const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  assert.equal(await theme(), "sepia");
+  const dark = await bg();
+  await page.click("#menuBtn");
+  await page.click('#themeRow [data-theme="maple"]');
+  assert.equal(await theme(), "maple");
+  assert.notEqual(await bg(), dark, "the background changes");
+  assert.equal((await settings(page)).theme, "maple");
+  const light = await bg();
+  await page.click('#themeRow [data-theme="steel"]');
+  assert.equal(await theme(), "steel");
+  assert.ok(![dark, light].includes(await bg()), "steel has its own background");
+  const accent = await page.evaluate(() => getComputedStyle(document.querySelector("#pick .pk-body")).fill);
+  assert.equal(accent, "rgb(128, 203, 196)", "the pick takes the theme's accent");
+  await page.click("#aboutBtn");
+  assert.match(await page.textContent("#aboutView"), /Michael/);
+  assert.equal(await page.getAttribute(".mp-coffee", "href"), "https://buymeacoffee.com/misan128");
+  await page.click("#aboutBack");
+  await page.click("#helpBtn");
+  assert.equal(await page.isVisible("#guide"), true, "Help opens the guide");
+  assert.equal(await page.isVisible("#menuPanel"), false);
+  await page.keyboard.press("Escape");
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
+test("a saved theme is there from the first paint, also under its earlier name", async () => {
+  const page = await app.open("", { theme: "maple" });
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), "maple");
+  const old = await app.open("", { theme: "material" });
+  assert.equal(await old.evaluate(() => document.documentElement.dataset.theme), "steel");
+  await old.context().close();
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });

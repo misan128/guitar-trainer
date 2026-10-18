@@ -16,6 +16,14 @@
 <link rel="preload" href="fonts/young-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/instrument-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/styles.css">
+<!-- Theme before the first paint (SPEC §18): the saved choice -->
+<script>
+  try {
+    var t = JSON.parse(localStorage.getItem("scaleWalkLight") || "{}").theme;
+    t = { light: "maple", material: "steel" }[t] || t;   // earlier names
+    document.documentElement.dataset.theme = t === "maple" || t === "steel" ? t : "sepia";
+  } catch (e) {}
+</script>
 </head>
 <body>
 <div class="corner left">
@@ -103,8 +111,36 @@
       <path d="M8.5 2.5v7.5a3.5 3.5 0 0 0 7 0V2.5M12 13.5v8"/>
     </svg>
   </button>
-  <button id="helpBtn" data-i18n-aria="guide"><span aria-hidden="true">?</span></button>
-  <select id="lang" class="quiet" data-i18n-aria="lang"></select>
+  <button id="menuBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="menuPanel" data-i18n-aria="menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16"/>
+    </svg>
+  </button>
+</div>
+<div id="menuPanel" role="dialog" data-i18n-aria="menu" hidden>
+  <div id="menuMain">
+    <div class="bp-title mp-first" data-i18n="lang"></div>
+    <div id="langRow" class="mp-row" role="group" data-i18n-aria="lang"></div>
+    <div class="bp-title" data-i18n="theme"></div>
+    <div id="themeRow" class="mp-row" role="group" data-i18n-aria="theme">
+      <button data-theme="sepia" data-i18n="themeSepia"></button>
+      <button data-theme="maple" data-i18n="themeMaple"></button>
+      <button data-theme="steel" data-i18n="themeSteel"></button>
+    </div>
+    <div class="mp-links">
+      <button id="helpBtn" data-i18n="help"></button>
+      <button id="aboutBtn" data-i18n="about"></button>
+    </div>
+  </div>
+  <div id="aboutView" hidden>
+    <button id="aboutBack" class="mp-back" data-i18n="back"></button>
+    <p data-i18n="aboutText1"></p>
+    <p data-i18n="aboutText2"></p>
+    <p data-i18n="aboutText3"></p>
+    <p data-i18n="aboutText4"></p>
+    <a class="mp-coffee" href="https://buymeacoffee.com/misan128" target="_blank" rel="noopener" data-i18n="aboutCoffee"></a>
+    <a class="mp-code" href="https://github.com/misan128/scale-trainer" target="_blank" rel="noopener" data-i18n="aboutCode"></a>
+  </div>
 </div>
 <div id="tunerPanel" role="dialog" data-i18n-aria="tuner" hidden>
   <div class="bp-head"><span data-i18n="tuner"></span><span id="tunerState" class="tn-state" aria-live="polite"></span></div>
@@ -143,9 +179,9 @@
     <div class="display">
       <div id="roundKey" hidden></div>
       <svg id="pick" viewBox="0 0 100 112" data-i18n-aria="pickAria" role="img">
-        <path d="M50 108 C34 96 6 60 7 32 C8 11 28 4 50 4 C72 4 92 11 93 32 C94 60 66 96 50 108 Z" fill="#d1a65a"/>
-        <path d="M24 26 C30 16 40 13 50 13" fill="none" stroke="#ede3d1" stroke-opacity=".45" stroke-width="5" stroke-linecap="round"/>
-        <circle cx="50" cy="44" r="9" fill="#1d1613" fill-opacity=".18"/>
+        <path d="M50 108 C34 96 6 60 7 32 C8 11 28 4 50 4 C72 4 92 11 93 32 C94 60 66 96 50 108 Z" class="pk-body"/>
+        <path class="pk-shine" d="M24 26 C30 16 40 13 50 13" fill="none" stroke-opacity=".45" stroke-width="5" stroke-linecap="round"/>
+        <circle class="pk-dot" cx="50" cy="44" r="9" fill-opacity=".18"/>
       </svg>
       <div id="note" hidden></div>
     </div>

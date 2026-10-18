@@ -7,6 +7,7 @@ import { newRound, shapeRound, placeAt, roundLabel } from "./rounds.js";
 import { view, buildBoard, drawBoard, slideBoard, drawBar, hideBoard } from "./board.js";
 import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
+import { closeMenu } from "./menu.js";
 import { drawChords, showChordView } from "./chords.js";
 const { PENTA_SHAPES, createStartPicker, pentaNeckOrder, createNeckWalk, chordNotes, chordAt } = Theory;
 
@@ -198,6 +199,7 @@ export async function start() {
   closePanel(false);
   closeBoard(false);
   closeTuner(false);
+  closeMenu(false);
   const s = settings, { pentaKey, shapeNo } = s;
   play.session = { keys: s.keys.slice(), order: s.order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
                    board: s.board ? { from: s.fretFrom, to: s.fretTo } : null, pickStart: createStartPicker(),

@@ -2,7 +2,7 @@
 export const $ = id => document.getElementById(id);
 export const noteEl = $("note"), pickEl = $("pick"), phaseEl = $("phase"), trackEl = $("track");
 export const inputs = { bpm: $("bpm"), prep: $("prep"), wait: $("wait") };
-export const langEl = $("lang"), showAllEl = $("showAll");
+export const showAllEl = $("showAll"), menuBtn = $("menuBtn");
 export const keyBtn = $("keyBtn"), keyPanel = $("keyPanel"), keyGrid = $("keyGrid");
 export const keyCount = $("keyCount"), keysAllBtn = $("keysAll"), keysClearBtn = $("keysClear");
 export const walkSetup = $("walkSetup"), pentaSetup = $("pentaSetup"), shapeGrid = $("shapeGrid"), shapeKey = $("shapeKey");
