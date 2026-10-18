@@ -2,11 +2,11 @@
 
 [![Buy me a coffee](https://img.shields.io/badge/Buy%20me%20a%20coffee-misan128-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/misan128)
 
-Guitar practice with a metronome, on the fretboard: scale walks from a random note in any major key, and the five minor pentatonic shapes in any minor key. Static web app, no dependencies.
+Guitar practice with a metronome: scale walks from a random note in any major key, the five minor pentatonic shapes in any minor key, and changes between two chords; plus a tuner. Static web app, no dependencies.
 
 **Use it:** https://misan128.github.io/scale-trainer/
 
-## Two exercises
+## Three exercises
 
 Choose the exercise in the setup panel (the button at the top left). BPM, ticks, aids and language are shared.
 
@@ -29,6 +29,16 @@ The five minor pentatonic shapes, played as fixed fingering patterns to build mu
 - **Variant:** when a shape fits in two places, choose between them: *Open* or *Closed* for the five open-position ones (E minor shape 1, D minor 2, C minor 3, A minor 4, G minor 5), *Low* or *High* for two octaves of the same movable shape.
 - **A round:** the complete six-string shape up (12 notes) and back down (11), then the same shape again straight away, without stopping. The reference note and the prep ticks only come before the first round, and there are no wait ticks: the route never changes, so there is nothing to wait for.
 - **Move along the neck:** instead of repeating one shape, each round moves to the next shape up the neck, and back down at the end, without stopping. As with one shape, it doesn't stop between shapes, and the next shape is announced while you descend: you slide along the 6th string into the next box. On the fretboard, a bar under the fret numbers shows where you are on the neck and, on the way down, points to the next shape; on the last note the view slides there.
+
+### Chord changes
+
+Learn chord fingerings and practise changing between two of them in time.
+
+- **Chords:** Chord A and Chord B from the eight open chords C, D, E, G, A, Am, Dm and Em (Am and C by default). Picking in one the chord the other has swaps them.
+- **Ticks per chord:** 2, 4 or 8.
+- **A round:** chord A for its ticks, then chord B, again and again. The prep ticks only come before the first chord. Each change gets an accented click and a soft strum of the new chord; how you strum is up to you.
+- **On screen:** the current chord large, with its name in gold and its fingering (finger numbers in the dots, ○ open and × muted strings), and the next chord smaller beside it, so you can prepare the move. Dots under the current chord count its ticks; the last one is ringed, the change comes after it. At rest, both chords are shown to study them.
+- **Aids:** the eye goes from finger numbers, to dots only, to the current chord from memory (the next one still drawn), to names only.
 
 Practice keeps going until you stop it.
 
