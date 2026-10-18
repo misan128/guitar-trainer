@@ -4,7 +4,7 @@
 
 A small tool to practice guitar scales **now**, while a much larger project is developed separately. This repository is independent of that project. Nothing from it should be anticipated here.
 
-**Scope:** two exercises on the same practice loop (metronome, prep and wait ticks, fretboard): **Scale walk** (§3, §12–§13) and **Pentatonic shapes** (§15). The app keeps changing only as using it shows a need, each change recorded here before or as it is built. Anything beyond those two exercises (improvisation, progress tracking, other instruments) belongs to the larger project (§11).
+**Scope:** exercises on the same practice loop (metronome, prep and wait ticks, fretboard): **Scale walk** (§3, §12–§13) and **Pentatonic shapes** (§15), with **Chord changes** planned next; and a **tuner** (§16). The app keeps changing only as using it shows a need, each change recorded here before or as it is built. Improvisation, progress tracking and other instruments belong to the larger project (§11).
 
 **Guiding principle:** get it working and in use as soon as possible. When in doubt, pick the simplest option. If something is not decided in this document, **ask the user before making it up** (see §9).
 
@@ -168,10 +168,11 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 13. Start notes follow §3: every pass of a key covers its seven start degrees, and two rounds in a row never start on the same note.
 14. Pentatonic shapes (§15): every shape matches §15.2, each round plays the complete shape up and down with the fretboard in sync, rounds follow each other with no wait (prep only before the first), and switching back to Scale walk leaves it exactly as it was.
 15. Along the neck (§15.6): consecutive rounds move to the neighbouring shape on the neck and turn at both ends, with no wait between shapes.
+16. Tuner (§16): a string played into the microphone reads as its note within a few cents, flat or sharp shown on the meter; each reference button plays its open string; closing the tuner releases the microphone.
 
 ## 11. Out of scope
 
-Anything beyond the two exercises (§1): other scales or modes than those in §3 and §15, tuner, accounts, analytics, frameworks, build, and anything from the larger project.
+Anything beyond §1's scope: other scales or modes than those in §3 and §15, accounts, analytics, frameworks, build, recording or scoring what is played, and anything from the larger project.
 
 ## 12. Multi-key practice
 
@@ -360,6 +361,18 @@ Learn the move from one shape to the next, not only each shape on its own.
 ### 15.8 Texts
 
 In `strings.js`, for every language: the two exercise names, "Move along the neck", "Next: Shape n", "Exercise", "Key" (for the minor keys), "Shape", the shape label ("Shape n"), the minor key name ("A minor"), the fret range ("Frets a–b"), and the accessible labels for the shape tiles and the idle preview.
+
+## 16. Tuner
+
+**Status: built.** A tool beside the exercises, not an exercise: it does not touch the practice loop.
+
+- **Where:** a tuning-fork button in the top-right corner, before **?**. It opens a panel under it, like the setup panel; only while stopped (disabled while practicing, like **?**). Esc, **Done** or tapping outside closes it.
+- **Listening:** opening the panel asks for the microphone and starts listening at once. The browser asks for permission the first time; if it is refused or there is no microphone, the panel says so and the reference tones still work. Closing the panel stops the microphone (the browser's recording indicator goes off). Nothing is recorded or sent: the sound is analysed in the page and dropped.
+- **Reading:** chromatic, A4 = 440 Hz. The nearest note in large type with its octave (E2), and a horizontal meter from −50 to +50 cents with its centre marked: a needle shows how far off, flat to the left, sharp to the right, with the cents as a number. A dark gold band marks ±5 cents around the centre: with the needle inside it, the note and the needle turn gold, in tune. When the string fades, its last reading stays, dimmed, for 1.5 s, so there is time to read it; then it fades out over half a second and the note shows "–" and the needle rests faded at the centre, as before any reading. Silence or noise never gives a reading. When the note is one of the open strings in standard tuning, its reference button is marked.
+- **Level:** a thin bar under the meter shows how loud the microphone hears the guitar (−60 to 0 dB), brighter once it is loud enough to read; it tells a quiet microphone from a string that is out of range.
+- **Detection:** YIN on blocks of 4096 samples, about 20 readings a second, from 70 Hz (drop D still reads) to 1000 Hz; quiet or non-periodic sound gives no reading. The needle follows the median of the last few readings, so it is steady but quick. `js/pitch.js`, pure and tested like `theory.js`.
+- **Reference tones:** a row with the six open strings (E A D G B e, low to high); tapping one plays it with the app's plucked-string sound, to tune by ear. They work without the microphone.
+- **Texts:** in `strings.js` for every language: the tuner's name, Done, the listening states (listening, no microphone, microphone blocked), "Reference", flat and sharp for screen readers, and a guide step.
 
 ## Appendix A. Design notes
 

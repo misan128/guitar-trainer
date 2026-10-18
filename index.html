@@ -85,8 +85,29 @@
   </div>
 </div>
 <div class="corner right">
+  <button id="tunerBtn" aria-haspopup="dialog" aria-expanded="false" aria-controls="tunerPanel" data-i18n-aria="tuner">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8.5 2.5v7.5a3.5 3.5 0 0 0 7 0V2.5M12 13.5v8"/>
+    </svg>
+  </button>
   <button id="helpBtn" data-i18n-aria="guide"><span aria-hidden="true">?</span></button>
   <select id="lang" class="quiet" data-i18n-aria="lang"></select>
+</div>
+<div id="tunerPanel" role="dialog" data-i18n-aria="tuner" hidden>
+  <div class="bp-head"><span data-i18n="tuner"></span><span id="tunerState" class="tn-state" aria-live="polite"></span></div>
+  <div id="tunerRead" class="tn-read" role="img">
+    <div class="tn-note"><span id="tunerNote">–</span><span id="tunerOct" class="tn-oct"></span></div>
+    <div class="tn-meter" aria-hidden="true">
+      <span>♭</span>
+      <div class="tn-scale"><i class="tn-zone"></i><i class="tn-center"></i><i id="tunerNeedle" class="tn-needle"></i></div>
+      <span>♯</span>
+    </div>
+    <div id="tunerCents" class="tn-cents" aria-hidden="true"></div>
+  </div>
+  <div class="tn-level" aria-hidden="true"><i id="tunerLevel"></i></div>
+  <div class="bp-title" data-i18n="tunerRef"></div>
+  <div id="tunerRef" class="tn-ref"></div>
+  <button id="tunerDone" data-i18n="boardDone"></button>
 </div>
 <div id="guide" role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideText" hidden>
   <div id="guideSpot"></div>
@@ -155,6 +176,7 @@
 
 <script src="js/strings.js"></script>
 <script src="js/theory.js"></script>
+<script src="js/pitch.js"></script>
 <script type="module" src="js/app/main.js"></script>
 </body>
 </html>

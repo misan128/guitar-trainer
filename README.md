@@ -32,6 +32,10 @@ The five minor pentatonic shapes, played as fixed fingering patterns to build mu
 
 Practice keeps going until you stop it.
 
+## Tuner
+
+The tuning fork (top-right) opens the tuner. Play a string: it shows the nearest note and a needle from flat to sharp, gold when it is in tune (within the band of ±5 cents, A = 440 Hz). When the string fades, its note stays dimmed for a second and a half, then fades out. A thin bar shows how loud the microphone hears the guitar. It uses the microphone only while it is open, and nothing is recorded or sent. Below, the six open strings (E A D G B e) play their pitch when tapped, to tune by ear; they work without the microphone too.
+
 ## Settings
 
 - **BPM**: 30–300.
