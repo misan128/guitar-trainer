@@ -1,6 +1,6 @@
 // First-use guide (SPEC §14): a cutout around each control with a short text
 import { $, langEl, mainEl, boardEl, keyBtn, showAllEl, boardBtn, helpBtn, tunerBtn } from "./dom.js";
-import { settings, play, T, save } from "./state.js";
+import { settings, play, T, save, aidText } from "./state.js";
 import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
 import { applyLang } from "./controls.js";
@@ -9,7 +9,7 @@ const guideEl = $("guide"), guideSpot = $("guideSpot"), guideTip = $("guideTip")
 // The language step comes first so the rest is read in the chosen language; it is skipped when reopened with ?
 const GUIDE = [
   { target: () => langEl, key: "guideLangPick", langs: true },
-  { target: () => mainEl.classList.contains("with-board") ? boardEl : document.querySelector(".display"), key: "guideRound" },
+  { target: () => mainEl.classList.contains("with-board") ? boardEl : mainEl.classList.contains("with-chords") ? $("chordView") : document.querySelector(".display"), key: "guideRound" },
   { target: () => keyBtn, key: "guideKeys" },
   { target: () => showAllEl, key: "guideEye", legend: true },
   { target: () => boardBtn, key: "guideBoard", skip: () => boardBtn.hidden },
@@ -45,7 +45,7 @@ function showStep() {
     icon.className = "eye";
     icon.dataset.level = n;
     icon.innerHTML = showAllEl.innerHTML;
-    li.append(icon, T["aid" + n]);
+    li.append(icon, aidText(n));
     legend.appendChild(li);
   }
   for (const b of guideLangs.children) b.setAttribute("aria-pressed", String(b.dataset.lang === settings.lang));

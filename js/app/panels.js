@@ -6,7 +6,9 @@ import { $, keyBtn, keyPanel, keyGrid, keyCount, keysAllBtn, keysClearBtn, walkS
 import { settings, T, save, setZone, FIFTHS, DEFAULT_KEY, FRET_FIRST_MAX, FRET_LAST_MAX, ZONE_MIN } from "./state.js";
 import { variantOf, placeAt } from "./rounds.js";
 import { showIdle } from "./player.js";
-const { KEYS, PENTA_SHAPES, MINOR_KEYS, pentaPlacements, pentaShape } = Theory;
+import { setAid } from "./controls.js";
+const { KEYS, PENTA_SHAPES, MINOR_KEYS, pentaPlacements, pentaShape, CHORD_NAMES } = Theory;
+const chordSetup = $("chordSetup"), chordSel = { A: $("chordA"), B: $("chordB") }, beatsGrid = $("beatsGrid");
 
 // Key tiles, circle-of-fifths order
 for (const idx of FIFTHS) {
@@ -16,14 +18,18 @@ for (const idx of FIFTHS) {
   keyGrid.appendChild(b);
 }
 export function renderKeys() {
-  const names = settings.keys.map(i => KEYS[i].name), penta = settings.exercise === "penta";
-  keyBtn.textContent = penta ? shapeLabel(settings.shapeNo) : settings.keys.length === 1 ? T.keyName(names[0])
-    : settings.keys.length === 2 ? names.join(", ") : T.keysSummary(settings.keys.length);
-  keyBtn.setAttribute("aria-label", `${penta ? T.shape : T.key}: ${keyBtn.textContent}`);
-  for (const b of keyPanel.querySelectorAll("[data-ex]")) b.setAttribute("aria-pressed", String(b.dataset.ex === settings.exercise));
-  walkSetup.hidden = penta;
+  const names = settings.keys.map(i => KEYS[i].name), ex = settings.exercise, penta = ex === "penta", chords = ex === "chords";
+  keyBtn.textContent = chords ? `${settings.chordA} ↔ ${settings.chordB}` : penta ? shapeLabel(settings.shapeNo)
+    : settings.keys.length === 1 ? T.keyName(names[0]) : settings.keys.length === 2 ? names.join(", ") : T.keysSummary(settings.keys.length);
+  keyBtn.setAttribute("aria-label", `${chords ? T.exChords : penta ? T.shape : T.key}: ${keyBtn.textContent}`);
+  for (const b of keyPanel.querySelectorAll("[data-ex]")) b.setAttribute("aria-pressed", String(b.dataset.ex === ex));
+  walkSetup.hidden = ex !== "walk";
   pentaSetup.hidden = !penta;
-  boardBtn.hidden = penta;             // in Pentatonic the fretboard is the exercise: always on
+  chordSetup.hidden = !chords;
+  boardBtn.hidden = ex !== "walk";     // in Pentatonic the fretboard is the exercise, in Chords there is none
+  chordSel.A.value = settings.chordA;
+  chordSel.B.value = settings.chordB;
+  for (const b of beatsGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.beats) === settings.chordBeats));
   shapeKey.textContent = T.minorName(MINOR_KEYS[settings.pentaKey].name);
   for (const b of pentaKeyGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.key) === settings.pentaKey));
   for (const b of shapeGrid.children) {
@@ -33,8 +39,8 @@ export function renderKeys() {
     b.querySelector("small").textContent = `${sh.from}–${sh.to}`;
   }
   neckSwitch.setAttribute("aria-checked", String(settings.neckWalk));
-  // Pentatonic has no wait between rounds (SPEC §15.3), so Ticks after has no effect there
-  const noWait = penta;
+  // Pentatonic and Chords have no wait between rounds (SPEC §15.3, §17.3), so Ticks after has no effect there
+  const noWait = ex !== "walk";
   inputs.wait.disabled = noWait;
   for (const b of document.querySelectorAll('.stepper [data-target="wait"]')) b.disabled = noWait;
   inputs.wait.closest(".field").classList.toggle("off", noWait);
@@ -121,6 +127,27 @@ keyPanel.querySelector(".kp-exercise").addEventListener("click", e => {
   const b = e.target.closest("[data-ex]");
   if (!b || b.dataset.ex === settings.exercise) return;
   settings.exercise = b.dataset.ex;
+  renderKeys();
+  setAid(settings.aid);                // the eye's label says what it shows in this exercise
+  showIdle();
+  save();
+});
+// Chords (SPEC §17.1): the library in both dropdowns; choosing in one the other's chord swaps them
+for (const k of ["A", "B"]) {
+  for (const name of CHORD_NAMES) chordSel[k].add(new Option(name, name));
+  chordSel[k].addEventListener("change", () => {
+    const other = k === "A" ? "B" : "A", v = chordSel[k].value;
+    if (v === settings["chord" + other]) settings["chord" + other] = settings["chord" + k];
+    settings["chord" + k] = v;
+    renderKeys();
+    showIdle();
+    save();
+  });
+}
+beatsGrid.addEventListener("click", e => {
+  const b = e.target.closest("[data-beats]");
+  if (!b) return;
+  settings.chordBeats = Number(b.dataset.beats);
   renderKeys();
   showIdle();
   save();

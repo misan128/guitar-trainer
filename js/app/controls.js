@@ -1,6 +1,6 @@
 // Shared controls: BPM and ticks (steppers and slider), the eye (aid level) and the language
 import { inputs, bpmRange, showAllEl, langEl, toggleBtn } from "./dom.js";
-import { settings, play, T, setLang, save, clampInput } from "./state.js";
+import { settings, play, T, setLang, save, clampInput, aidText } from "./state.js";
 import { renderKeys } from "./panels.js";
 import { render, showIdle, drawTrack } from "./player.js";
 import { refreshGuide } from "./guide.js";
@@ -28,7 +28,7 @@ export function setAid(v) {
   settings.aid = v;
   settings.showAll = v <= 3;
   showAllEl.dataset.level = v;
-  const label = `${T.aids}: ${T["aid" + v]}`;
+  const label = `${T.aids}: ${aidText(v)}`;
   showAllEl.setAttribute("aria-label", label);
   showAllEl.title = label;
 }
