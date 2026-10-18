@@ -1,4 +1,5 @@
-// First-use guide (SPEC §14): a cutout around each control with a short text
+// First-use guide (SPEC §14): a cutout around each control with a short text. The same guide gives each panel
+// its own short tour the first time it opens, over the open panel (SPEC §19).
 import { $, mainEl, boardEl, keyBtn, showAllEl, boardBtn, menuBtn, tunerBtn } from "./dom.js";
 import { settings, play, T, save } from "./state.js";
 import { closePanel, closeBoard } from "./panels.js";
@@ -16,7 +17,24 @@ const GUIDE = [
   { target: () => tunerBtn, key: "guideTuner" },
   { target: () => menuBtn, key: "guideHelp" },
 ];
-let steps = GUIDE, guideStep = 0, guideFromHelp = false;
+const q = sel => () => document.querySelector(sel);
+const visible = sel => () => { const e = document.querySelector(sel); return !e || e.offsetParent === null; };
+// Tips: one tour per panel; "setup" (the exercise row) only comes with the first setup tour shown
+const TOURS = {
+  menu: [{ target: q("#langRow"), key: "tipMenuLang" }, { target: q("#themeRow"), key: "tipMenuTheme" }, { target: q(".mp-links"), key: "tipMenuHelp" }],
+  setup: [{ target: q(".kp-exercise"), key: "tipSetupExercise" }],
+  walk: [{ target: q("#keyGrid"), key: "tipWalkKeys" }, { target: q(".kp-order"), key: "tipWalkOrder" }],
+  penta: [{ target: q("#pentaKeyGrid"), key: "tipPentaKey" }, { target: q("#shapeGrid"), key: "tipPentaShape" },
+          { target: q("#placeRow"), key: "tipPentaVariant", skip: visible("#placeRow") }, { target: q(".kp-switch"), key: "tipPentaNeck" }],
+  chords: [{ target: q("#chordMode"), key: "tipChordsMode" }, { target: q("#pairSetup"), key: "tipChordsTiles", skip: visible("#pairSetup") },
+           { target: q("#beatsLabel"), key: "tipChordsBeats" }],
+  prog: [{ target: q("#progGrid"), key: "tipProgList" }, { target: q("#progKeyGrid"), key: "tipProgKey" }],
+  picker: [{ target: q("#rootGrid"), key: "tipPickerRoot" }, { target: q("#typeRow"), key: "tipPickerType" }, { target: q("#posGrid"), key: "tipPickerPos" }],
+  tuner: [{ target: q("#tunerRead"), key: "tipTunerRead" }, { target: q("#tuningRow"), key: "tipTunerTuning" }, { target: q("#tunerRef"), key: "tipTunerRef" }],
+  board: [{ target: q("#boardPanel .bp-head"), key: "tipBoardSwitch" }, { target: q(".bp-frets"), key: "tipBoardZone" }],
+};
+export const TOUR_IDS = Object.keys(TOURS);
+let steps = GUIDE, guideStep = 0, guideFromHelp = false, tour = ["main"];
 const guideLangs = $("guideLangs");
 for (const code in STRINGS) {
   const b = guideLangs.appendChild(document.createElement("button"));
@@ -70,18 +88,41 @@ export function openGuide(fromHelp) {
   closePanel(false);
   closeBoard(false);
   closeTuner(false);
-  guideStep = 0;
   guideFromHelp = fromHelp;
-  steps = GUIDE.filter(s => !(fromHelp && s.langs) && !(s.skip && s.skip()));
+  start(["main"], GUIDE.filter(s => !(fromHelp && s.langs) && !(s.skip && s.skip())));
+}
+function start(ids, list) {
+  tour = ids;
+  steps = list;
+  guideStep = 0;
   guideEl.hidden = false;
   showStep();
   guideNext.focus();
 }
+// Tips (SPEC §19): the tours in `ids` not seen yet, over the panel that just opened; never while practising or
+// over another guide. A setup tour brings the exercise row's step with it the first time.
+export function tips(ids) {
+  if (play.running || !guideEl.hidden) return;
+  if (["walk", "penta", "chords"].includes(ids[0])) ids = ["setup", ...ids];   // seen once, then dropped below
+  const fresh = ids.filter(id => TOURS[id] && !settings.tipsSeen[id]);
+  if (!fresh.length) return;
+  requestAnimationFrame(() => {            // after the panel has laid out
+    const list = fresh.flatMap(id => TOURS[id]).filter(s => !(s.skip && s.skip()));
+    if (list.length) start(fresh, list);
+    else markSeen(fresh);
+  });
+}
+function markSeen(ids) {
+  for (const id of ids) {
+    if (id === "main") settings.guideSeen = true;
+    else settings.tipsSeen[id] = true;
+  }
+  save();
+}
 export function closeGuide() {
   guideEl.hidden = true;
-  settings.guideSeen = true;
-  save();
-  if (guideFromHelp) menuBtn.focus();
+  markSeen(tour);
+  if (guideFromHelp && tour[0] === "main") menuBtn.focus();
 }
 guideNext.addEventListener("click", () => {
   if (guideStep === steps.length - 1) return closeGuide();

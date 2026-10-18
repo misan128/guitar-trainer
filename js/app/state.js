@@ -42,6 +42,7 @@ export const settings = {
   chordMode: "pair",                   // "pair" (two chords) | "prog" (a progression, SPEC §17.5)
   progId: "pop", progKey: 0,           // the progression and its key (pitch class of the root; C)
   guideSeen: false,
+  tipsSeen: {},                        // the panels whose tips have been shown (SPEC §19), by tour id
   theme: "sepia",                      // SPEC §18: sepia | maple | steel
   tuning: "standard",                  // the tuner's reference strings (SPEC §16): standard | halfDown | dropD | highD
   board: true, fretFrom: ZONE_DEFAULT, fretTo: ZONE_DEFAULT + ZONE_MIN - 1,
@@ -86,7 +87,7 @@ export function save() {
     localStorage.setItem("scaleWalkLight", JSON.stringify({
       bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
       keys: s.keys, order: s.order, key: s.keys[0], aid: s.aid, showAll: s.showAll, lang: s.lang,
-      board: s.board, fretFrom: s.fretFrom, fretTo: s.fretTo, guideSeen: s.guideSeen, exercise: s.exercise,
+      board: s.board, fretFrom: s.fretFrom, fretTo: s.fretTo, guideSeen: s.guideSeen, tipsSeen: s.tipsSeen, exercise: s.exercise,
       pentaShape: s.shapeNo, pentaKey: s.pentaKey, pentaPlace: s.pentaPlace, pentaNeck: s.neckWalk, tuning: s.tuning, theme: s.theme,
       chordA: s.chordA, chordB: s.chordB, chordBeats: s.chordBeats, chordPos: s.chordPos,
       chordMode: s.chordMode, progId: s.progId, progKey: s.progKey
@@ -108,6 +109,7 @@ export function load() {
       if (STRINGS[s.lang]) settings.lang = s.lang;
       if (typeof s.board === "boolean") settings.board = s.board;   // older settings get the default
       settings.guideSeen = s.guideSeen === true;
+      if (s.tipsSeen && typeof s.tipsSeen === "object") for (const k in s.tipsSeen) if (s.tipsSeen[k] === true) settings.tipsSeen[k] = true;
       if (s.exercise === "penta" || s.exercise === "chords") settings.exercise = s.exercise;
       if (CHORDS[s.chordA] && CHORDS[s.chordB] && s.chordA !== s.chordB) { settings.chordA = s.chordA; settings.chordB = s.chordB; }
       if ([2, 4, 8].includes(s.chordBeats)) settings.chordBeats = s.chordBeats;

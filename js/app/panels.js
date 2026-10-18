@@ -7,6 +7,7 @@ import { settings, T, save, setZone, voicingOf, FIFTHS, DEFAULT_KEY, FRET_FIRST_
 import { variantOf, placeAt, chordPlan, progName, progKeyLabel } from "./rounds.js";
 import { showIdle } from "./player.js";
 import { miniDiagram } from "./chords.js";
+import { tips } from "./guide.js";
 const { KEYS, PENTA_SHAPES, MINOR_KEYS, pentaPlacements, pentaShape, CHORDS, CHORD_ROOTS, voicingFrets, PROGRESSIONS, progressionChords } = Theory;
 const modeRow = $("chordMode"), pairSetup = $("pairSetup"), progSetup = $("progSetup"), progGrid = $("progGrid"), progKeyGrid = $("progKeyGrid");
 const chordSetup = $("chordSetup"), beatsGrid = $("beatsGrid"), tiles = { A: $("tileA"), B: $("tileB") };
@@ -102,7 +103,10 @@ function openPanel() {
   keyPanel.hidden = false;
   keyBtn.setAttribute("aria-expanded", "true");
   (keyGrid.querySelector("[aria-pressed=true]") || keyGrid.firstChild).focus();
+  tips(setupTours());
 }
+// The setup panel's tours: its exercise, and the progression's when it is showing
+const setupTours = () => settings.exercise === "chords" && settings.chordMode === "prog" ? ["chords", "prog"] : [settings.exercise];
 export function closePanel(refocus) {
   if (keyPanel.hidden) return;
   showPicker(null);
@@ -161,6 +165,7 @@ keyPanel.querySelector(".kp-exercise").addEventListener("click", e => {
   renderKeys();
   showIdle();
   save();
+  tips(setupTours());
 });
 // Chords (SPEC §17.1): tapping a tile opens the picker in the panel: the root, the type, and the positions as
 // small diagrams. Every tap applies at once; choosing the other chord's chord swaps them.
@@ -171,7 +176,7 @@ function showPicker(k) {
   pickedFrom = k && settings["chord" + k];
   picker.hidden = !k;
   keyPanel.classList.toggle("picking", !!k);
-  if (k) { renderPicker(); (rootGrid.querySelector("[aria-pressed=true]") || rootGrid.firstChild).focus(); }
+  if (k) { renderPicker(); (rootGrid.querySelector("[aria-pressed=true]") || rootGrid.firstChild).focus(); tips(["picker"]); }
 }
 function setChord(name) {
   const other = picking === "A" ? "B" : "A";
@@ -226,7 +231,7 @@ for (const p of PROGRESSIONS) {
 const chordsChanged = () => { renderKeys(); showIdle(); save(); };
 modeRow.addEventListener("click", e => {
   const b = e.target.closest("[data-mode]");
-  if (b && b.dataset.mode !== settings.chordMode) { settings.chordMode = b.dataset.mode; chordsChanged(); }
+  if (b && b.dataset.mode !== settings.chordMode) { settings.chordMode = b.dataset.mode; chordsChanged(); if (b.dataset.mode === "prog") tips(["prog"]); }
 });
 progGrid.addEventListener("click", e => {
   const b = e.target.closest("[data-prog]");
@@ -298,7 +303,7 @@ keyPanel.addEventListener("change", e => {
 });
 // Tapping outside closes the panel
 document.addEventListener("pointerdown", e => {
-  if (!keyPanel.hidden && !keyPanel.contains(e.target) && !keyBtn.contains(e.target)) closePanel(false);
+  if (!keyPanel.hidden && !keyPanel.contains(e.target) && !keyBtn.contains(e.target) && !e.target.closest("#guide")) closePanel(false);
 });
 // ---- Fretboard panel ----
 for (let f = 0; f <= FRET_FIRST_MAX; f++) fretFromEl.add(new Option(f, f));
@@ -315,6 +320,7 @@ function openBoard() {
   boardPanel.hidden = false;
   boardBtn.setAttribute("aria-expanded", "true");
   boardSwitch.focus();
+  tips(["board"]);
 }
 export function closeBoard(refocus) {
   if (boardPanel.hidden) return;
@@ -328,5 +334,5 @@ fretFromEl.addEventListener("change", () => { setZone(Number(fretFromEl.value), 
 fretToEl.addEventListener("change", () => { setZone(settings.fretFrom, Number(fretToEl.value)); renderBoardPanel(); save(); });
 $("boardDone").addEventListener("click", () => closeBoard(true));
 document.addEventListener("pointerdown", e => {
-  if (!boardPanel.hidden && !boardPanel.contains(e.target) && !boardBtn.contains(e.target)) closeBoard(false);
+  if (!boardPanel.hidden && !boardPanel.contains(e.target) && !boardBtn.contains(e.target) && !e.target.closest("#guide")) closeBoard(false);
 });
