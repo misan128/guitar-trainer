@@ -100,7 +100,7 @@ LICENSE
 - **Code in English:** comments, identifiers and commit messages.
 - **UI texts centralized in `strings.js`:** one object per language (`en`, `es`, `eu`) with the same keys. Covers everything visible or read by screen readers: labels, buttons, phases, shortcut hint, `aria-label` and `<title>`. Note and key names (C, D♭, F♯…) are not translatable text.
 - Loaded with `<script>` before the app code. No build, no `fetch`.
-- **Language selector:** small and subtle in the top-right corner, showing the language code (EN / ES / EU). Saved in `localStorage` inside `scaleWalkLight` (field `lang`), without breaking previously saved settings.
+- **Language:** in the menu (§18), one button per language in its own name (English · Euskara · Español). Saved in `localStorage` inside `scaleWalkLight` (field `lang`), without breaking previously saved settings.
 - Adding a language = adding an object to `strings.js` with the same keys, without touching the rest of the code.
 - **Default language** when nothing is saved: the browser's (`es*` → Spanish, `eu*` → Basque; anything else → English).
 - The language **can be changed while practice is running** and applies immediately.
@@ -164,12 +164,13 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 9. With one key selected, no multi-key element shows; with several, every point of §12 holds.
 10. With the fretboard off, the big note letter shows, nothing from §13 is drawn, and the start note plays in octave 3.
 11. With the fretboard on, every walk in every zone of at least 5 frets is playable: each marked fret sounds the pitch played, stays inside the zone, never moves to a lower string while ascending, and the same key, start note and zone always give the same fingering.
-12. The first-use guide shows once (language step first), can be reopened with **?**, and is never shown while practice is running.
+12. The first-use guide shows once (language step first), can be reopened from the menu's **Help**, and is never shown while practice is running.
 13. Start notes follow §3: every pass of a key covers its seven start degrees, and two rounds in a row never start on the same note.
 14. Pentatonic shapes (§15): every shape matches §15.2, each round plays the complete shape up and down with the fretboard in sync, rounds follow each other with no wait (prep only before the first), and switching back to Scale walk leaves it exactly as it was.
 15. Along the neck (§15.6): consecutive rounds move to the neighbouring shape on the neck and turn at both ends, with no wait between shapes.
 16. Tuner (§16): a string played into the microphone reads as its note within a few cents, flat or sharp shown on the meter; each reference button plays its open string; closing the tuner releases the microphone.
 17. Chord changes (§17): the eight chords match §17.2; the current chord changes exactly on the tick after its last beat, the next one is always shown, and Scale walk and Pentatonic are as before.
+18. Menu (§18): language, theme, Help and About work from the menu; the chosen theme is applied before the first paint, and nothing keeps a colour of another theme.
 
 ## 11. Out of scope
 
@@ -254,26 +255,27 @@ A short guided tour that explains the unlabeled controls where they are.
 
 **When it shows**
 - Automatically on the first load, and once for users who already have saved settings. Finishing or skipping it marks it as seen (`guideSeen` in `scaleWalkLight`).
-- A small, muted **?** button in the top-right corner, left of the language selector, opens it again.
-- Never while practice is running: the **?** is disabled then, like the key and fretboard buttons.
+- **Help** in the menu (§18) opens it again.
+- Never while practice is running: **Help** is disabled then, like the key and fretboard buttons.
 
 **How it looks**
 - The screen dims except for a rounded cutout around the step's control.
 - A bubble next to it (below, or above if it does not fit) with a title, one or two sentences, progress dots, **Skip** and **Next** (**Done** on the last step).
-- Tapping outside does nothing. `Esc` closes it (counts as seen). Keyboard shortcuts are off while it is open. Focus moves to the bubble and returns to the **?** when opened from it.
+- Tapping outside does nothing. `Esc` closes it (counts as seen). Keyboard shortcuts are off while it is open. Focus moves to the bubble and returns to the menu button when opened from it.
 
 **Steps** (Spanish shown; English and Basque say the same)
 
 | # | Points at | Text |
 | --- | --- | --- |
-| 0 | Language selector | **Idioma:** elige el idioma de la guía y de la app; puedes cambiarlo después arriba a la derecha. The bubble has one button per language, each written in its own language (English · Español · Euskara), the current one highlighted; tapping one switches the whole app at once. |
+| 0 | Menu button | **Idioma:** elige el idioma de la guía y de la app; puedes cambiarlo después en el menú, arriba a la derecha. The bubble has one button per language, each written in its own language (English · Español · Euskara), the current one highlighted; tapping one switches the whole app at once. |
 | 1 | The pick / note | **Una ronda:** una nota al azar de la tonalidad. Tras unos clics de preparación, subes una octava y vuelves a bajar al ritmo del metrónomo. |
-| 2 | Setup button | **Ejercicio y tonalidad:** elige el ejercicio: recorrido de escala o formas pentatónicas. Luego sus tonalidades, o la tonalidad y la forma. |
+| 2 | Setup button | **Ejercicio y tonalidad:** elige el ejercicio: cambios de acorde, recorrido de escala o formas pentatónicas. Luego sus dos acordes, sus tonalidades, o la tonalidad y la forma. |
 | 3 | Eye | **Ayudas:** toca el ojo para cerrarlo poco a poco, de más ayuda a menos. Below the text, the four eyes with their level: *Todas las notas · Solo la actual · Solo la forma · Solo el inicio*. |
 | 4 | Guitar | **Diapasón:** muestra el recorrido en el mástil, dentro de la zona de trastes que elijas. |
-| 5 | **?** | **Ayuda:** con **?** vuelves a ver esta guía cuando quieras. |
+| 5 | Tuner | **Afinador:** afina con el micrófono, o de oído con las cuerdas de referencia. |
+| 6 | Menu button | **Menú:** idioma, tema, esta guía cuando quieras y más sobre la app. |
 
-The language step comes first so the rest of the guide is read in the chosen language. It only appears on the automatic first showing; reopening with **?** starts at step 1.
+The language step comes first so the rest of the guide is read in the chosen language. It only appears on the automatic first showing; reopening with **Help** starts at step 1.
 
 Tempo, ticks and installing on the phone are left out on purpose.
 
@@ -367,7 +369,7 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 
 **Status: built.** A tool beside the exercises, not an exercise: it does not touch the practice loop.
 
-- **Where:** a tuning-fork button in the top-right corner, before **?**. It opens a panel under it, like the setup panel; only while stopped (disabled while practicing, like **?**). Esc, **Done** or tapping outside closes it.
+- **Where:** a tuning-fork button in the top-right corner, before the menu. It opens a panel under it, like the setup panel; only while stopped (disabled while practicing, like **?**). Esc, **Done** or tapping outside closes it.
 - **Listening:** opening the panel asks for the microphone and starts listening at once. The browser asks for permission the first time; if it is refused or there is no microphone, the panel says so and the reference tones still work. Closing the panel stops the microphone (the browser's recording indicator goes off). Nothing is recorded or sent: the sound is analysed in the page and dropped.
 - **Reading:** chromatic, A4 = 440 Hz. The nearest note in large type with its octave (E2), and a horizontal meter from −50 to +50 cents with its centre marked: a needle shows how far off, flat to the left, sharp to the right, with the cents as a number. A dark gold band marks ±5 cents around the centre: with the needle inside it, the note and the needle turn gold, in tune. When the string fades, its last reading stays, dimmed, for 1.5 s, so there is time to read it; then it fades out over half a second and the note shows "–" and the needle rests faded at the centre, as before any reading. Silence or noise never gives a reading. When the note is one of the chosen tuning's strings, it is named as that string (E♭, not D♯) and its reference button is marked.
 - **Level:** a thin bar under the meter shows how loud the microphone hears the guitar (−60 to 0 dB), brighter once it is loud enough to read; it tells a quiet microphone from a string that is out of range.
@@ -416,6 +418,18 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 ### 17.6 Texts
 
 In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks per chord, Now, Next, and the guide's updated exercise step.
+
+## 18. Menu, themes and About
+
+**Status: built.** The top bar had grown to six controls; the ones that are not about practising move into one menu.
+
+- **Top bar:** on the left, practice (setup, eye, fretboard); on the right, the tuner and a **menu button** (three lines). The language selector and **?** are gone from the bar.
+- **The menu:** a panel under its button, like the others (Esc, tapping outside, or the button again close it; keyboard shortcuts are off while it is open). It can be opened while practising; only **Help** is disabled then. From top to bottom:
+  1. **Language:** English · Euskara · Español, each in its own language; it applies at once.
+  2. **Theme:** *Sepia · Maple · Steel*, each named after what its palette looks like. Sepia is today's warm dark palette of browns and brass, the default; Maple a light fretboard (cream background, dark brown ink, a deeper brass for contrast); Steel the cool blue-grey of steel strings with a teal accent. (An *Auto* theme following the system was tried and dropped: with the system in dark mode it looked the same as Dark.) Every colour comes from CSS variables on `:root`, so a theme is one block of values. The saved theme is applied before the first paint (a few lines in `<head>`), so there is no flash of the other one; the browser's bar (`theme-color`) follows it. Saved as `theme`.
+  3. **Help** (opens the guide) and **About**, side by side.
+- **About:** replaces the menu's content, with **Back**. In first person, close and informal, and short: who I am (Michael, a Colombian living in the Basque Country and loving it, who plays guitar for fun and made this to practise at home), that it grew as I needed things, that it is free with no ads, accounts or anyone watching (with a word for cookies), and that a coffee is welcome if it is useful. No list of what the app does: it is not a sales page. A brass **Buy me a coffee** button (buymeacoffee.com/misan128) and a quiet link to the source code on GitHub, both opening in a new tab.
+- **Texts:** menu, theme and its three names, help, about, back, the three About paragraphs and the two links; the guide's last step now points at the menu.
 
 ## Appendix A. Design notes
 
