@@ -770,6 +770,7 @@ main.with-chords #phase { margin-top: 0; }
 .mp-links { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--wire); }
 .mp-links button { color: var(--bone); }
 .mp-links button:disabled { opacity: .4; cursor: not-allowed; }
+.mp-links .mp-wide { grid-column: 1 / -1; color: var(--muted); font-weight: 400; }
 #aboutView p { margin: .8rem 0 0; line-height: 1.45; }
 .mp-back { min-height: 2.2rem; padding: .2rem .8rem; }
 .mp-coffee, .mp-code { display: block; margin-top: 1rem; text-align: center; font-weight: 600; }

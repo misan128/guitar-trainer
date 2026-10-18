@@ -172,6 +172,7 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 16. Tuner (§16): a string played into the microphone reads as its note within a few cents, flat or sharp shown on the meter; each reference button plays its open string; closing the tuner releases the microphone.
 17. Chord changes (§17): every chord and voicing is correct and playable (§17.2), each chord's positions can be chosen; the current chord changes exactly on the tick after its last beat, the next one is always shown, and Scale walk and Pentatonic are as before.
 18. Menu (§18): language, theme, Help and About work from the menu; the chosen theme is applied before the first paint, and nothing keeps a colour of another theme.
+19. Tips (§19): every panel shows its tour the first time it opens, over it, once; Show the tips again brings them back; never while practising.
 
 ## 11. Out of scope
 
@@ -458,6 +459,29 @@ In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks p
   3. **Help** (opens the guide) and **About**, side by side.
 - **About:** replaces the menu's content, with **Back**. In first person, close and informal, and short: who I am (Michael, a Colombian living in the Basque Country and loving it, who plays guitar for fun and made this to practise at home), that it grew as I needed things, that it is free with no ads, accounts or anyone watching (with a word for cookies), and that a coffee is welcome if it is useful. No list of what the app does: it is not a sales page. A brass **Buy me a coffee** button (buymeacoffee.com/misan128) and a quiet link to the source code on GitHub, both opening in a new tab.
 - **Texts:** menu, theme and its three names, help, about, back, the three About paragraphs and the two links; the guide's last step now points at the menu.
+
+## 19. Tips in each panel
+
+**Status: built.** The app grew beyond what one first-use guide can explain without becoming a lecture. The guide (§14) stays short and general, a map of where things are; each panel explains its own parts, the first time it is opened.
+
+- **What:** the same guide (dimmed screen, a cutout, a bubble with Next and Skip), over the open panel, 2–4 steps each:
+
+  | Tour | When | Steps |
+  | --- | --- | --- |
+  | Menu | first opening of the menu | language, theme, help and more |
+  | Setup | with the first exercise tour shown | the exercise row: what to practise |
+  | Scale walk | setup opened in Scale walk | keys, order |
+  | Pentatonic | setup opened in Pentatonic | key, shape, variant (when it shows), along the neck |
+  | Chords | setup opened in Chords | two chords or a progression, the chord tiles (in two-chord mode), ticks |
+  | Progression | switching to Progression (or opening it there) | the progressions, the key |
+  | Chord picker | first chord tile tapped | root, type, position |
+  | Tuner | first opening of the tuner | the reading and its band, the tunings, the reference strings |
+  | Fretboard | first opening of the fretboard panel | on/off, the zone |
+
+- **Once:** finishing or skipping a tour marks it seen (`tipsSeen`, by tour). The guide's last step says that each panel explains itself the first time it is opened.
+- **Never in the way:** not while practising (the menu opens then, its tips wait), never over another guide; tapping the guide does not close the panel underneath.
+- **Show the tips again:** in the menu, under Help and About; every panel then shows its tips the next time it opens. It reads "Tips will show again" until one has been seen.
+- **Texts:** a title and a line for every step, in every language.
 
 ## Appendix A. Design notes
 

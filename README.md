@@ -55,7 +55,7 @@ The tuning fork (top-right) opens the tuner. Play a string: it shows the nearest
 - **Aids** (the eye): how much the fretboard shows, from more help to less. Each tap closes the eye one step: *all notes* named → only the *current note* named → the *shape* without names → only the *start* position, to play the rest from memory. Wide open by default.
 - **Menu** (three lines, top right): the language (English, Spanish or Basque), the theme (*Sepia*, warm and dark; *Maple*, light; or *Steel*, blue-grey), **Help** to see the guide again, and **About**.
 
-The exercise, keys, shape and fretboard can only be changed while stopped. A short guide explains the controls on first use; **Help** in the menu shows it again.
+The exercise, keys, shape and fretboard can only be changed while stopped. A short guide shows where everything is on first use, and each panel (setup, chord picker, tuner, menu…) explains its own parts the first time you open it. **Help** in the menu shows the guide again, and **Show the tips again** brings the panels' tips back.
 
 Settings are saved in the browser.
 
