@@ -38,6 +38,7 @@ export const settings = {
   neckWalk: false,                     // Pentatonic: move to the neighbouring shape each round (SPEC §15.6)
   chordA: "Am", chordB: "C",           // Chord changes (SPEC §17): the two chords, never the same…
   chordBeats: 4,                       // …and the ticks each one lasts: 2, 4 or 8
+  chordPos: {},                        // the chosen position (voicing index) per chord, when there are several
   guideSeen: false,
   theme: "sepia",                      // SPEC §18: sepia | maple | steel
   tuning: "standard",                  // the tuner's reference strings (SPEC §16): standard | halfDown | dropD | highD
@@ -52,6 +53,12 @@ export function setLang(code) {
 }
 
 // While practising. The scheduler's own timers live in player.js.
+// A chord's chosen position, if it still exists; otherwise its first (open if it has one, else the lowest)
+export const voicingOf = name => {
+  const i = settings.chordPos[name];
+  return Number.isInteger(i) && CHORDS[name].voicings[i] ? i : 0;
+};
+
 export const play = {
   running: false,
   round: null, step: 0, nextTime: 0,
@@ -79,7 +86,7 @@ export function save() {
       keys: s.keys, order: s.order, key: s.keys[0], aid: s.aid, showAll: s.showAll, lang: s.lang,
       board: s.board, fretFrom: s.fretFrom, fretTo: s.fretTo, guideSeen: s.guideSeen, exercise: s.exercise,
       pentaShape: s.shapeNo, pentaKey: s.pentaKey, pentaPlace: s.pentaPlace, pentaNeck: s.neckWalk, tuning: s.tuning, theme: s.theme,
-      chordA: s.chordA, chordB: s.chordB, chordBeats: s.chordBeats
+      chordA: s.chordA, chordB: s.chordB, chordBeats: s.chordBeats, chordPos: s.chordPos
     }));
   } catch (e) {}
 }
@@ -101,6 +108,7 @@ export function load() {
       if (s.exercise === "penta" || s.exercise === "chords") settings.exercise = s.exercise;
       if (CHORDS[s.chordA] && CHORDS[s.chordB] && s.chordA !== s.chordB) { settings.chordA = s.chordA; settings.chordB = s.chordB; }
       if ([2, 4, 8].includes(s.chordBeats)) settings.chordBeats = s.chordBeats;
+      if (s.chordPos && typeof s.chordPos === "object") for (const k in s.chordPos) if (CHORDS[k] && Number.isInteger(s.chordPos[k])) settings.chordPos[k] = s.chordPos[k];
       if (PENTA_SHAPES[s.pentaShape]) settings.shapeNo = Number(s.pentaShape);
       if (MINOR_KEYS[s.pentaKey]) settings.pentaKey = Number(s.pentaKey);
       settings.neckWalk = s.pentaNeck === true;

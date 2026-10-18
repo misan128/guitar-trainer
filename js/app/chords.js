@@ -28,15 +28,29 @@ function buildDiagram(svg) {
   return { svg, nut, base, marks: el("g", { class: "marks" }, svg) };
 }
 const diagrams = { now: buildDiagram(cards.now.querySelector("svg")), next: buildDiagram(cards.next.querySelector("svg")) };
+// A small diagram (setup tiles, the picker's positions): the same drawing, dots without numbers
+export function miniDiagram(svg, name, vi) {
+  svg.textContent = "";
+  drawChord(buildDiagram(svg), name, vi, true, false);
+}
 
-// Draws chord `name` in diagram `d`. show: the fingering (dots, open and muted marks); numbers: finger numbers
-function drawChord(d, name, show, numbers) {
-  const v = CHORDS[name].voicings[0], first = v.base;
+// Draws voicing vi of chord `name` in diagram `d`. show: the fingering (dots, barre, open and muted marks);
+// numbers: finger numbers
+function drawChord(d, name, vi, show, numbers) {
+  const v = CHORDS[name].voicings[vi], first = v.base;
   d.marks.textContent = "";
   d.nut.style.display = first === 1 ? "" : "none";
   d.base.textContent = first === 1 ? "" : `${first}fr`;
   if (!show) return;
+  // The barre: a rounded bar across its strings, with the first finger's number
+  const b = v.barre;
+  if (b) {
+    const g = el("g", { class: "barre", transform: `translate(0 ${fy(b.fret - first + 1)})` }, d.marks);
+    el("rect", { x: sx(b.from) - 6.6, y: -6.6, width: sx(b.to) - sx(b.from) + 13.2, height: 13.2, rx: 6.6 }, g);
+    if (numbers) el("text", { x: (sx(b.from) + sx(b.to)) / 2 }, g).textContent = 1;
+  }
   v.frets.forEach((f, st) => {
+    if (b && f === b.fret && v.fingers[st] === 1) return;   // under the barre
     if (f < 0) el("path", { class: "muted", d: `M${sx(st) - 3.5} ${TY - 13.5}l7 7m0 -7l-7 7` }, d.marks);
     else if (f === 0) el("circle", { class: "open", cx: sx(st), cy: TY - 10, r: 3.6 }, d.marks);
     else {
@@ -47,16 +61,17 @@ function drawChord(d, name, show, numbers) {
   });
 }
 
-// Both chords always drawn in full, with finger numbers: no eye in this exercise (SPEC §17.4)
+// now, next: { name, v } (chord and voicing). Both always drawn in full, with finger numbers: no eye in this
+// exercise (SPEC §17.4)
 let shown = null;
 export function drawChords(now, next, beat, beats) {
-  const key = `${now}|${next}`;
+  const key = `${now.name}:${now.v}|${next.name}:${next.v}`;
   if (key !== shown) {
     shown = key;
-    cards.now.querySelector(".ch-name").textContent = now;
-    cards.next.querySelector(".ch-name").textContent = next;
-    drawChord(diagrams.now, now, true, true);
-    drawChord(diagrams.next, next, true, true);
+    cards.now.querySelector(".ch-name").textContent = now.name;
+    cards.next.querySelector(".ch-name").textContent = next.name;
+    drawChord(diagrams.now, now.name, now.v, true, true);
+    drawChord(diagrams.next, next.name, next.v, true, true);
   }
   // One dot per tick of the chord: the current one filled, the last one marked (the change comes after it)
   if (beatsEl.childElementCount !== beats) {

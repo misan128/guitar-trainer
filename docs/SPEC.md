@@ -170,7 +170,7 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 14. Pentatonic shapes (§15): every shape matches §15.2, each round plays the complete shape up and down with the fretboard in sync, rounds follow each other with no wait (prep only before the first), and switching back to Scale walk leaves it exactly as it was.
 15. Along the neck (§15.6): consecutive rounds move to the neighbouring shape on the neck and turn at both ends, with no wait between shapes.
 16. Tuner (§16): a string played into the microphone reads as its note within a few cents, flat or sharp shown on the meter; each reference button plays its open string; closing the tuner releases the microphone.
-17. Chord changes (§17): the eight chords match §17.2; the current chord changes exactly on the tick after its last beat, the next one is always shown, and Scale walk and Pentatonic are as before.
+17. Chord changes (§17): every chord and voicing is correct and playable (§17.2), each chord's positions can be chosen; the current chord changes exactly on the tick after its last beat, the next one is always shown, and Scale walk and Pentatonic are as before.
 18. Menu (§18): language, theme, Help and About work from the menu; the chosen theme is applied before the first paint, and nothing keeps a colour of another theme.
 
 ## 11. Out of scope
@@ -381,21 +381,27 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 
 ## 17. Chord changes
 
-**Status: phase 1 built (two chords).** A third exercise: learning chord fingerings and practising the change between two chords with the metronome. The metronome says **when** to change; how and when to strum is up to the player (no strumming patterns, no listening to what is played).
+**Status: phase 1 built (two chords); chords in every key and their positions on the neck built (v5.1).** A third exercise: learning chord fingerings and practising the change between two chords with the metronome. The metronome says **when** to change; how and when to strum is up to the player (no strumming patterns, no listening to what is played).
 
 ### 17.1 Setup
 
 - **Exercise row:** a third button, *Chords*, in the setup panel's exercise row (§15.1), which now reads *Chords · Scale walk · Pentatonic*. Same rules: it can only be changed while stopped.
-- **Chord A and Chord B:** two dropdowns with the library (§17.2), Am and C by default. They are never the same: choosing in one the chord the other has swaps them.
+- **Chord A and Chord B as tiles,** side by side: each with its name, a small diagram of its position and the position below ("Open 0–2"). Am and C by default.
+- **The chord picker:** tapping a tile replaces the panel's content (with **Back**, like About) by one screen, not a wizard: the **12 roots** in a grid, the **type** (*Major · Minor · 7th*, each showing the chord it gives, "Am"), and the chord's **positions as small diagrams** with their name and frets. Every tap applies at once. Choosing the chord the other tile has swaps them; the other gets this tile's chord from when the picker opened.
+- **Positions** are named by the string the root sits on (or *Open*): *Open 0–3 · 5th string 3–5 · 4th string 8–10 · 6th string 8–10*. The default is the first: the lowest on the neck and, when two start on the same fret, the easiest (open, then 4th, 5th, 6th string), so F starts as the small F (xx3211), not the full barre. Remembered per chord (`chordPos`), like the pentatonic variants.
+- **From a UX review:** tiles with diagrams and a single-screen picker came from a proposal with a three-step wizard and more chord types (m7, maj7, sus, dim…); the wizard was dropped as slower, and the extra types wait until they are in the library.
 - **Ticks per chord:** 2 · 4 · 8, 4 by default; the same for both chords.
 - **Button label:** "Am ↔ C". No fretboard button (as in Pentatonic). **Ticks after** is disabled: the change is continuous.
 - **Shared:** BPM, prep ticks, the eye, language and guide. Saved in the same settings: `chordA`, `chordB`, `chordBeats`.
 
 ### 17.2 Chords and voicings
 
-- **Library:** the eight open chords C, D, E, G, A, Am, Dm, Em, with their standard fingerings (x32010, xx0232, 022100, 320003, x02220, x02210, xx0231, 022000) and finger numbers.
-- **A chord and its voicings are separate:** a chord is its root and quality; each has a list of voicings (frets per string, −1 muted and 0 open, fingers 1–4, and the diagram's first fret), and the app uses the first. Barre chords and alternative fingerings can be added as more voicings later.
-- In `js/theory.js`, tested: every sounding note is in the chord, every chord tone sounds, the root is in the bass, one finger per fretted string within four frets.
+- **Library:** every root (C C♯ D E♭ E F F♯ G A♭ A B♭ B) as major, minor and dominant 7th: 36 chords.
+- **Open voicings** where the chord has a standard one: C, D, E, G, A, Am, Dm, Em (x32010, xx0232, 022100, 320003, x02220, x02210, xx0231, 022000) and A7, B7, C7, D7, E7, G7 (x02020, x21202, x32310, xx0212, 020100, 320001), with finger numbers.
+- **Movable voicings** for every chord, moved to its root like the pentatonic shapes, named by the string the root sits on: **6th string** (major 133211, minor 133111, 7th 131211 from the barre), **5th string** (major x13331, minor x13321, 7th x13131) and **4th string**, the small chords on the top four strings (major xx3211 and minor xx3111 as in F, with a small barre on the high strings; 7th as the D7 shape moved up, xx1323 from its lowest fret). Each at the lowest fret from 1 (fret 0 would be an open chord, which comes from the table) and only up to fret 11: higher ones only crowded the row. The barre, when there is one, is part of the voicing (fret and strings).
+- **Why by string:** a first model only had "the open chord" or "a full barre", so the usual easy F (xx3211) could not be shown. Naming positions by the root's string fits any fingering, including more to come.
+- **A chord and its voicings are separate:** a chord is its root and quality; its voicings are a list (frets per string, −1 muted and 0 open, fingers 1–4, the diagram's first fret, the barre if any, and which kind it is), sorted from the lowest on the neck.
+- In `js/theory.js`, tested for every chord and voicing: every sounding note is in the chord, every chord tone sounds (a 7th chord may leave out its fifth), the root is in the bass, one finger per fretted string except the barre, fingers in fret order, within four frets.
 
 ### 17.3 A round
 
@@ -406,19 +412,19 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 
 ### 17.4 Display
 
-- **Two vertical chord diagrams** in place of the note and the fretboard, side by side: **now** on the left, large, its name in gold; **next** on the right, smaller and muted, already showing the coming chord. Six strings, four frets, the nut; finger positions as dots with their finger number; ○ open and × muted strings above the nut. The geometry never changes between chords: only the dots do. A first fret above 1 shows as "5fr" beside the diagram, without the nut.
+- **Two vertical chord diagrams** in place of the note and the fretboard, side by side: **now** on the left, large, its name in gold; **next** on the right, smaller and muted, already showing the coming chord. Six strings, four frets, the nut; finger positions as dots with their finger number; ○ open and × muted strings above the nut. The geometry never changes between chords: only the dots do. A first fret above 1 shows as "5fr" beside the diagram, without the nut. A barre is a rounded bar across its strings, with its finger number.
 - **Ticks:** under the current chord, one dot per tick of the chord, the current one filled; the last one marked, since the change comes after it. They replace the bars of the other exercises.
 - **At rest:** chord A as now and chord B as next, to study the fingerings.
 - **No eye:** both diagrams are always drawn in full, with finger numbers. Hiding the fingering added nothing here (tried, then dropped), so the eye button is hidden in this exercise and the guide skips its step; the saved level is kept for the other exercises.
 
 ### 17.5 Later phases (not decided)
 
-- **Phase 2, progressions:** three or more chords repeating, as ready-made presets rather than an editor, each chord with its own length.
-- **Phase 3:** barre and movable chords, alternative fingerings.
+- **Phase 2, progressions (next, v5.2):** ready-made progressions in degrees transposed to the chosen key (I–V–vi–IV, I–IV–V, vi–IV–I–V, ii–V–I, the Andalusian cadence, the 12-bar blues with 7th chords), each chord with its own length; each chord's position chosen automatically (open when there is one, otherwise the closest to the previous chord), and a strip with the whole progression and the current chord marked.
+- **More positions:** the other shapes of each chord along the neck, presented as positions like the ones here. The CAGED system as a concept (the five shapes and how they link with the pentatonic boxes) would be a space of its own, later.
 
 ### 17.6 Texts
 
-In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks per chord, Now, Next, and the guide's updated exercise step.
+In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks per chord, Now, Next, Root, Type, the chord types (major, minor, 7th), Position and the position names (open, 6th, 5th and 4th string), and the guide's updated exercise step.
 
 ## 18. Menu, themes and About
 
