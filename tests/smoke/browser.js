@@ -3,6 +3,9 @@
 const { chromium, devices } = require("playwright");
 const { createServer } = require("../../scripts/serve.js");
 
+// The panels' tips (SPEC §19), all seen: tests open panels as someone who knows them; tests of the tips pass {}
+const ALL_TIPS = Object.fromEntries(["menu", "setup", "walk", "penta", "chords", "prog", "picker", "tuner", "board"].map(id => [id, true]));
+
 // args: extra Chromium flags (the tuner test feeds it a fake microphone)
 async function launch(args = []) {
   const requests = [];
@@ -11,7 +14,7 @@ async function launch(args = []) {
   const base = `http://localhost:${server.address().port}/`;
   const browser = await chromium.launch({ args: ["--autoplay-policy=no-user-gesture-required", ...args] });
 
-  // settings: saved settings to start from (the app's localStorage), merged over "guide already seen"
+  // settings: saved settings to start from (the app's localStorage), merged over "guide and tips already seen"
   async function open(query = "", settings = {}) {
     const context = await browser.newContext({ ...devices["iPhone 13"], locale: "en", serviceWorkers: "block" });
     await context.addInitScript(s => {
@@ -19,7 +22,7 @@ async function launch(args = []) {
         localStorage.setItem("scaleWalkLight", JSON.stringify(s));
         sessionStorage.setItem("seeded", "1");
       }
-    }, { guideSeen: true, lang: "en", ...settings });
+    }, { guideSeen: true, tipsSeen: ALL_TIPS, lang: "en", ...settings });
     const page = await context.newPage();
     page.errors = [];
     page.on("pageerror", e => page.errors.push(e.message));

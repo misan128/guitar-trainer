@@ -4,6 +4,7 @@ import { $, tunerBtn } from "./dom.js";
 import { settings, play, T, save } from "./state.js";
 import { audio, wakeAudio, playReference } from "./audio.js";
 import { closePanel, closeBoard } from "./panels.js";
+import { tips } from "./guide.js";
 const { detectPitch, noteOf, SILENCE, TUNINGS } = Pitch;
 
 const panel = $("tunerPanel"), stateEl = $("tunerState"), readEl = $("tunerRead"), noteEl = $("tunerNote");
@@ -178,6 +179,7 @@ export function openTuner() {
   show(null);
   $("tunerDone").focus();
   listen();
+  tips(["tuner"]);
 }
 export function closeTuner(refocus) {
   if (panel.hidden) return;
@@ -191,7 +193,7 @@ export const tunerOpen = () => !panel.hidden;
 tunerBtn.addEventListener("click", () => panel.hidden ? openTuner() : closeTuner(true));
 $("tunerDone").addEventListener("click", () => closeTuner(true));
 document.addEventListener("pointerdown", e => {
-  if (!panel.hidden && !panel.contains(e.target) && !tunerBtn.contains(e.target)) closeTuner(false);
+  if (!panel.hidden && !panel.contains(e.target) && !tunerBtn.contains(e.target) && !e.target.closest("#guide")) closeTuner(false);
 });
 // Leaving the page closes it, so the microphone never stays on in the background
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") closeTuner(false); });

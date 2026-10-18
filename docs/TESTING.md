@@ -44,6 +44,7 @@ The app in a real browser: Chromium with an iPhone 13 viewport, driven by Playwr
 | Chord changes: progressions | Progression mode replaces the tiles, "Ticks per bar", the button reads "C · G · Am · F" (its chords), each progression shows its chords in the key, the strip behind the panel; the blues in A groups its bars on one line; the Andalusian cadence reads the key as A minor; saved; playing follows the strip, and F comes as the small F. A two-bar chord shows one bar of dots, ringed only in its last bar. |
 | Chord changes: positions | In the picker, Am's three positions as small diagrams, open pressed; the 6th-string barre shows "5fr", no open or muted strings, and the tile follows; F starts as the small F (4th string) before the full barre, drawn at fret 1 with the nut; the choice saved per chord; Esc closes the panel. |
 | Chord changes | At rest: Am now and C next, Am's three fingers with their numbers, two open and one muted string, two tick dots, no bars, no fretboard button, Ticks after disabled. Playing: C becomes current with Am next, then Am again, one tick lit. No eye in Chords, both chords in full with finger numbers whatever the saved level, and the eye back in Scale walk; dev mode runs. |
+| Tips | The menu's tour the first time, over the open menu, and not twice; the setup's exercise row once, then each exercise's tips (Chords, Progression on switching, Pentatonic, Scale walk); the picker's and the tuner's; Skip counts as seen; Show the tips again brings them back; none while practising. |
 | Tuner | With a fake microphone playing the A string 12 cents sharp: the panel reads A2, settling at +9 to +15 cents, marks the A reference and shows the level as heard, and closes. The reference buttons follow the tuning (E A D G B e · E♭ A♭ D♭ G♭ B♭ e♭ · D A D G B e · E A D G B d), each tuning button shows its notes, and the choice is saved; they play; Esc closes; the tuner is disabled while practising. |
 
 Once, from the repo root:
@@ -159,6 +160,9 @@ Do it on the phone after changes to the UI, audio or service worker, and before 
 - [ ] Each open string reads as its note (E2 A2 D3 G3 B3 E4) and the needle settles quickly; turning the peg moves it the right way; gold within 5 cents.
 - [ ] Closing the tuner turns off the browser's recording indicator; switching to another app does too.
 - [ ] iPhone: after using the tuner, practice still plays with the silent switch on.
+
+**Tips**
+- [ ] With the tips reset (menu → Show the tips again), each panel explains itself once, readable on the phone, and the panel stays usable afterwards.
 
 **Menu and themes**
 - [ ] Maple and Steel: everything is readable (fretboard, chord diagrams, tuner, panels, the guide's dimming); nothing keeps the gold or the dark of another theme.
