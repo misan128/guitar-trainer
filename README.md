@@ -39,6 +39,7 @@ Learn chord fingerings and practise changing between two of them in time.
 - **Ticks per chord:** 2, 4 or 8.
 - **A round:** chord A for its ticks, then chord B, again and again. The prep ticks only come before the first chord. Each change gets an accented click and a soft strum of the new chord; how you strum is up to you.
 - **On screen:** the current chord large, with its name in gold and its fingering (finger numbers in the dots, the barre as a bar, ○ open and × muted strings, and the starting fret when it is up the neck), and the next chord smaller beside it, so you can prepare the move. Dots under the current chord count its ticks; the last one is ringed, the change comes after it. At rest, both chords are shown to study them.
+- **Progression:** instead of two chords, choose a ready-made progression and its key: *I–V–vi–IV*, *I–IV–V*, *vi–IV–I–V*, *ii–V–I*, the *Andalusian cadence* (minor) or the *12-bar blues* with 7th chords. Each chord's position is chosen for you: open when there is one, otherwise close to the chord before, so the hand moves as little as possible. A strip above the chords shows the whole progression and where you are; the ticks count bars, and the strum only sounds when the chord changes.
 - No eye here: both chords are always shown in full.
 
 Practice keeps going until you stop it.
