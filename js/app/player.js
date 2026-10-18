@@ -1,11 +1,12 @@
 // Practising: the lookahead scheduler on the audio clock, the screen drawn in sync with what is heard,
 // the bars under it, start and stop, and the idle view in between
-import { noteEl, pickEl, phaseEl, trackEl, inputs, roundKeyEl, toggleBtn, keyBtn, boardBtn, helpBtn, boardEl } from "./dom.js";
+import { noteEl, pickEl, phaseEl, trackEl, inputs, roundKeyEl, toggleBtn, keyBtn, boardBtn, helpBtn, tunerBtn, boardEl } from "./dom.js";
 import { settings, play, T, WALK, WALK_PEAK, clampInput } from "./state.js";
 import { audio, wakeAudio, openBus, closeBus, click, playNote } from "./audio.js";
 import { newRound, shapeRound, placeAt, roundLabel } from "./rounds.js";
 import { view, buildBoard, drawBoard, slideBoard, drawBar, hideBoard } from "./board.js";
 import { closePanel, closeBoard } from "./panels.js";
+import { closeTuner } from "./tuner.js";
 const { PENTA_SHAPES, createStartPicker, pentaNeckOrder, createNeckWalk } = Theory;
 
 const LOOKAHEAD_MS = 25;
@@ -165,6 +166,7 @@ export async function start() {
   for (const k in inputs) clampInput(inputs[k]);
   closePanel(false);
   closeBoard(false);
+  closeTuner(false);
   const s = settings, { pentaKey, shapeNo } = s;
   play.session = { keys: s.keys.slice(), order: s.order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
                    board: s.board ? { from: s.fretFrom, to: s.fretTo } : null, pickStart: createStartPicker(),
@@ -174,7 +176,7 @@ export async function start() {
   keyBtn.disabled = true;
   boardBtn.disabled = true;
   document.body.classList.add("practicing");
-  helpBtn.disabled = true;
+  helpBtn.disabled = tunerBtn.disabled = true;
   play.running = true;
   const id = ++runId;
   toggleBtn.textContent = T.stop;
@@ -204,7 +206,7 @@ export function stop() {
   keyBtn.disabled = false;
   boardBtn.disabled = false;
   document.body.classList.remove("practicing");
-  helpBtn.disabled = false;
+  helpBtn.disabled = tunerBtn.disabled = false;
   roundKeyEl.hidden = true;
   noteEl.hidden = true;
   showIdle();

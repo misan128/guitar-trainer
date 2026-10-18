@@ -9,6 +9,6 @@ export const walkSetup = $("walkSetup"), pentaSetup = $("pentaSetup"), shapeGrid
 export const pentaKeyGrid = $("pentaKeyGrid"), placeRow = $("placeRow"), placeGrid = $("placeGrid"), openHint = $("openHint");
 export const neckSwitch = $("neckSwitch");
 export const roundKeyEl = $("roundKey");
-export const bpmRange = $("bpmRange"), toggleBtn = $("toggle"), helpBtn = $("helpBtn");
+export const bpmRange = $("bpmRange"), toggleBtn = $("toggle"), helpBtn = $("helpBtn"), tunerBtn = $("tunerBtn");
 export const boardBtn = $("boardBtn"), boardPanel = $("boardPanel"), boardSwitch = $("boardSwitch");
 export const fretFromEl = $("fretFrom"), fretToEl = $("fretTo"), boardEl = $("board"), mainEl = document.querySelector("main");
