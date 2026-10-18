@@ -1,5 +1,5 @@
 {
-  "name": "scale-trainer",
+  "name": "guitar-trainer",
   "private": true,
   "description": "Guitar scale practice app. No build step: these scripts only run the checks.",
   "scripts": {

@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Scale walk — practice</title>
+<title>Guitar Trainer</title>
 <meta name="theme-color" content="#1d1613">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Scale Trainer">
+<meta name="apple-mobile-web-app-title" content="Guitar Trainer">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
@@ -59,7 +59,8 @@
   <button id="boardDone" data-i18n="boardDone"></button>
 </div>
 <div id="keyPanel" role="dialog" data-i18n-aria="keysTitle" hidden>
-  <div class="kp-exercise" role="group" data-i18n-aria="exercise">
+  <div id="exLabel" class="kp-ex-title" data-i18n="exercise"></div>
+  <div class="kp-exercise" role="group" aria-labelledby="exLabel">
     <button data-ex="chords" data-i18n="exChords"></button>
     <button data-ex="walk" data-i18n="exWalk"></button>
     <button data-ex="penta" data-i18n="exPenta"></button>
@@ -139,7 +140,7 @@
     <p data-i18n="aboutText3"></p>
     <p data-i18n="aboutText4"></p>
     <a class="mp-coffee" href="https://buymeacoffee.com/misan128" target="_blank" rel="noopener" data-i18n="aboutCoffee"></a>
-    <a class="mp-code" href="https://github.com/misan128/scale-trainer" target="_blank" rel="noopener" data-i18n="aboutCode"></a>
+    <a class="mp-code" href="https://github.com/misan128/guitar-trainer" target="_blank" rel="noopener" data-i18n="aboutCode"></a>
   </div>
 </div>
 <div id="tunerPanel" role="dialog" data-i18n-aria="tuner" hidden>

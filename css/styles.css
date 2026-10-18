@@ -352,7 +352,9 @@ select:disabled { opacity: .5; cursor: not-allowed; }
   box-shadow: 0 12px 32px var(--shadow);
 }
 /* Exercise row, first in the setup panel (SPEC §15.1) */
-.kp-exercise { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin-bottom: .9rem; padding-bottom: .9rem; border-bottom: 1px solid var(--wire); }
+/* What to practise comes first, then how: a heading over the exercises, and a clear break before their setup */
+.kp-ex-title { margin-bottom: .45rem; color: var(--muted); font-size: .7rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+.kp-exercise { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin-bottom: 1.1rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--wire); }
 .kp-exercise button, .tn-tunings button {
   min-height: 2.5rem;
   padding: .3rem .5rem;
