@@ -3,7 +3,7 @@
 window.STRINGS = {
   en: {
     langName: "English",                 // shown in its own language
-    title: "Scale walk — practice",
+    title: "Guitar Trainer",
     idle: "Choose a key and press Start",
     pickAria: "Idle",
     bpm: "BPM",
@@ -118,7 +118,7 @@ window.STRINGS = {
   },
   eu: {
     langName: "Euskara",                 // shown in its own language
-    title: "Eskalak lantzen",
+    title: "Guitar Trainer",
     idle: "Aukeratu tonalitatea eta sakatu Hasi",
     pickAria: "Geldirik",
     bpm: "BPM",
@@ -233,7 +233,7 @@ window.STRINGS = {
   },
   es: {
     langName: "Español",                 // shown in its own language
-    title: "Recorrido de escala — práctica",
+    title: "Guitar Trainer",
     idle: "Elige tonalidad y pulsa Empezar",
     pickAria: "En reposo",
     bpm: "BPM",

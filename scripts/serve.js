@@ -38,7 +38,7 @@ if (require.main === module) {
   });
   server.listen(port, () => {
     const lan = Object.values(os.networkInterfaces()).flat().filter(a => a && a.family === "IPv4" && !a.internal).map(a => a.address);
-    console.log(`Scale Trainer at http://localhost:${port}/  (dev mode: http://localhost:${port}/?debug)`);
+    console.log(`Guitar Trainer at http://localhost:${port}/  (dev mode: http://localhost:${port}/?debug)`);
     for (const ip of lan) console.log(`On the network:  http://${ip}:${port}/  (no offline or screen lock there: they need HTTPS)`);
     console.log("Ctrl+C to stop.");
   });

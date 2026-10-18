@@ -66,7 +66,7 @@ On a release or hotfix branch, before merging into `main`:
 node scripts/check-cache.js
 ```
 
-It compares with the latest release tag: if a file the service worker precaches changed, `sw.js` must name a new cache (`scale-trainer-vN`), or installed apps keep the old files offline. It also checks that every precached file exists. Give a tag or commit to compare with another base: `node scripts/check-cache.js v3.0.0`.
+It compares with the latest release tag: if a file the service worker precaches changed, `sw.js` must name a new cache (`guitar-trainer-vN`), or installed apps keep the old files offline. It also checks that every precached file exists. Give a tag or commit to compare with another base: `node scripts/check-cache.js v3.0.0`.
 
 GitHub runs the same check, and `node --test`, on every push to `main` (`.github/workflows/cache-check.yml`); a failure shows as a red cross on the commit and an email.
 
