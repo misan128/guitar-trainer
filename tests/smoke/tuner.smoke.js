@@ -50,9 +50,20 @@ test("the tuner reads a string from the microphone, and closing it stops listeni
   await page.context().close();
 });
 
-test("reference buttons play without the microphone, and the tuner is off while practising", async () => {
+test("reference buttons follow the tuning, play without the microphone, and the tuner is off while practising", async () => {
   const page = await app.open();
   await page.click("#tunerBtn");
+  const labels = () => page.$$eval("#tunerRef button", bs => bs.map(b => b.textContent).join(" "));
+  assert.equal(await labels(), "E A D G B e");
+  await page.click('[data-tuning="halfDown"]');
+  assert.equal(await labels(), "E♭ A♭ D♭ G♭ B♭ e♭");
+  await page.click('[data-tuning="dropD"]');
+  assert.equal(await labels(), "D A D G B e");
+  await page.click('[data-tuning="highD"]');
+  assert.equal(await labels(), "E A D G B d");
+  assert.equal(await page.textContent('[data-tuning="highD"]'), "e → DE A D G B D", "name, then its notes");
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem("scaleWalkLight")).tuning), "highD", "the tuning is saved");
+  await page.click('[data-tuning="standard"]');
   await page.click("#tunerRef [data-midi='40']");   // low E
   await page.keyboard.press("Escape");
   assert.equal(await page.isVisible("#tunerPanel"), false, "Esc closes it");

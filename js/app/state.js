@@ -37,6 +37,7 @@ export const settings = {
   pentaPlace: {},                      // chosen placement per "key:shape" (its first fret), when there are two
   neckWalk: false,                     // Pentatonic: move to the neighbouring shape each round (SPEC §15.6)
   guideSeen: false,
+  tuning: "standard",                  // the tuner's reference strings (SPEC §16): standard | halfDown | dropD | highD
   board: true, fretFrom: ZONE_DEFAULT, fretTo: ZONE_DEFAULT + ZONE_MIN - 1,
   lang: browserLang(),                 // overridden by saved settings
 };
@@ -74,7 +75,7 @@ export function save() {
       bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
       keys: s.keys, order: s.order, key: s.keys[0], aid: s.aid, showAll: s.showAll, lang: s.lang,
       board: s.board, fretFrom: s.fretFrom, fretTo: s.fretTo, guideSeen: s.guideSeen, exercise: s.exercise,
-      pentaShape: s.shapeNo, pentaKey: s.pentaKey, pentaPlace: s.pentaPlace, pentaNeck: s.neckWalk
+      pentaShape: s.shapeNo, pentaKey: s.pentaKey, pentaPlace: s.pentaPlace, pentaNeck: s.neckWalk, tuning: s.tuning
     }));
   } catch (e) {}
 }
@@ -97,6 +98,7 @@ export function load() {
       if (PENTA_SHAPES[s.pentaShape]) settings.shapeNo = Number(s.pentaShape);
       if (MINOR_KEYS[s.pentaKey]) settings.pentaKey = Number(s.pentaKey);
       settings.neckWalk = s.pentaNeck === true;
+      if (Pitch.TUNINGS[s.tuning]) settings.tuning = s.tuning;
       if (s.pentaPlace && typeof s.pentaPlace === "object") for (const k in s.pentaPlace) if (Number.isInteger(s.pentaPlace[k])) settings.pentaPlace[k] = s.pentaPlace[k];
       setZone(Number(s.fretFrom), Number(s.fretTo));
     }
