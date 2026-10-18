@@ -1,55 +1,106 @@
-// Chord changes (SPEC §17): the eight open chords are musically right and playable, and the sequence of
+// Chord changes (SPEC §17): every chord in every position is musically right and playable, and the sequence of
 // chords lands its changes on the right ticks. Run: node --test
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { OPEN_MIDI, STRING_NAMES, CHORD_QUALITIES, CHORDS, CHORD_NAMES, chordNotes, chordAt } = require("../js/theory.js");
+const { OPEN_MIDI, STRING_NAMES, CHORD_QUALITIES, CHORDS, CHORD_NAMES, voicingFrets, chordNotes, chordAt } = require("../js/theory.js");
 
 const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 const show = v => v.frets.map(f => (f < 0 ? "x" : f)).join("");
 
-test("the library: the eight open chords, in this order", () => {
-  assert.deepEqual(CHORD_NAMES, ["C", "D", "E", "G", "A", "Am", "Dm", "Em"]);
+const ROOT_PC = n => (PC[n[0]] + (n.includes("♯") ? 1 : n.includes("♭") ? -1 : 0) + 12) % 12;
+const all = () => CHORD_NAMES.flatMap(name => CHORDS[name].voicings.map((v, i) => ({ name, v, i })));
+
+test("the library: every root as major, minor and 7th, each with its positions", () => {
+  assert.equal(CHORD_NAMES.length, 36);
+  assert.deepEqual(CHORD_NAMES.slice(0, 12), ["C", "C♯", "D", "E♭", "E", "F", "F♯", "G", "A♭", "A", "B♭", "B"]);
+  assert.deepEqual(CHORD_NAMES.filter(n => n.endsWith("m")).length, 12);
+  assert.deepEqual(CHORD_NAMES.filter(n => n.endsWith("7")).length, 12);
   for (const name of CHORD_NAMES) {
     const c = CHORDS[name];
     assert.equal(name, c.root + c.quality, `${name}: its name is its root and quality`);
     assert.ok(CHORD_QUALITIES[c.quality], `${name}: known quality`);
-    assert.ok(c.voicings.length >= 1, `${name}: at least one voicing`);
+    const kinds = c.voicings.map(v => v.kind);
+    assert.ok(c.voicings.length >= 2, `${name}: at least two positions`);
+    assert.ok(kinds.every(k => ["open", "root6", "root5", "root4"].includes(k)), `${name}: known kinds`);
+    assert.equal(new Set(kinds).size, kinds.length, `${name}: one position of each kind`);
+    assert.ok(c.voicings.every(v => voicingFrets(v)[0] <= 11), `${name}: no position starts above fret 11`);
+    const from = c.voicings.map(v => voicingFrets(v)[0]);
+    assert.deepEqual(from, [...from].sort((x, y) => x - y), `${name}: positions from the lowest on the neck`);
   }
 });
 
-test("the fingerings are the standard open ones", () => {
-  const table = { C: "x32010", D: "xx0232", E: "022100", G: "320003", A: "x02220", Am: "x02210", Dm: "xx0231", Em: "022000" };
-  for (const name of CHORD_NAMES) assert.equal(show(CHORDS[name].voicings[0]), table[name], name);
-});
-
-test("every sounding note belongs to the chord, every chord tone sounds, and the root is in the bass", () => {
+test("the open fingerings are the standard ones, and only those chords have one", () => {
+  const table = { C: "x32010", D: "xx0232", E: "022100", G: "320003", A: "x02220", Am: "x02210", Dm: "xx0231", Em: "022000",
+    A7: "x02020", B7: "x21202", C7: "x32310", D7: "xx0212", E7: "020100", G7: "320001" };
   for (const name of CHORD_NAMES) {
-    const c = CHORDS[name], root = PC[c.root], tones = CHORD_QUALITIES[c.quality].map(i => (root + i) % 12);
-    const notes = chordNotes(name), pcs = notes.map(m => m % 12);
-    for (const p of pcs) assert.ok(tones.includes(p), `${name}: a note outside the chord`);
-    for (const t of tones) assert.ok(pcs.includes(t), `${name}: chord tone ${t} missing`);
-    assert.equal(pcs[0], root, `${name}: the lowest sounding note is the root`);
-    assert.deepEqual(notes, [...notes].sort((a, b) => a - b), `${name}: notes low to high`);
+    const open = CHORDS[name].voicings.find(v => v.kind === "open");
+    if (table[name]) assert.equal(open && show(open), table[name], name);
+    else assert.equal(open, undefined, `${name}: no open voicing`);
   }
 });
 
-test("the fingering fits a hand: one finger per fretted string, fingers 1–4, open and muted strings without one", () => {
-  for (const name of CHORD_NAMES) for (const v of CHORDS[name].voicings) {
+test("barre shapes moved to their root: known fingerings", () => {
+  const at = (name, kind) => show(CHORDS[name].voicings.find(v => v.kind === kind));
+  assert.equal(at("F", "root6"), "133211");
+  assert.equal(at("Bm", "root5"), "x24432");
+  assert.equal(at("B♭", "root5"), "x13331");
+  assert.equal(at("Gm", "root6"), "355333");
+  assert.equal(at("C7", "root5"), "x35353");
+  assert.equal(at("A7", "root6"), "575655");
+  assert.equal(at("F", "root4"), "xx3211", "the small F");
+  assert.equal(at("Fm", "root4"), "xx3111");
+  assert.equal(at("E7", "root4"), "xx2434", "7ths on the 4th string: the D7 shape moved up");
+});
+
+test("every voicing: every sounding note is in the chord, every chord tone sounds (a 7th may drop its fifth), root in the bass", () => {
+  for (const { name, v, i } of all()) {
+    const c = CHORDS[name], root = ROOT_PC(c.root), tones = CHORD_QUALITIES[c.quality].map(x => (root + x) % 12);
+    const notes = chordNotes(name, i), pcs = notes.map(m => m % 12), where = `${name} ${v.kind} ${show(v)}`;
+    for (const p of pcs) assert.ok(tones.includes(p), `${where}: a note outside the chord`);
+    tones.forEach((t, k) => {
+      const fifth = c.quality === "7" && CHORD_QUALITIES[c.quality][k] === 7;
+      if (!fifth) assert.ok(pcs.includes(t), `${where}: chord tone ${t} missing`);
+    });
+    assert.equal(pcs[0], root, `${where}: the lowest sounding note is the root`);
+    assert.deepEqual(notes, [...notes].sort((a, b) => a - b), `${where}: notes low to high`);
+  }
+});
+
+test("every fingering fits a hand: fingers 1–4, one per string unless it is the barre, in fret order, within four frets", () => {
+  for (const { name, v } of all()) {
+    const where = `${name} ${v.kind} ${show(v)}`;
     assert.equal(v.frets.length, 6);
     assert.equal(v.fingers.length, 6);
-    assert.ok(v.base >= 1);
     v.frets.forEach((f, st) => {
-      const where = `${name}, ${STRING_NAMES[st]} string`;
-      if (f <= 0) assert.equal(v.fingers[st], 0, `${where}: open or muted, no finger`);
-      else assert.ok(v.fingers[st] >= 1 && v.fingers[st] <= 4, `${where}: a finger from 1 to 4`);
+      if (f <= 0) assert.equal(v.fingers[st], 0, `${where}, ${STRING_NAMES[st]}: open or muted, no finger`);
+      else assert.ok(v.fingers[st] >= 1 && v.fingers[st] <= 4, `${where}, ${STRING_NAMES[st]}: a finger from 1 to 4`);
     });
-    const used = v.fingers.filter(n => n > 0);
-    assert.equal(new Set(used).size, used.length, `${name}: no finger on two strings (no barres yet)`);
+    const used = v.fingers.map((n, st) => [n, st]).filter(([n]) => n > 0);
+    for (const n of [1, 2, 3, 4]) {
+      const strings = used.filter(([m]) => m === n).map(([, st]) => st);
+      if (strings.length < 2) continue;
+      assert.ok(v.barre && n === 1, `${where}: finger ${n} on two strings without a barre`);
+      for (const st of strings) assert.equal(v.frets[st], v.barre.fret, `${where}: the barre finger stays on its fret`);
+    }
+    if (v.barre) {
+      for (let st = v.barre.from; st <= v.barre.to; st++) assert.ok(v.frets[st] >= v.barre.fret, `${where}: nothing under the barre`);
+      assert.equal(v.base, v.barre.fret, `${where}: the diagram starts at the barre`);
+    }
     const fretted = v.frets.filter(f => f > 0);
-    assert.ok(Math.max(...fretted) - Math.min(...fretted) <= 3, `${name}: within four frets`);
-    // A higher finger never sits on a lower fret than a lower finger on the same chord
-    const byFinger = v.fingers.map((n, st) => [n, v.frets[st]]).filter(([n]) => n > 0).sort((a, b) => a[0] - b[0]);
-    for (let i = 1; i < byFinger.length; i++) assert.ok(byFinger[i][1] >= byFinger[i - 1][1], `${name}: fingers in fret order`);
+    assert.ok(Math.max(...fretted) - Math.min(...fretted) <= 3, `${where}: within four frets`);
+    assert.ok(Math.max(...fretted) - v.base <= 3, `${where}: fits the diagram's four frets`);
+    const byFinger = used.map(([n, st]) => [n, v.frets[st]]).sort((a, b) => a[0] - b[0]);
+    for (let k = 1; k < byFinger.length; k++) assert.ok(byFinger[k][1] >= byFinger[k - 1][1], `${where}: fingers in fret order`);
+  }
+});
+
+test("positions: the frets each voicing spans, and the easiest first when two start on the same fret", () => {
+  assert.deepEqual(CHORDS.C.voicings.map(voicingFrets), [[0, 3], [3, 5], [8, 10], [8, 10]]);
+  assert.deepEqual(CHORDS.F.voicings.map(v => v.kind), ["root4", "root6", "root5"], "F: the small F before the full barre");
+  assert.deepEqual(CHORDS.Am.voicings.map(v => v.kind), ["open", "root4", "root6"]);
+  for (const name of CHORD_NAMES) {
+    const first = CHORDS[name].voicings[0];
+    if (CHORDS[name].voicings.some(v => v.kind === "open")) assert.equal(first.kind, "open", `${name}: open first`);
   }
 });
 

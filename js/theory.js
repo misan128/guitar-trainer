@@ -181,21 +181,56 @@
   }
 
   // ---- Chord changes (SPEC §17) ----
-  // A chord is what it is (root and quality); a voicing is one way to finger it. Each chord has a list of
-  // voicings so others (barre, movable) can be added later; the app uses the first. Strings low E to high e:
-  // frets (-1 muted, 0 open) and fingers (1 index … 4 little; 0 none). base: the diagram's first fret.
-  const CHORD_QUALITIES = { "": [0, 4, 7], m: [0, 3, 7] };
-  const CHORDS = {
-    C: { root: "C", quality: "", voicings: [{ frets: [-1, 3, 2, 0, 1, 0], fingers: [0, 3, 2, 0, 1, 0], base: 1 }] },
-    D: { root: "D", quality: "", voicings: [{ frets: [-1, -1, 0, 2, 3, 2], fingers: [0, 0, 0, 1, 3, 2], base: 1 }] },
-    E: { root: "E", quality: "", voicings: [{ frets: [0, 2, 2, 1, 0, 0], fingers: [0, 2, 3, 1, 0, 0], base: 1 }] },
-    G: { root: "G", quality: "", voicings: [{ frets: [3, 2, 0, 0, 0, 3], fingers: [2, 1, 0, 0, 0, 3], base: 1 }] },
-    A: { root: "A", quality: "", voicings: [{ frets: [-1, 0, 2, 2, 2, 0], fingers: [0, 0, 1, 2, 3, 0], base: 1 }] },
-    Am: { root: "A", quality: "m", voicings: [{ frets: [-1, 0, 2, 2, 1, 0], fingers: [0, 0, 2, 3, 1, 0], base: 1 }] },
-    Dm: { root: "D", quality: "m", voicings: [{ frets: [-1, -1, 0, 2, 3, 1], fingers: [0, 0, 0, 2, 3, 1], base: 1 }] },
-    Em: { root: "E", quality: "m", voicings: [{ frets: [0, 2, 2, 0, 0, 0], fingers: [0, 2, 3, 0, 0, 0], base: 1 }] },
+  // A chord is what it is (root and quality); a voicing is one way to finger it. Each chord has its voicings,
+  // sorted from the lowest on the neck: the open one where there is a standard one, and barre chords moved to
+  // its root, named by the string the root sits on (6th, 5th or 4th). Strings low E to high e: frets (-1 muted,
+  // 0 open), fingers (1 index … 4 little; 0 none), base (the diagram's first fret), barre ({ fret, from, to }
+  // strings, first finger) and kind ("open", "root6", "root5", "root4").
+  const CHORD_QUALITIES = { "": [0, 4, 7], m: [0, 3, 7], "7": [0, 4, 7, 10] };
+  const CHORD_ROOTS = [["C", 0], ["C♯", 1], ["D", 2], ["E♭", 3], ["E", 4], ["F", 5], ["F♯", 6], ["G", 7], ["A♭", 8], ["A", 9], ["B♭", 10], ["B", 11]];
+  const OPEN_CHORDS = {
+    C: ["x32010", "032010"], D: ["xx0232", "000132"], E: ["022100", "023100"], G: ["320003", "210003"], A: ["x02220", "001230"],
+    Am: ["x02210", "002310"], Dm: ["xx0231", "000231"], Em: ["022000", "023000"],
+    A7: ["x02020", "002030"], B7: ["x21202", "021304"], C7: ["x32310", "032410"], D7: ["xx0212", "000213"], E7: ["020100", "020100"], G7: ["320001", "320001"],
   };
+  // Movable shapes, relative to their lowest fret r: the root on the 6th string (E shape), the 5th (A shape), or
+  // the 4th (the top four strings of the E shape, like the small F xx3211; for 7ths the D7 shape). open: the
+  // pitch class at r = 0. barre: the strings the first finger lays across, if any.
+  const MOVABLE = {
+    root6: { open: 4, "": [[0, 2, 2, 1, 0, 0], [1, 3, 4, 2, 1, 1], [0, 5]], m: [[0, 2, 2, 0, 0, 0], [1, 3, 4, 1, 1, 1], [0, 5]], "7": [[0, 2, 0, 1, 0, 0], [1, 3, 1, 2, 1, 1], [0, 5]] },
+    root5: { open: 9, "": [[-1, 0, 2, 2, 2, 0], [0, 1, 2, 3, 4, 1], [1, 5]], m: [[-1, 0, 2, 2, 1, 0], [0, 1, 3, 4, 2, 1], [1, 5]], "7": [[-1, 0, 2, 0, 2, 0], [0, 1, 3, 1, 4, 1], [1, 5]] },
+    root4: { open: 4, "": [[-1, -1, 2, 1, 0, 0], [0, 0, 3, 2, 1, 1], [4, 5]], m: [[-1, -1, 2, 0, 0, 0], [0, 0, 3, 1, 1, 1], [3, 5]],
+             "7": [[-1, -1, 0, 2, 1, 2], [0, 0, 1, 3, 2, 4], null], open7: 2 },
+  };
+  const MAX_POSITION = 11;                   // positions start no higher than this fret: higher ones only clutter
+  const EASE = { open: 0, root4: 1, root5: 2, root6: 3 };   // the same first fret: the easiest first
+  const firstFret = frets => { const f = frets.filter(x => x > 0); return f.length ? Math.min(...f) : 1; };
+  const CHORDS = {};
+  for (const quality of ["", "m", "7"]) for (const [root, pc] of CHORD_ROOTS) {   // major, minor, 7th (not key order: "7" would come first)
+    const name = root + quality, voicings = [];
+    if (OPEN_CHORDS[name]) {
+      const [f, fi] = OPEN_CHORDS[name];
+      voicings.push({ frets: [...f].map(c => (c === "x" ? -1 : Number(c))), fingers: [...fi].map(Number), base: 1, kind: "open" });
+    }
+    for (const kind in MOVABLE) {
+      const shape = MOVABLE[kind], [rel, fingers, across] = shape[quality];
+      const at0 = quality === "7" && shape.open7 != null ? shape.open7 : shape.open;
+      const fret = (pc - at0 + 12) % 12;                      // fret 0 would be an open chord: those come from the table
+      if (fret === 0 || fret > MAX_POSITION) continue;
+      const frets = rel.map(x => (x < 0 ? -1 : x + fret));
+      const v = { frets, fingers, base: fret, kind };
+      if (across) v.barre = { fret, from: across[0], to: across[1] };
+      voicings.push(v);
+    }
+    voicings.sort((a, b) => firstFret(a.frets) - firstFret(b.frets) || EASE[a.kind] - EASE[b.kind]);
+    CHORDS[name] = { root, quality, voicings };
+  }
   const CHORD_NAMES = Object.keys(CHORDS);
+  // The frets a voicing spans, for its label ("Open (0–3)", "5th string (3–5)")
+  function voicingFrets(v) {
+    const fretted = v.frets.filter(f => f > 0);
+    return [v.kind === "open" ? 0 : Math.min(...fretted), Math.max(...fretted)];
+  }
   // The sounding notes of a chord's voicing, low to high (muted strings left out)
   function chordNotes(name, v = 0) {
     const { frets } = CHORDS[name].voicings[v];
@@ -214,7 +249,7 @@
 
   const api = { MAJOR, KEYS, scaleNames, semis, OPEN_MIDI, STRING_NAMES, boardWalk, createStartPicker,
     MINOR_PENTA, PENTA_DEGREES, PENTA_SHAPES, MINOR_KEYS, PENTA_MAX_FRET, pentaPlacements, pentaShape, pentaNeckOrder, createNeckWalk,
-    CHORD_QUALITIES, CHORDS, CHORD_NAMES, chordNotes, chordAt };
+    CHORD_QUALITIES, CHORD_ROOTS, CHORDS, CHORD_NAMES, voicingFrets, chordNotes, chordAt };
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.Theory = api;
 })(this);
