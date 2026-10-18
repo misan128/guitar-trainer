@@ -34,10 +34,11 @@ The five minor pentatonic shapes, played as fixed fingering patterns to build mu
 
 Learn chord fingerings and practise changing between two of them in time.
 
-- **Chords:** Chord A and Chord B from the eight open chords C, D, E, G, A, Am, Dm and Em (Am and C by default). Picking in one the chord the other has swaps them.
+- **Chords:** Chord A and Chord B, shown as tiles with their fingering (Am and C by default). Tap one to pick its root, its type (major, minor or 7th) and its position, all on one screen. Picking the other tile's chord swaps them.
+- **Position:** every chord can be played in several places on the neck, shown as small diagrams: *open* where there is a standard open chord, and with its root on the *6th*, *5th* or *4th string* (the 4th-string ones are the small chords on the top strings, like the easy F, xx3211). The choice is remembered per chord; by default the lowest and easiest.
 - **Ticks per chord:** 2, 4 or 8.
 - **A round:** chord A for its ticks, then chord B, again and again. The prep ticks only come before the first chord. Each change gets an accented click and a soft strum of the new chord; how you strum is up to you.
-- **On screen:** the current chord large, with its name in gold and its fingering (finger numbers in the dots, ○ open and × muted strings), and the next chord smaller beside it, so you can prepare the move. Dots under the current chord count its ticks; the last one is ringed, the change comes after it. At rest, both chords are shown to study them.
+- **On screen:** the current chord large, with its name in gold and its fingering (finger numbers in the dots, the barre as a bar, ○ open and × muted strings, and the starting fret when it is up the neck), and the next chord smaller beside it, so you can prepare the move. Dots under the current chord count its ticks; the last one is ringed, the change comes after it. At rest, both chords are shown to study them.
 - No eye here: both chords are always shown in full.
 
 Practice keeps going until you stop it.
