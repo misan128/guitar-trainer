@@ -108,7 +108,7 @@ A random note from a major key, then up the octave and back down, one note per t
 
 - **Keys:** one or more of the 12 major keys (at least one stays selected; Clear goes back to C major), ordered by the circle of fifths. With several, rounds go in random order (each key once before any repeats) or in circle-of-fifths order; the key is shown with the round, and the wait ticks announce the next one.
 - **Fretboard** (guitar beside the eye): shows each walk inside a neck zone you choose (first and last fret, at least 5 frets; standard tuning). The same key, start note and zone always give the same fingering. On by default, frets 2–6.
-- **Aids** (the eye): each tap closes it one step: *all notes* named → only the *current note* named → the *shape* without names → only the *start* position, to play the rest from memory.
+- **Hints** (the eye): each tap closes it one step: *all notes* named → only the *current note* named → the *shape* without names → only the *start* position, to play the rest from memory.
 
 </details>
 
@@ -143,7 +143,7 @@ A random note from a major key, then up the octave and back down, one note per t
 - **Tuner:** when the string fades, its note stays dimmed for a second and a half, then fades out. A thin bar shows how loud the microphone hears the guitar. The reference strings work without the microphone too.
 - **BPM:** 30–300. **Ticks before / after:** 1–16 and 0–16 (the ticks after only apply to Scale walk, and only show there).
 - **Menu** (three lines, top right): the language (English, Spanish or Basque), the theme, **Help** and **About**.
-- **Help:** a short guide shows where everything is on first use, and each panel (setup, chord picker, tuner, menu…) explains its own parts the first time you open it. **Help** shows the guide again, and **Show the tips again** brings the panels' tips back.
+- **Help:** a short guide shows where everything is on first use, and each panel (setup, chord picker, tuner, menu…) explains its own parts the first time you open it, once. After that, **Help** in the menu opens a page that explains every control, and links to the guided tour if you want it again.
 - The exercise, keys, shape and fretboard can only be changed while stopped. Settings are saved in the browser.
 
 | Key | Action |

@@ -30,7 +30,7 @@ This section is for understanding the code and checking that nothing breaks.
 - BPM controls, built for thumbs: the slider has a 48px touch area around a 7px bar (gold progress) and a 27px thumb; tapping anywhere on it jumps there, then it drags (handled in JS, since iOS only drags the thumb natively), and it never scrolls the page. On `−`/`+` (all steppers), a press steps once and holding repeats until release, with mouse or touch; the click a press leaves behind is ignored so a tap never counts twice. Slider, number and buttons stay in sync, also while running.
 - Ticks before and after the walk.
 - Keys: one or more of the 12 major keys, ordered by the circle of fifths and spelled after their key signature. Can only be changed while stopped. The selector sits in the top-left corner in brass (see §12).
-- **Aids (the eye):** four levels of help, shown by how open the eye is. Each tap closes it one step; from closed it opens fully again. Usable while running.
+- **Hints (the eye):** four levels of help (called *Aids* until 5.5: it read badly), shown by how open the eye is. Each tap closes it one step; from closed it opens fully again. Usable while running.
   | Eye | Level | With the fretboard | Without it (the big letter) |
   | --- | --- | --- | --- |
   | Wide open | 1 · All notes | the route, every position named, the current one in gold | the letter follows each note |
@@ -173,8 +173,9 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 16. Tuner (§16): a string played into the microphone reads as its note within a few cents, flat or sharp shown on the meter; each reference button plays its open string; closing the tuner releases the microphone.
 17. Chord changes (§17): every chord and voicing is correct and playable (§17.2), each chord's positions can be chosen; the current chord changes exactly on the tick after its last beat, the next one is always shown, and Scale walk and Pentatonic are as before.
 18. Menu (§18): language, theme, Help and About work from the menu; the chosen theme is applied before the first paint, and nothing keeps a colour of another theme.
-19. Tips (§19): every panel shows its tour the first time it opens, over it, once; Show the tips again brings them back; never while practising.
+19. Tips (§19): every panel shows its tour the first time it opens, over it, once; never while practising, and never by themselves in dev mode.
 20. Second slot (§20): Scale walk shows Ticks after, Pentatonic Move along the neck, Chords the ticks per chord or bar; the last two are locked while practising.
+21. Help (§21): the menu's Help opens a page explaining every control, with the real icons, in the chosen language; it links to the tour.
 
 ## 11. Out of scope
 
@@ -259,8 +260,8 @@ A short guided tour that explains the unlabeled controls where they are.
 
 **When it shows**
 - Automatically on the first load, and once for users who already have saved settings. Finishing or skipping it marks it as seen (`guideSeen` in `scaleWalkLight`).
-- **Help** in the menu (§18) opens it again.
-- Never while practice is running: **Help** is disabled then, like the key and fretboard buttons.
+- Once: afterwards, the help page (§21) explains everything, and links to the tour for anyone who wants to take it again.
+- Never while practice is running, and never by itself in dev mode (`?debug`): there every new address (Live Preview, `npm start`) counted as a first visit.
 
 **How it looks**
 - The screen dims except for a rounded cutout around the step's control.
@@ -339,7 +340,7 @@ The route never changes between rounds: no randomness in fingering or starting p
 - **Open strings** (open variant): drawn as hollow dots, and the nut a little stronger.
 - **Roots:** the positions that are the key's root (A in A minor) carry a subtle mark (a thin second ring), always, so the shape can be anchored to its root.
 - **Fret range:** the shape's own frets, widened to at least 5 so every shape has the same geometry (extra fret above; below if that would pass fret 16).
-- **Aids (eye):** as in Scale walk (§3): all notes, current note, shape only, start only. The idle preview follows level 1 (all positions named) or shows the plain route at the other levels.
+- **Hints (eye):** as in Scale walk (§3): all notes, current note, shape only, start only. The idle preview follows level 1 (all positions named) or shows the plain route at the other levels.
 
 ### 15.5 Implementation order
 
@@ -457,10 +458,10 @@ In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks p
 **Status: built.** The top bar had grown to six controls; the ones that are not about practising move into one menu.
 
 - **Top bar:** on the left, practice (setup, eye, fretboard); on the right, the tuner and a **menu button** (three lines). The language selector and **?** are gone from the bar.
-- **The menu:** a panel under its button, like the others (Esc, tapping outside, or the button again close it; keyboard shortcuts are off while it is open). It can be opened while practising; only **Help** is disabled then. From top to bottom:
+- **The menu:** a panel under its button, like the others (Esc, tapping outside, or the button again close it; keyboard shortcuts are off while it is open). It can be opened while practising. From top to bottom:
   1. **Language:** English · Euskara · Español, each in its own language; it applies at once.
   2. **Theme:** *Sepia · Maple · Steel*, each named after what its palette looks like. Sepia is today's warm dark palette of browns and brass, the default; Maple a light fretboard (cream background, dark brown ink, a deeper brass for contrast); Steel the cool blue-grey of steel strings with a teal accent. (An *Auto* theme following the system was tried and dropped: with the system in dark mode it looked the same as Dark.) Every colour comes from CSS variables on `:root`, so a theme is one block of values. The saved theme is applied before the first paint (a few lines in `<head>`), so there is no flash of the other one; the browser's bar (`theme-color`) follows it. Saved as `theme`.
-  3. **Help** (opens the guide) and **About**, side by side.
+  3. **Help** (the help page, §21) and **About**, side by side.
 - **About:** replaces the menu's content, with **Back**. In first person, close and informal, and short: who I am (Michael, a Colombian living in the Basque Country and loving it, who plays guitar for fun and made this to practise at home), that it grew as I needed things, that it is free with no ads, accounts or anyone watching (with a word for cookies), and that a coffee is welcome if it is useful. No list of what the app does: it is not a sales page. A brass **Buy me a coffee** button (buymeacoffee.com/misan128) and a quiet link to the source code on GitHub, both opening in a new tab.
 - **Texts:** menu, theme and its three names, help, about, back, the three About paragraphs and the two links; the guide's last step now points at the menu.
 
@@ -484,7 +485,7 @@ In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks p
 
 - **Once:** finishing or skipping a tour marks it seen (`tipsSeen`, by tour). The guide's last step says that each panel explains itself the first time it is opened.
 - **Never in the way:** not while practising (the menu opens then, its tips wait), never over another guide; tapping the guide does not close the panel underneath.
-- **Show the tips again:** in the menu, under Help and About; every panel then shows its tips the next time it opens. It reads "Tips will show again" until one has been seen.
+- **Once, for good:** there is no way to bring the tips back. A "Show the tips again" button in the menu was tried and dropped: replaying guided tours wears thin; looking things up belongs in the help page (§21). In dev mode (`?debug`) the tips never show by themselves.
 - **Texts:** a title and a line for every step, in every language.
 
 ## 20. The second slot
@@ -500,6 +501,15 @@ In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks p
 - **Why:** hiding *Ticks after* where it does nothing left an empty half row that looked like something was missing; *ticks per chord* and *along the neck* are practice settings used often, so they belong next to the tempo rather than inside the setup panel.
 - **Locked while practising,** like the setup: both are read at Start. *Ticks after* stays live, as before.
 - The tips (§19) no longer cover them: they are on the main screen, with their label.
+
+## 21. Help page
+
+**Status: built.** The guided tour (§14) and the tips (§19) happen once; after that, whoever needs help looks it up here, at their own pace.
+
+- **Where:** **Help** in the menu opens a full-screen page, scrolled, with a sticky title and a close button; Esc closes it, and keyboard shortcuts are off while it is open. It can be read while practising.
+- **Sections:** quick start (three steps); the top bar, each control with its real icon (the setup button with its own label, the eye with its four levels); the main screen (BPM, Ticks before, each exercise's own setting, and where the bottom says where you are); one section per exercise and one for the tuner; the keyboard shortcuts, only on a computer (a fine pointer that can hover): on a phone they mean nothing.
+- **Same words everywhere:** the bar's entries reuse the guide's texts, and the exercises' and tuner's reuse the tips', so every explanation reads the same wherever it appears, and there is little new to translate.
+- **The tour, again:** a small link at the end, "Take the guided tour again", hidden while practising.
 
 ## Appendix A. Design notes
 

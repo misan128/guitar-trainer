@@ -37,14 +37,15 @@ The app in a real browser: Chromium with an iPhone 13 viewport, driven by Playwr
 | Pentatonic along the neck | From A minor shape 1, the neck bar shows 1, points to 2 on the way down, slides to 2, and only one zone is left. |
 | Eye | Four taps go through levels 2, 3, 4, 1, and the level is saved. |
 | Menu: language | Spanish and Basque, chosen in the menu, change the texts (the menu's too); the choice is saved. |
-| Menu: themes, About, guide | Maple changes the background and is saved; Steel has a background of its own and its teal accent reaches the pick; About shows the text and the coffee link; Help opens the guide and closes the menu. |
+| Menu: themes, About, guide | Maple changes the background and is saved; Steel has a background of its own and its teal accent reaches the pick; About shows the text and the coffee link; Help opens the help page and closes the menu; Esc closes it. |
+| Help page | Its sections in order, the setup button with its own label, the four real icons and the eye's four levels; in the chosen language; the tour link starts the guided tour. In dev mode neither the first-use guide nor the tips show by themselves. |
 | Theme at first paint | A saved Maple theme is already applied when the page loads, and a theme saved under its earlier name (Material) comes back as Steel. |
 | Dev mode | `?debug` loads `dbg`; pause, step and back return to the same tick. |
 | Chord changes: setup | Chords as tiles with name, fingering and position; the picker replaces the panel, each type shows the chord it gives; picking A's chord for B swaps them with B's chord from before; ticks per chord on the main screen (tapping it closes the panel); saved; back to Scale walk hides the chords and the timeline and brings Ticks after back. |
 | Chord changes: progressions | Progression mode replaces the tiles, "Ticks per bar", the button reads "C · G · Am · F" (its chords), each progression shows its chords in the key, the timeline behind the panel; the blues in A groups its bars; the Andalusian cadence reads the key as A minor; saved; playing follows the timeline, and F comes as the small F. A two-bar chord shows one bar of dots in its chip, ringed only in its last bar. |
 | Chord changes: positions | In the picker, Am's three positions as small diagrams, open pressed; the 6th-string barre shows "5fr", no open or muted strings, and the tile follows; F starts as the small F (4th string) before the full barre, drawn at fret 1 with the nut; the choice saved per chord; Esc closes the panel. |
 | Chord changes | At rest: Am now and C next, Am's three fingers with their numbers, two open and one muted string, the timeline "Am C" with Am lit and its two ticks, ticks per chord in the second slot, no bars, no fretboard button, Ticks after hidden, the phase line empty. Playing: C becomes current with Am next, then Am again, one tick lit on Am's chip, the slot locked. No eye in Chords, both chords in full with finger numbers whatever the saved level, and the eye back in Scale walk; dev mode runs. |
-| Tips | The menu's tour the first time, over the open menu, and not twice; the setup's exercise row once, then each exercise's tips (Chords, Progression on switching, Pentatonic, Scale walk); the picker's and the tuner's; Skip counts as seen; Show the tips again brings them back; none while practising. |
+| Tips | The menu's tour the first time, over the open menu, and not twice; the setup's exercise row once, then each exercise's tips (Chords, Progression on switching, Pentatonic, Scale walk); the picker's and the tuner's; Skip counts as seen; once only, with no way back; none while practising. |
 | Tuner | With a fake microphone playing the A string 12 cents sharp: the panel reads A2, settling at +9 to +15 cents, marks the A reference and shows the level as heard, and closes. The reference buttons follow the tuning (E A D G B e · E♭ A♭ D♭ G♭ B♭ e♭ · D A D G B e · E A D G B d), each tuning button shows its notes, and the choice is saved; they play; Esc closes; the tuner is disabled while practising. |
 
 Once, from the repo root:
@@ -172,7 +173,8 @@ Do it on the phone after changes to the UI, audio or service worker, and before 
 - [ ] iPhone: after using the tuner, practice still plays with the silent switch on.
 
 **Tips**
-- [ ] With the tips reset (menu → Show the tips again), each panel explains itself once, readable on the phone, and the panel stays usable afterwards.
+- [ ] In a fresh browser (or after clearing the site's data), each panel explains itself once, readable on the phone, and the panel stays usable afterwards.
+- [ ] Help in the menu: the page reads well on the phone, scrolls with its title in place, and closes with ✕.
 
 **Menu and themes**
 - [ ] Maple and Steel: everything is readable (fretboard, chord diagrams, tuner, panels, the guide's dimming); nothing keeps the gold or the dark of another theme.
