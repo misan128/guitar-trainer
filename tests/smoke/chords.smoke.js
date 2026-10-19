@@ -15,15 +15,19 @@ test("at rest: chord A now and chord B next, with their fingerings and the ticks
   const page = await app.open("", CHORDS);
   assert.equal(await page.textContent("#keyBtn"), "Am ↔ C");
   assert.equal(await names(page), "Am C");
-  assert.equal(await page.textContent("#phase"), "Am ↔ C");
+  assert.equal(await page.textContent("#phase"), "", "the phase line does not repeat the button");
   assert.equal(await page.locator(".ch-now .dot").count(), 3, "Am: three fingers");
   assert.equal(await page.textContent(".ch-now .dot text >> nth=0"), "2", "finger numbers at level 1");
   assert.equal(await page.locator(".ch-now .open").count(), 2, "Am: A and e open");
   assert.equal(await page.locator(".ch-now .muted").count(), 1, "Am: low E muted");
-  assert.equal(await page.locator("#chordBeatsShown i").count(), 2);
+  assert.equal(await page.textContent("#chordLine"), "AmC", "the timeline at the bottom: the two chords…");
+  assert.equal(await page.locator("#chordLine .on i").count(), 2, "…the first lit, with its two ticks");
+  assert.equal(await page.isVisible("#beatsGrid"), true, "ticks per chord on the main screen, in the second slot");
+  assert.equal(await page.isVisible("#neckSwitch"), false);
   assert.equal(await page.isVisible("#track"), false, "no bars");
   assert.equal(await page.isVisible("#boardBtn"), false, "no fretboard button");
   assert.equal(await page.isDisabled("#wait"), true, "no ticks after");
+  assert.equal(await page.isVisible("#wait"), false, "…and not shown");
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });
@@ -52,13 +56,17 @@ test("the setup: chords as tiles, chosen in the picker; choosing the other's cho
   await page.click("#pickerBack");
   assert.equal(await page.isVisible("#exLabel"), true, "back to the setup");
   await pick(page, "A", "G", "");
-  await page.click('#beatsGrid [data-beats="8"]');
+  await page.click('#beatsGrid [data-beats="8"]');               // on the main screen: closes the panel
+  assert.equal(await page.isVisible("#keyPanel"), false);
   assert.equal(await page.textContent("#keyBtn"), "G ↔ Am");
-  assert.equal(await page.locator("#chordBeatsShown i").count(), 8);
+  assert.equal(await page.locator("#chordLine .on i").count(), 8);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("scaleWalkLight")));
   assert.deepEqual([saved.chordA, saved.chordB, saved.chordBeats], ["G", "Am", 8]);
+  await page.click("#keyBtn");
   await page.click('[data-ex="walk"]');
   assert.equal(await page.isVisible("#chordView"), false, "back to Scale walk: no chords");
+  assert.equal(await page.isVisible("#chordLine"), false);
+  assert.equal(await page.isVisible("#wait"), true, "Ticks after is back in the second slot");
   assert.equal(await page.isVisible("#pick"), true);
   assert.deepEqual(page.errors, []);
   await page.context().close();
@@ -95,7 +103,9 @@ test("playing: the chords change on their boundaries, the next one always shown"
   assert.equal(await names(page), "C Am");
   assert.equal(await page.locator(".ch-now .dot").count(), 3, "C: three fingers");
   await page.waitForFunction(() => document.querySelector(".ch-now .ch-name").textContent === "Am", null, { timeout: 4000 });
-  assert.equal(await page.locator("#chordBeatsShown i.on").count(), 1, "one tick lit");
+  assert.equal(await page.locator("#chordLine i.now").count(), 1, "one tick lit");
+  assert.equal(await page.textContent("#chordLine .on"), "Am", "on the current chord's chip");
+  assert.equal(await page.isDisabled('#beatsGrid [data-beats="2"]'), true, "the slot is locked while practising");
   await page.click("#toggle");
   assert.deepEqual(page.errors, []);
   await page.context().close();
@@ -126,12 +136,12 @@ test("progressions: chosen with their key, a strip with every step, the chords f
   assert.equal(await page.textContent("#beatsLabel"), "Ticks per bar");
   assert.equal(await page.textContent("#keyBtn"), "C · G · Am · F", "labelled by its chords");
   assert.equal(await page.textContent('#progGrid [data-prog="pop"] small'), "C G Am F", "each progression shows its chords in the key");
-  assert.equal(await page.textContent("#chordStrip"), "CGAmF", "the strip behind the panel");
+  assert.equal(await page.textContent("#chordLine"), "CGAmF", "the timeline behind the panel");
   assert.equal(await page.textContent("#progKeyName"), "C major");
   await page.click('#progGrid [data-prog="blues"]');
   await page.click('#progKeyGrid [data-pc="9"]');
   assert.equal(await page.textContent('#progGrid [data-prog="blues"] small'), "A7 D7 E7");
-  assert.equal(await page.textContent("#chordStrip"), "A7×4D7×2A7×2E7D7A7E7", "the blues' twelve bars, repeats grouped on one line");
+  assert.equal(await page.textContent("#chordLine"), "A7×4D7×2A7×2E7D7A7E7", "the blues' twelve bars, repeats grouped");
   await page.click('#progGrid [data-prog="andalusian"]');
   assert.equal(await page.textContent("#progKeyName"), "A minor", "a minor progression reads the key as minor");
   assert.equal(await page.textContent("#keyBtn"), "Am · G · F · E");
@@ -142,7 +152,7 @@ test("progressions: chosen with their key, a strip with every step, the chords f
   await page.click("#toggle");
   await page.waitForFunction(() => document.querySelector(".ch-now .ch-name").textContent === "G", null, { timeout: 4000 });
   assert.equal(await names(page), "G F");
-  assert.equal(await page.textContent("#chordStrip .on"), "G", "the strip marks the current step");
+  assert.equal(await page.textContent("#chordLine .on"), "G", "the timeline marks the current step");
   await page.waitForFunction(() => document.querySelector(".ch-now .ch-name").textContent === "F", null, { timeout: 4000 });
   assert.equal(await page.locator(".ch-now .barre").count(), 1, "F as the small F, chosen for you");
   await page.click("#toggle");
@@ -157,7 +167,7 @@ test("progressions: a two-bar chord keeps one bar of dots, ringed only in its la
   await page.waitForFunction(() => document.querySelector(".ch-now .ch-name").textContent === "C", null, { timeout: 6000 });
   await page.evaluate(() => dbg.pause());
   const shown = async () => {
-    const d = await page.$$eval("#chordBeatsShown i", is => is.map(i => (i.classList.contains("on") ? "●" : "○") + (i.classList.contains("last") ? "|" : "")).join(""));
+    const d = await page.$$eval("#chordLine .on i", is => is.map(i => (i.classList.contains("now") ? "●" : "○") + (i.classList.contains("last") ? "|" : "")).join(""));
     await page.evaluate(() => dbg.step());
     return d;
   };

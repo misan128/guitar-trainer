@@ -86,7 +86,7 @@ LICENSE
 - **Layout:** `index.html`, `sw.js` and `manifest.webmanifest` stay at the root: Pages serves `index.html` there, and a service worker only controls its own folder and below. Styles go in `css/`, scripts in `js/`, and `icons/`, `fonts/`, `docs/` and `tests/` keep their folders. No `src/`: there is no build step.
 - **`.gitignore`:** system files, editors, `node_modules/`, logs, `*.zip`, AI agent directories and the loose versions folder (`.tmp/`).
 - **`LICENSE`:** MIT, held by Michael Sandoval.
-- **`README.md`:** in English, with screenshots of the real app (`docs/images/`, captured at phone size mid-practice with the automated browser; re-taken when the screens change). Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
+- **`README.md`:** in English, with screenshots of the real app (`docs/images/`, captured at phone size mid-practice with the automated browser and composed in it: `npm run screenshots`, re-run when the screens change). Describes **only what exists**: what the app does, what a round looks like, settings, shortcuts, how to install it on iPhone and Android, and a link to the published site. No roadmap or promises.
 - **`index.html`:** markup only. **`css/styles.css`:** all the styles. **`js/app/`:** the app, as native ES modules with no build step, entered through `main.js` (`<script type="module">`): `dom.js` (the page's elements), `state.js` (settings, saved settings, language, shared playback state), `audio.js` (clicks and plucked notes), `rounds.js` (which key or shape comes next, and each round's notes), `board.js` (fretboard drawing, the slide and the neck bar), `player.js` (scheduler, drawing synced to the sound, start and stop, idle view), `controls.js` (BPM and ticks, eye, language), `panels.js` (setup and fretboard panels) and `guide.js` (first-use guide). Modules need the page served over HTTP(S), as GitHub Pages does; opening `index.html` straight from disk no longer works.
 - **`js/theory.js`:** scale theory, start-note selection (§3) and fretboard walks (§13.2), with no DOM, so the tests can load it. In the browser it defines `Theory`; in Node it is a CommonJS module.
 - **`tests/`:** run with `node --test` from the repo root (Node 18+, no dependencies). They check start-note selection (§3), every fretboard walk against acceptance criterion 11, known fingerings, scale spelling, and that every language has the same texts.
@@ -174,6 +174,7 @@ Nothing pending right now. Add here anything that comes up and needs the user's 
 17. Chord changes (§17): every chord and voicing is correct and playable (§17.2), each chord's positions can be chosen; the current chord changes exactly on the tick after its last beat, the next one is always shown, and Scale walk and Pentatonic are as before.
 18. Menu (§18): language, theme, Help and About work from the menu; the chosen theme is applied before the first paint, and nothing keeps a colour of another theme.
 19. Tips (§19): every panel shows its tour the first time it opens, over it, once; Show the tips again brings them back; never while practising.
+20. Second slot (§20): Scale walk shows Ticks after, Pentatonic Move along the neck, Chords the ticks per chord or bar; the last two are locked while practising.
 
 ## 11. Out of scope
 
@@ -327,7 +328,7 @@ Goal: memorize the five minor pentatonic shapes as **physical patterns**: where 
 1. **Announce:** the shape's first (lowest) note, shown and played once as a reference, before the first round only.
 2. **Prep:** the shared prep ticks, before the first round only.
 3. **Shape:** the complete six-string shape, one position per tick: 12 positions up, then the same 11 back down, without playing the highest twice (23 ticks). Each tick plays the position's real pitch (`OPEN_MIDI[string] + fret`), with the same clicks as Scale walk.
-4. **No wait:** the same shape again straight away, until Stop. The path is fixed and known, so a pause between rounds adds nothing; the wait ticks are for Scale walk, where the next key and start note change. **Ticks after** is shown disabled in Pentatonic.
+4. **No wait:** the same shape again straight away, until Stop. The path is fixed and known, so a pause between rounds adds nothing; the wait ticks are for Scale walk, where the next key and start note change. **Ticks after** is hidden in Pentatonic (at first it was greyed out, which took a whole row for nothing).
 
 The route never changes between rounds: no randomness in fingering or starting point.
 
@@ -351,7 +352,7 @@ The route never changes between rounds: no randomness in fingering or starting p
 
 Learn the move from one shape to the next, not only each shape on its own.
 
-- **A switch in the Pentatonic setup:** *Move along the neck*, off by default. Stored as `pentaNeck`.
+- **A switch on the main screen** (the second slot, §20): *Move along the neck*, off by default. Stored as `pentaNeck`. (It first sat at the bottom of the setup panel.)
 - **Off:** as before, the selected shape again and again.
 - **On:** practice starts on the selected shape and each round moves to its **neighbour on the neck** in that key, up to the highest shape and back down, back and forth until Stop. The order follows the frets, not the shape numbers: in A minor, 5 (2–5) → 1 → 2 → 3 → 4 (12–15) and back. Each shape uses its chosen variant (§15.2), so an open variant sits at the bottom end. No arbitrary jumps between shapes: those belong to improvisation (§11).
 - **Continuous,** like a single shape (§15.3): the prep ticks and the reference note only before the first shape, no wait between shapes. Each shape ends on its lowest note, on the 6th string, and the next one starts on the 6th string too: the move is a slide along the low string to the next box.
@@ -392,8 +393,9 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 - **The chord picker:** tapping a tile replaces the panel's content (with **Back**, like About) by one screen, not a wizard: the **12 roots** in a grid, the **type** (*Major · Minor · 7th*, each showing the chord it gives, "Am"), and the chord's **positions as small diagrams** with their name and frets. Every tap applies at once. Choosing the chord the other tile has swaps them; the other gets this tile's chord from when the picker opened.
 - **Positions** are named by the string the root sits on (or *Open*): *Open 0–3 · 5th string 3–5 · 4th string 8–10 · 6th string 8–10*. The default is the first: the lowest on the neck and, when two start on the same fret, the easiest (open, then 4th, 5th, 6th string), so F starts as the small F (xx3211), not the full barre. Remembered per chord (`chordPos`), like the pentatonic variants.
 - **From a UX review:** tiles with diagrams and a single-screen picker came from a proposal with a three-step wizard and more chord types (m7, maj7, sus, dim…); the wizard was dropped as slower, and the extra types wait until they are in the library.
-- **Ticks per chord:** 2 · 4 · 8, 4 by default; the same for both chords.
-- **Button label:** "Am ↔ C". No fretboard button (as in Pentatonic). **Ticks after** is disabled: the change is continuous.
+- **Ticks per chord:** 2 · 4 · 8, 4 by default; the same for both chords. On the main screen, in the second slot (§20); it first sat in the setup panel.
+- **Button label:** "Am ↔ C". No fretboard button (as in Pentatonic). **Ticks after** is hidden: the change is continuous.
+- **Phase line:** only the prep countdown ("Get ready · 3"); otherwise empty. Repeating the chords there, right under the button that already names them, was noise.
 - **Shared:** BPM, prep ticks, the eye, language and guide. Saved in the same settings: `chordA`, `chordB`, `chordBeats`.
 
 ### 17.2 Chords and voicings
@@ -415,7 +417,8 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 ### 17.4 Display
 
 - **Two vertical chord diagrams** in place of the note and the fretboard, side by side: **now** on the left, large, its name in gold; **next** on the right, smaller and muted, already showing the coming chord. Six strings, four frets, the nut; finger positions as dots with their finger number; ○ open and × muted strings above the nut. The geometry never changes between chords: only the dots do. A first fret above 1 shows as "5fr" beside the diagram, without the nut. A barre is a rounded bar across its strings, with its finger number.
-- **Ticks:** under the current chord, one dot per tick of the chord, the current one filled; the last one marked, since the change comes after it. They replace the bars of the other exercises.
+- **The diagrams change with a plain cut.** (Sliding them was tried and dropped: too much movement where the eye reads the fingering.)
+- **Timeline:** at the bottom, where the other exercises have their bars and with the same height: the chords as chips (two chords, or the progression with repeats grouped), the current one lit with its ticks inside, the current tick filled and the last one ringed when the change comes after it. On a change, one highlight slides from the chord's chip to the next one, taking its size, while the ticks fold in one chip and unfold in the other: the change has a direction (left to right, and back to the start when the cycle repeats). At most 300 ms, less at fast tempos; none faster than 250 ms per tick, or with reduced motion. (A first version lit and dimmed each chip in place: smooth, but without direction.) Where you are is read at the bottom, as in every exercise; what to play, in the diagrams above. (The ticks first sat under the current diagram and the progression's strip above the diagrams: two places to look.)
 - **At rest:** chord A as now and chord B as next, to study the fingerings.
 - **No eye:** both diagrams are always drawn in full, with finger numbers. Hiding the fingering added nothing here (tried, then dropped), so the eye button is hidden in this exercise and the guide skips its step; the saved level is kept for the other exercises.
 
@@ -437,8 +440,8 @@ In `strings.js`, for every language: the two exercise names, "Move along the nec
 - **Bars:** one bar is the setup's ticks (2, 4 or 8, labelled *Ticks per bar* in this mode); a two-bar step lasts twice as long.
 - **Positions chosen for you:** each chord's position comes from the progression, not from the two-chord choices: the open one when the chord has it; otherwise the one closest on the neck to the previous chord (by the fret it starts on; on a tie, the easiest), so the hand moves as little as possible. Pure and tested (`progressionChords` in `theory.js`).
 - **Button label and phase line:** the progression's chords, each once: "C · G · Am · F", the blues "A7 · D7 · E7". ("I–V–vi–IV · C" was tried first: right for a musician, cryptic at a glance.) The progression's name stays on its button in the panel.
-- **Playing:** the same loop as two chords (§17.3): the sequence is the progression's steps, each with its own length. Every bar starts with an accented click; the soft strum only when the chord changes (in the blues the same chord can last several bars).
-- **Display:** as in two chords (now, next), plus a **strip** above the diagrams with the progression's steps, the current one in gold. Repeats are grouped so it stays on one line: the blues reads "A7×4 D7×2 A7×2 E7 D7 A7 E7" (twelve bars on two lines pushed the controls off small screens; grouped, it also shows how long each chord lasts). The tick dots show one bar; a chord of two bars ticks through them twice, ringing the last dot only in its last bar. With the strip, the diagrams give up a little height so everything fits on an iPhone SE.
+- **Playing:** the same loop as two chords (§17.3): the sequence is the progression's steps, each with its own length. Every bar starts with an accented click and a strum: full when the chord changes, softer when it repeats. (At first it only strummed on changes, which left the blues' repeated bars silent but for the clicks: it felt like something was missing.)
+- **Display:** as in two chords: now and next above, and the timeline at the bottom with every step of the progression, repeats grouped so it stays compact: the blues reads "A7×4 D7×2 A7×2 E7 D7 A7 E7" (it also shows how long each chord lasts). The ticks show one bar; a chord of two bars ticks through them twice, ringing the last only in its last bar.
 - **Not now:** choosing each chord's position by hand, editing progressions, more progressions (they are data: adding one is a row).
 
 ### 17.6 Later (not decided)
@@ -483,6 +486,20 @@ In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks p
 - **Never in the way:** not while practising (the menu opens then, its tips wait), never over another guide; tapping the guide does not close the panel underneath.
 - **Show the tips again:** in the menu, under Help and About; every panel then shows its tips the next time it opens. It reads "Tips will show again" until one has been seen.
 - **Texts:** a title and a line for every step, in every language.
+
+## 20. The second slot
+
+**Status: built.** Under BPM, the main screen has two slots. The first is always *Ticks before*. The second is each exercise's own timing setting, so the row never has a hole and every control means something for what is being practised:
+
+| Exercise | Second slot |
+| --- | --- |
+| Scale walk | *Ticks after* (the wait between rounds) |
+| Pentatonic | *Move along the neck*, a switch |
+| Chords | *Ticks per chord* (*per bar* for a progression): 2 · 4 · 8 |
+
+- **Why:** hiding *Ticks after* where it does nothing left an empty half row that looked like something was missing; *ticks per chord* and *along the neck* are practice settings used often, so they belong next to the tempo rather than inside the setup panel.
+- **Locked while practising,** like the setup: both are read at Start. *Ticks after* stays live, as before.
+- The tips (§19) no longer cover them: they are on the main screen, with their label.
 
 ## Appendix A. Design notes
 

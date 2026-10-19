@@ -37,6 +37,8 @@ test("Pentatonic along the neck: the shape moves on to its neighbour, with the n
   const page = await app.open("", { exercise: "penta", pentaShape: 1, pentaKey: 0, pentaNeck: true, bpm: "240", prep: "1", aid: 2 });
   const thumb = () => page.textContent("#board .neckbar .thumb text");
   assert.equal(await thumb(), "1", "the neck bar shows the selected shape at rest");
+  assert.equal(await page.getAttribute("#neckSwitch", "aria-checked"), "true", "along the neck: the second slot, on the main screen");
+  assert.equal(await page.isVisible("#wait"), false);
   await page.click("#toggle");
   await page.waitForSelector("#board .neckbar .ghost.on", { timeout: 8000 });   // on the way down
   assert.equal(await page.textContent("#board .neckbar .ghost text"), "2", "the next shape is shape 2");
