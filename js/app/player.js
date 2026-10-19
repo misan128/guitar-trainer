@@ -1,6 +1,6 @@
 // Practising: the lookahead scheduler on the audio clock, the screen drawn in sync with what is heard,
 // the bars under it, start and stop, and the idle view in between
-import { noteEl, pickEl, phaseEl, trackEl, inputs, roundKeyEl, toggleBtn, keyBtn, boardBtn, helpBtn, tunerBtn, boardEl, mainEl } from "./dom.js";
+import { noteEl, pickEl, phaseEl, trackEl, inputs, roundKeyEl, toggleBtn, keyBtn, boardBtn, tunerBtn, boardEl, mainEl } from "./dom.js";
 import { settings, play, T, WALK, WALK_PEAK, clampInput, voicingOf } from "./state.js";
 import { audio, wakeAudio, openBus, closeBus, click, playNote, strum } from "./audio.js";
 import { newRound, shapeRound, placeAt, roundLabel, chordPlan } from "./rounds.js";
@@ -226,7 +226,7 @@ export async function start() {
   keyBtn.disabled = true;
   boardBtn.disabled = true;
   document.body.classList.add("practicing");
-  helpBtn.disabled = tunerBtn.disabled = true;
+  tunerBtn.disabled = true;
   lockSlots(true);
   play.running = true;
   const id = ++runId;
@@ -257,7 +257,7 @@ export function stop() {
   keyBtn.disabled = false;
   boardBtn.disabled = false;
   document.body.classList.remove("practicing");
-  helpBtn.disabled = tunerBtn.disabled = false;
+  tunerBtn.disabled = false;
   lockSlots(false);
   roundKeyEl.hidden = true;
   noteEl.hidden = true;

@@ -143,7 +143,6 @@
     <div class="mp-links">
       <button id="helpBtn" data-i18n="help"></button>
       <button id="aboutBtn" data-i18n="about"></button>
-      <button id="tipsBtn" class="mp-wide"></button>
     </div>
   </div>
   <div id="aboutView" hidden>
@@ -173,6 +172,14 @@
   <div class="bp-title" data-i18n="tunerRef"></div>
   <div id="tunerRef" class="tn-ref"></div>
   <button id="tunerDone" data-i18n="boardDone"></button>
+</div>
+<!-- Help (SPEC §21): every control explained, to look things up at any time -->
+<div id="helpPage" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+  <div class="hp-inner">
+    <div class="hp-head"><h2 id="helpTitle" data-i18n="helpTitle"></h2><button id="helpClose" data-i18n-aria="helpClose">✕</button></div>
+    <div id="helpBody"></div>
+    <button id="helpTour" class="hp-tour" data-i18n="helpTour"></button>
+  </div>
 </div>
 <div id="guide" role="dialog" aria-modal="true" aria-labelledby="guideTitle" aria-describedby="guideText" hidden>
   <div id="guideSpot"></div>

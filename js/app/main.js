@@ -1,7 +1,7 @@
 // Guitar Trainer: loads the settings, wires the keyboard, draws the first view. The rest lives in the
 // other modules of js/app/; music theory in js/theory.js and the texts in js/strings.js (classic scripts).
 import { inputs, keyPanel, boardPanel } from "./dom.js";
-import { settings, play, load, FIFTHS, ZONE_MIN } from "./state.js";
+import { settings, play, load, DEV, FIFTHS, ZONE_MIN } from "./state.js";
 import { audio } from "./audio.js";
 import { buildRound, newRound } from "./rounds.js";
 import { buildBoard, drawBoard } from "./board.js";
@@ -11,6 +11,7 @@ import { applyLang, setBpm, syncRange } from "./controls.js";
 import { guideOpen, openGuide, closeGuide } from "./guide.js";
 import { tunerOpen, closeTuner } from "./tuner.js";
 import { menuOpen, closeMenu, applyTheme } from "./menu.js";
+import { helpOpen, closeHelp } from "./help.js";
 
 load();
 applyTheme();
@@ -20,6 +21,10 @@ document.addEventListener("keydown", e => {
   if (e.target.tagName === "INPUT" && e.target.type === "number") return;
   if (e.target.tagName === "SELECT") return;
   if (e.target.closest("#dbgPanel")) return;   // dev mode panel
+  if (helpOpen()) {                    // shortcuts are off while reading help
+    if (e.key === "Escape") closeHelp(true);
+    return;
+  }
   if (guideOpen()) {                   // shortcuts are off during the guide
     if (e.key === "Escape") closeGuide();
     return;
@@ -38,7 +43,7 @@ applyLang();                           // also draws the idle view
 
 // ---- Dev mode bridge: only with ?debug in the URL (js/debug.js, docs/TESTING.md) ----
 // Exposes just what the dev tool needs, then loads it. Without ?debug nothing is exposed or loaded.
-if (new URLSearchParams(location.search).has("debug")) {
+if (DEV) {
   const s = settings;
   window.GuitarTrainerDev = {
     ZONE_MIN, FIFTHS, inputs,
@@ -59,6 +64,6 @@ if (new URLSearchParams(location.search).has("debug")) {
   document.body.appendChild(Object.assign(document.createElement("script"), { src: "js/debug.js" }));
 }
 
-if (!settings.guideSeen) openGuide(false);
+if (!settings.guideSeen && !DEV) openGuide(false);   // in dev mode it would greet every new address
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});

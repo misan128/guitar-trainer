@@ -98,9 +98,47 @@ test("the menu: themes, About, and the guide", async () => {
   assert.equal(await page.getAttribute(".mp-coffee", "href"), "https://buymeacoffee.com/misan128");
   await page.click("#aboutBack");
   await page.click("#helpBtn");
-  assert.equal(await page.isVisible("#guide"), true, "Help opens the guide");
+  assert.equal(await page.isVisible("#helpPage"), true, "Help opens the help page");
   assert.equal(await page.isVisible("#menuPanel"), false);
   await page.keyboard.press("Escape");
+  assert.equal(await page.isVisible("#helpPage"), false, "Esc closes it");
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
+test("the help page: every control explained, with the real icons; the tour linked at the end", async () => {
+  const page = await app.open("", { exercise: "chords" });
+  await page.click("#menuBtn");
+  await page.click("#helpBtn");
+  const sections = await page.$$eval("#helpBody h3", hs => hs.map(h => h.textContent));
+  assert.deepEqual(sections, ["Quick start", "Top bar", "Main screen", "Chords", "Scale walk", "Pentatonic shapes", "Tuner"], "no keyboard shortcuts on a phone");
+  assert.equal(await page.textContent("#helpBody .hp-row:nth-child(3) b"), "Hints", "the eye is called Hints");
+  const eyeLayers = await page.$$eval("#helpBody .hp-icon.eye g", gs => gs.filter(g => getComputedStyle(g).display !== "none").length);
+  assert.equal(eyeLayers, 1, "the eye's icon shows one level, not its four drawings at once");
+  assert.equal(await page.textContent("#helpBody .hp-key"), "Am ↔ C", "the setup button, with its own label");
+  assert.equal(await page.locator("#helpBody .hp-icon svg").count(), 4, "the eye, fretboard, tuner and menu icons");
+  assert.equal(await page.locator("#helpBody .g-legend li").count(), 4, "the four eye levels");
+  await page.click("#helpClose");
+  await page.click("#menuBtn");
+  await page.click('#langRow [data-lang="es"]');
+  await page.click("#helpBtn");
+  assert.equal(await page.textContent("#helpTitle"), "Ayuda", "in the chosen language");
+  await page.click("#helpTour");
+  assert.equal(await page.isVisible("#helpPage"), false);
+  assert.equal(await page.isVisible("#guide"), true, "the guided tour, again, from the link");
+  await page.keyboard.press("Escape");
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
+test("in dev mode neither the first-use guide nor the tips show by themselves", async () => {
+  const page = await app.open("?debug", { guideSeen: false, tipsSeen: {} });
+  await page.waitForFunction(() => window.dbg);
+  await page.waitForTimeout(300);
+  assert.equal(await page.isVisible("#guide"), false, "no guide");
+  await page.click("#menuBtn");
+  await page.waitForTimeout(300);
+  assert.equal(await page.isVisible("#guide"), false, "no tips");
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });
