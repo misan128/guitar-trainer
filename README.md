@@ -35,7 +35,7 @@ Switch between two chords in time. The current chord is drawn large with its fin
 </td>
 </tr>
 <tr>
-<td><img src="docs/images/progression.png" alt="A progression: the strip C G Am F with Am marked, Am now and F next" width="270"></td>
+<td><img src="docs/images/progression.png" alt="A progression: Am now and F next, and at the bottom the timeline C G Am F with Am lit and its ticks" width="270"></td>
 <td>
 
 ### 🔁 Progressions
@@ -43,8 +43,8 @@ Switch between two chords in time. The current chord is drawn large with its fin
 Play a whole progression in any key: *I–V–vi–IV*, *I–IV–V*, *vi–IV–I–V*, *ii–V–I*, the *Andalusian cadence* or the *12-bar blues*.
 
 - Each chord comes **where your hand is**: open when it can be, otherwise close to the chord before.
-- A **strip** shows the whole progression and where you are.
-- The ticks count bars; the strum only sounds when the chord changes.
+- A **timeline** at the bottom shows the whole progression and where you are, with the current chord's ticks.
+- The ticks count bars, with a strum on every bar, softer when the chord repeats.
 
 </td>
 </tr>
@@ -57,7 +57,7 @@ Play a whole progression in any key: *I–V–vi–IV*, *I–IV–V*, *vi–IV�
 The five minor pentatonic boxes as fixed fingerings, to build muscle memory: the whole shape up and back down, with the current note lit and the next move hinted.
 
 - **Any minor key**, with open and octave variants where a shape fits twice.
-- **Move along the neck:** each round slides to the next shape, up and down the neck, with a bar showing where you are and where you're going.
+- **Move along the neck** (a switch next to the tempo): each round slides to the next shape, up and down the neck, with a bar showing where you are and where you're going.
 
 </td>
 </tr>
@@ -84,10 +84,10 @@ A random note from a major key, then up the octave and back down, one note per t
 
 - **Chords:** Chord A and Chord B, shown as tiles with their fingering (Am and C by default). Tap one to pick its root, its type (major, minor or 7th) and its position, all on one screen. Picking the other tile's chord swaps them.
 - **Position:** every chord can be played in several places on the neck, shown as small diagrams: *open* where there is a standard open chord, and with its root on the *6th*, *5th* or *4th string* (the 4th-string ones are the small chords on the top strings, like the easy F, xx3211). The choice is remembered per chord; by default the lowest and easiest.
-- **Ticks per chord:** 2, 4 or 8.
+- **Ticks per chord:** 2, 4 or 8, next to the tempo on the main screen.
 - **A round:** chord A for its ticks, then chord B, again and again. The prep ticks only come before the first chord. Each change gets an accented click and a soft strum of the new chord; how you strum is up to you.
-- **On screen:** the current chord large, with its name in gold and its fingering (finger numbers in the dots, the barre as a bar, ○ open and × muted strings, and the starting fret when it is up the neck), and the next chord smaller beside it. Dots under the current chord count its ticks; the last one is ringed, the change comes after it. At rest, both chords are shown to study them.
-- **Progression:** instead of two chords, choose a ready-made progression and its key. Each chord's position is chosen for you: open when there is one, otherwise close to the chord before, so the hand moves as little as possible. A strip above the chords shows the whole progression and where you are; the ticks count bars, and the strum only sounds when the chord changes.
+- **On screen:** the current chord large, with its name in gold and its fingering (finger numbers in the dots, the barre as a bar, ○ open and × muted strings, and the starting fret when it is up the neck), and the next chord smaller beside it. At the bottom, a timeline of the chords with the current one lit and its ticks inside; the last tick is ringed, the change comes after it. At rest, both chords are shown to study them.
+- **Progression:** instead of two chords, choose a ready-made progression and its key. Each chord's position is chosen for you: open when there is one, otherwise close to the chord before, so the hand moves as little as possible. The timeline shows the whole progression and where you are; the ticks count bars, with a strum on every bar, softer when the chord repeats.
 - No eye here: both chords are always shown in full.
 
 #### Pentatonic shapes
@@ -141,7 +141,7 @@ A random note from a major key, then up the octave and back down, one note per t
 <summary><b>More about the tuner, settings and help</b></summary>
 
 - **Tuner:** when the string fades, its note stays dimmed for a second and a half, then fades out. A thin bar shows how loud the microphone hears the guitar. The reference strings work without the microphone too.
-- **BPM:** 30–300. **Ticks before / after:** 1–16 and 0–16 (the ticks after only apply to Scale walk).
+- **BPM:** 30–300. **Ticks before / after:** 1–16 and 0–16 (the ticks after only apply to Scale walk, and only show there).
 - **Menu** (three lines, top right): the language (English, Spanish or Basque), the theme, **Help** and **About**.
 - **Help:** a short guide shows where everything is on first use, and each panel (setup, chord picker, tuner, menu…) explains its own parts the first time you open it. **Help** shows the guide again, and **Show the tips again** brings the panels' tips back.
 - The exercise, keys, shape and fretboard can only be changed while stopped. Settings are saved in the browser.
@@ -172,6 +172,7 @@ npm start                            # serve it: http://localhost:8000/ (add ?de
 node --test                          # unit tests: Node 18+, no dependencies
 npm install && npm run smoke:setup   # once, for the smoke tests (Playwright and Chromium)
 npm run smoke                        # the main flows in a real browser
+npm run screenshots                  # re-take the screenshots in this README
 ```
 
 Opening `index.html` as a file does not work: browsers only load ES modules over HTTP(S). The unit tests check the music (fingerings, shapes, chords and progressions in every key, pitch detection) and that all languages have the same texts; the smoke tests run the app in Chromium. The spec is [docs/SPEC.md](docs/SPEC.md); what the tests cover, and a manual checklist for the phone, are in [docs/TESTING.md](docs/TESTING.md).
