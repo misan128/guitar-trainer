@@ -5,6 +5,7 @@ import { renderKeys } from "./panels.js";
 import { render, showIdle, drawTrack } from "./player.js";
 import { refreshGuide } from "./guide.js";
 import { renderMenu } from "./menu.js";
+import { refreshHelp } from "./help.js";
 
 // Everything that shows text, in the chosen language
 export function applyLang(code = settings.lang) {
@@ -18,6 +19,7 @@ export function applyLang(code = settings.lang) {
   setAid(settings.aid);
   refreshGuide();
   renderMenu();
+  refreshHelp();
   if (play.running && play.lastShown) render(play.lastShown);
   else if (!play.running) showIdle();
 }

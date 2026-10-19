@@ -55,6 +55,9 @@ export function setLang(code) {
   T = STRINGS[code];
 }
 
+// Dev mode (?debug): the first-use guide and the panels' tips never show by themselves there (SPEC §19)
+export const DEV = new URLSearchParams(location.search).has("debug");
+
 // While practising. The scheduler's own timers live in player.js.
 // A chord's chosen position, if it still exists; otherwise its first (open if it has one, else the lowest)
 export const voicingOf = name => {
