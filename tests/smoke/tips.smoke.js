@@ -55,7 +55,7 @@ test("the setup panel: the exercise row once, then each exercise's tips, and the
   await page.context().close();
 });
 
-test("the picker and the tuner have their own; Skip counts as seen; Show the tips again brings them back", async () => {
+test("the picker and the tuner have their own; Skip counts as seen; once only", async () => {
   const page = await app.open("", { tipsSeen: { setup: true, chords: true, menu: true }, exercise: "chords" });
   await page.click("#keyBtn");
   await page.click("#tileA");
@@ -68,16 +68,10 @@ test("the picker and the tuner have their own; Skip counts as seen; Show the tip
   await page.click("#guideSkip");
   assert.equal((await saved(page)).tipsSeen.tuner, true, "skipped is seen");
   await page.click("#tunerDone");
-  await page.click("#menuBtn");
-  assert.equal(await page.textContent("#tipsBtn"), "Show the tips again");
-  await page.click("#tipsBtn");
-  assert.equal(await page.textContent("#tipsBtn"), "Tips will show again");
-  assert.equal(await page.isDisabled("#tipsBtn"), true);
-  assert.deepEqual((await saved(page)).tipsSeen, {});
-  await page.keyboard.press("Escape");
   await page.click("#tunerBtn");
-  await page.waitForSelector("#guide:not([hidden])");
-  assert.equal(await page.textContent("#guideTitle"), "Tuning", "the tuner's tips again");
+  await page.waitForTimeout(300);
+  assert.equal(await page.isVisible("#guide"), false, "once: not again");
+  assert.equal(await page.isVisible("#tipsBtn"), false, "and no button to bring them back");
   assert.deepEqual(page.errors, []);
   await page.context().close();
 });

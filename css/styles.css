@@ -779,12 +779,38 @@ main.with-chords #phase { margin-top: 0; }
 .mp-links { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--wire); }
 .mp-links button { color: var(--bone); }
 .mp-links button:disabled { opacity: .4; cursor: not-allowed; }
-.mp-links .mp-wide { grid-column: 1 / -1; color: var(--muted); font-weight: 400; }
 #aboutView p { margin: .8rem 0 0; line-height: 1.45; }
 .mp-back { min-height: 2.2rem; padding: .2rem .8rem; }
 .mp-coffee, .mp-code { display: block; margin-top: 1rem; text-align: center; font-weight: 600; }
 .mp-coffee { padding: .75rem; border-radius: 10px; background: var(--brass); color: var(--wood); text-decoration: none; }
 .mp-code { color: var(--muted); font-size: .9rem; }
+
+/* Help (SPEC §21): a full page to look things up, scrolled; the same width as the practice screen */
+#helpPage { position: fixed; inset: 0; z-index: 8; overflow-y: auto; background: var(--wood); padding: env(safe-area-inset-top, 0px) 1rem calc(env(safe-area-inset-bottom, 0px) + 1.5rem); }
+.hp-inner { max-width: 34rem; margin: 0 auto; }
+.hp-head { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: .9rem 0 .6rem; background: var(--wood); }
+.hp-head h2 { margin: 0; font: 400 1.6rem "Young Serif", Georgia, serif; color: var(--brass); }
+#helpClose { width: 2.5rem; height: 2.5rem; border: 0; border-radius: 10px; background: var(--tile); color: var(--bone); font-size: 1rem; cursor: pointer; }
+#helpBody section { padding: .9rem 0; border-top: 1px solid var(--wire); }
+#helpBody h3 { margin: 0 0 .6rem; color: var(--muted); font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+#helpBody p { margin: .25rem 0; line-height: 1.45; }
+.hp-steps { margin: 0; padding-left: 1.3rem; line-height: 1.6; }
+.hp-list { margin: .4rem 0; padding-left: 1.2rem; line-height: 1.5; color: var(--bone); }
+.hp-row { display: grid; grid-template-columns: 2.6rem 1fr; gap: .75rem; align-items: start; padding: .45rem 0; }
+.hp-row b { display: block; }
+.hp-row p { color: var(--muted); }
+.hp-icon { display: grid; place-items: center; width: 2.4rem; height: 2.4rem; padding: .5rem; border-radius: 10px; background: var(--tile); color: var(--brass); font-weight: 600; }
+.hp-icon svg { width: 100%; height: 100%; }
+.hp-keyrow { grid-template-columns: auto 1fr; }
+.hp-icon.hp-key { width: auto; min-width: 2.4rem; padding: 0 .6rem; font-size: .8rem; white-space: nowrap; }
+.hp-plain { padding: .4rem 0; }
+.hp-plain b { display: block; }
+.hp-plain p { color: var(--muted); }
+.hp-row .g-legend { margin-top: .4rem; }
+.hp-keys { display: grid; grid-template-columns: auto 1fr; gap: .4rem 1rem; margin: 0; }
+.hp-keys dt { font-weight: 600; color: var(--brass); }
+.hp-keys dd { margin: 0; color: var(--muted); }
+.hp-tour { display: block; margin: 1.2rem auto 0; padding: .5rem 1rem; border: 0; background: none; color: var(--muted); font: 400 .9rem "Instrument Sans", system-ui, sans-serif; text-decoration: underline; cursor: pointer; }
 
 /* First-use guide: dims everything but the step's control */
 #guide { position: fixed; inset: 0; z-index: 10; }

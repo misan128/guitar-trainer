@@ -1,13 +1,14 @@
 // Menu (SPEC §18): language, theme, the guide and About, behind one button at the top right
 import { $, menuBtn, helpBtn } from "./dom.js";
-import { settings, play, T, save } from "./state.js";
+import { settings, play, save } from "./state.js";
 import { applyLang } from "./controls.js";
-import { openGuide, tips } from "./guide.js";
+import { tips } from "./guide.js";
+import { openHelp } from "./help.js";
 import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
 
 const panel = $("menuPanel"), mainView = $("menuMain"), aboutView = $("aboutView");
-const langRow = $("langRow"), themeRow = $("themeRow"), tipsBtn = $("tipsBtn");
+const langRow = $("langRow"), themeRow = $("themeRow");
 
 // Languages by their own name (English, Euskara, Español)
 for (const code in STRINGS) {
@@ -41,11 +42,6 @@ themeRow.addEventListener("click", e => {
 // After a language change: which language is pressed
 export function renderMenu() {
   for (const b of langRow.children) b.setAttribute("aria-pressed", String(b.dataset.lang === settings.lang));
-  // Tips (SPEC §19): shown again the next time each panel opens
-  const none = !Object.keys(settings.tipsSeen).length;
-  tipsBtn.textContent = none ? T.tipsAgainDone : T.tipsAgain;
-  tipsBtn.disabled = none;
-  helpBtn.disabled = play.running;     // the guide is never shown while practising
 }
 
 function showAbout(on) {
@@ -74,13 +70,8 @@ export function closeMenu(refocus) {
 export const menuOpen = () => !panel.hidden;
 
 menuBtn.addEventListener("click", () => panel.hidden ? openMenu() : closeMenu(true));
-helpBtn.addEventListener("click", () => { closeMenu(false); openGuide(true); });
+helpBtn.addEventListener("click", () => { closeMenu(false); openHelp(); });   // the page; the tour is linked from it
 $("aboutBtn").addEventListener("click", () => showAbout(true));
-tipsBtn.addEventListener("click", () => {
-  settings.tipsSeen = {};
-  save();
-  renderMenu();
-});
 $("aboutBack").addEventListener("click", () => showAbout(false));
 document.addEventListener("pointerdown", e => {
   if (!panel.hidden && !panel.contains(e.target) && !menuBtn.contains(e.target) && !e.target.closest("#guide")) closeMenu(false);

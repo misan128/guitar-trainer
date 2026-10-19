@@ -1,7 +1,7 @@
 // First-use guide (SPEC §14): a cutout around each control with a short text. The same guide gives each panel
 // its own short tour the first time it opens, over the open panel (SPEC §19).
 import { $, mainEl, boardEl, keyBtn, showAllEl, boardBtn, menuBtn, tunerBtn } from "./dom.js";
-import { settings, play, T, save } from "./state.js";
+import { settings, play, T, save, DEV } from "./state.js";
 import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
 import { applyLang } from "./controls.js";
@@ -101,7 +101,7 @@ function start(ids, list) {
 // Tips (SPEC §19): the tours in `ids` not seen yet, over the panel that just opened; never while practising or
 // over another guide. A setup tour brings the exercise row's step with it the first time.
 export function tips(ids) {
-  if (play.running || !guideEl.hidden) return;
+  if (DEV || play.running || !guideEl.hidden) return;
   if (["walk", "penta", "chords"].includes(ids[0])) ids = ["setup", ...ids];   // seen once, then dropped below
   const fresh = ids.filter(id => TOURS[id] && !settings.tipsSeen[id]);
   if (!fresh.length) return;
