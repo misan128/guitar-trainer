@@ -8,7 +8,7 @@ import { view, buildBoard, drawBoard, slideBoard, drawBar, hideBoard } from "./b
 import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
 import { closeMenu } from "./menu.js";
-import { drawChords, drawStrip, showChordView } from "./chords.js";
+import { drawChords, drawLine, showChordView } from "./chords.js";
 const { PENTA_SHAPES, createStartPicker, pentaNeckOrder, createNeckWalk, chordNotes, chordAt } = Theory;
 
 const LOOKAHEAD_MS = 25;
@@ -26,8 +26,12 @@ export function playTick(r, st, time, beat) {
     const c = chordAt(r.seq, w);
     const cur = r.seq[c.i], prev = r.seq[(c.i + r.seq.length - 1) % r.seq.length];
     click(time, c.beat % r.perBar === 0, false);                     // every bar starts accented
-    // The strum only when the chord changes (in the blues the same chord can last several bars)
-    if (c.beat === 0 && (w === 0 || prev.name !== cur.name || prev.v !== cur.v)) strum(chordNotes(cur.name, cur.v), time, beat * c.beats);
+    // A strum on every bar, as you would play it: full when the chord changes, softer when it repeats (in the
+    // blues the same chord lasts several bars; strumming only on changes left them silent but for the clicks)
+    if (c.beat % r.perBar === 0) {
+      const change = c.beat === 0 && (w === 0 || prev.name !== cur.name || prev.v !== cur.v);
+      strum(chordNotes(cur.name, cur.v), time, beat * r.perBar, change ? 0.22 : 0.14);
+    }
     return;
   }
   if (st === 0 && r.announce !== false) playNote(r.walk[0].midi, time);   // reference note
@@ -113,20 +117,21 @@ export function render(tick) {
   drawTrack(step);
 }
 
-// Chord changes: during prep the first chord waits as "now"; then the sequence, tick by tick
+// Chord changes: during prep the first chord waits as "now"; then the sequence, tick by tick. The phase line only
+// counts the prep down: the chords are already named in the top button, the diagrams and the strip
 function renderChords({ step, round }) {
   shownRound = round;
-  const w = step - round.prep, label = roundLabel(round);
-  const prog = round.prog ? round.seq : null, per = round.perBar;
+  const w = step - round.prep;
+  const per = round.perBar;
   if (w < 0) {
-    phaseEl.textContent = `${label} · ${T.phasePrep(round.prep - step)}`;
-    drawStrip(prog, -1);
-    return drawChords(round.seq[0], round.seq[1 % round.seq.length], -1, per);
+    phaseEl.textContent = T.phasePrep(round.prep - step);
+    drawChords(round.seq[0], round.seq[1 % round.seq.length]);
+    return drawLine(round.seq, 0, -1, per);
   }
   const c = chordAt(round.seq, w);
-  phaseEl.textContent = label;
-  drawStrip(prog, c.i);
-  drawChords(round.seq[c.i], round.seq[c.next], c.beat % per, per, c.beat >= c.beats - per);
+  phaseEl.textContent = "";
+  drawChords(round.seq[c.i], round.seq[c.next]);
+  drawLine(round.seq, c.i, c.beat % per, per, c.beat >= c.beats - per);
 }
 
 // Bars: flat for prep and wait; rise and fall during the walk, peaking at its top note
@@ -180,9 +185,9 @@ export function showIdle() {
     hideBoard();
     pickEl.setAttribute("hidden", "");
     const plan = chordPlan();
-    phaseEl.textContent = plan.label;
-    drawStrip(plan.prog ? plan.seq : null, -1);
-    drawChords(plan.seq[0], plan.seq[1], -1, plan.perBar);
+    phaseEl.textContent = "";              // the top button already names the chords
+    drawChords(plan.seq[0], plan.seq[1]);
+    drawLine(plan.seq, 0, -1, plan.perBar);
   } else if (settings.exercise === "penta") {
     const r = shapeRound(settings.shapeNo);
     r.neckBar = settings.neckWalk;
@@ -199,6 +204,10 @@ export function showIdle() {
 }
 
 // ---- Start / stop ----
+// The second slot's settings (ticks per chord, along the neck) are read at Start: locked while practising
+function lockSlots(on) {
+  for (const b of document.querySelectorAll("#beatsGrid button, #neckSwitch")) b.disabled = on;
+}
 let runId = 0;
 export async function start() {
   const resumed = wakeAudio();
@@ -218,6 +227,7 @@ export async function start() {
   boardBtn.disabled = true;
   document.body.classList.add("practicing");
   helpBtn.disabled = tunerBtn.disabled = true;
+  lockSlots(true);
   play.running = true;
   const id = ++runId;
   toggleBtn.textContent = T.stop;
@@ -248,6 +258,7 @@ export function stop() {
   boardBtn.disabled = false;
   document.body.classList.remove("practicing");
   helpBtn.disabled = tunerBtn.disabled = false;
+  lockSlots(false);
   roundKeyEl.hidden = true;
   noteEl.hidden = true;
   showIdle();

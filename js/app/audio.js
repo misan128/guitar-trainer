@@ -81,9 +81,9 @@ export function playNote(midi, time, duration, out = audio.master, level = 0.7) 
   src.start(time);
   src.stop(time + (duration || src.buffer.duration));
 }
-// Chord changes: a soft strum, low string to high, lasting until the next chord
-export function strum(midis, time, duration) {
-  midis.forEach((m, i) => playNote(m, time + i * 0.014, duration - i * 0.014, audio.master, 0.22));
+// Chord changes: a soft strum, low string to high, lasting `duration`; level: each string's loudness
+export function strum(midis, time, duration, level = 0.22) {
+  midis.forEach((m, i) => playNote(m, time + i * 0.014, duration - i * 0.014, audio.master, level));
 }
 // Tuner: an open string to tune by ear, outside any practice session (its own bus, always open)
 let refBus = null;

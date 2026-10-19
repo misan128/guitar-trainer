@@ -38,14 +38,14 @@ test("the setup panel: the exercise row once, then each exercise's tips, and the
   const page = await app.open("", { tipsSeen: {}, exercise: "chords" });
   await page.click("#keyBtn");
   await page.waitForSelector("#guide:not([hidden])");
-  assert.deepEqual(await tour(page), ["What to practise", "Two chords or a progression", "Your chords", "Ticks"]);
+  assert.deepEqual(await tour(page), ["What to practise", "Two chords or a progression", "Your chords"]);
   assert.equal(await page.isVisible("#keyPanel"), true);
   await page.click('#chordMode [data-mode="prog"]');
   await page.waitForSelector("#guide:not([hidden])");
   assert.deepEqual(await tour(page), ["Progression", "Key"]);
   await page.click('[data-ex="penta"]');
   await page.waitForSelector("#guide:not([hidden])");
-  assert.deepEqual(await tour(page), ["Key", "Shape", "Along the neck"], "Pentatonic, without the exercise row again (A minor shape 1 has no variant)");
+  assert.deepEqual(await tour(page), ["Key", "Shape"], "Pentatonic, without the exercise row again (A minor shape 1 has no variant)");
   await page.click('[data-ex="chords"]');
   await page.click('[data-ex="walk"]');
   await page.waitForSelector("#guide:not([hidden])");
