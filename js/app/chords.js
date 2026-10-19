@@ -1,6 +1,7 @@
-// Chord changes (SPEC §17.4): two vertical chord diagrams, now (large) and next (small, muted), and the
-// ticks of the current chord. The grid of a diagram is built once; changing chord only redraws its dots.
-import { $ } from "./dom.js";
+// Chord changes (SPEC §17.4): two vertical chord diagrams, now (large) and next (small, muted), and at the
+// bottom, where the other exercises have their bars, a timeline of the chords with the current one's ticks.
+// The grid of a diagram is built once; changing chord only redraws its dots.
+import { $, inputs } from "./dom.js";
 const { CHORDS } = Theory;
 
 const SVG_NS = "http://www.w3.org/2000/svg";
@@ -16,7 +17,7 @@ function el(tag, attrs, parent) {
 
 export const chordView = $("chordView");
 const cards = { now: chordView.querySelector(".ch-now"), next: chordView.querySelector(".ch-next") };
-const beatsEl = $("chordBeatsShown"), stripEl = $("chordStrip");
+const lineEl = $("chordLine");
 
 // The fixed grid: six strings, four frets and the nut; a layer for the chord's marks on top
 function buildDiagram(svg) {
@@ -64,48 +65,75 @@ function drawChord(d, name, vi, show, numbers) {
 // now, next: { name, v } (chord and voicing). Both always drawn in full, with finger numbers: no eye in this
 // exercise (SPEC §17.4)
 let shown = null;
-// dots: the ticks of one bar; beat: the current one (-1 none); lastBar: whether the chord ends with this bar
-export function drawChords(now, next, beat, dots, lastBar = true) {
+export function drawChords(now, next) {
   const key = `${now.name}:${now.v}|${next.name}:${next.v}`;
-  if (key !== shown) {
-    shown = key;
-    cards.now.querySelector(".ch-name").textContent = now.name;
-    cards.next.querySelector(".ch-name").textContent = next.name;
-    drawChord(diagrams.now, now.name, now.v, true, true);
-    drawChord(diagrams.next, next.name, next.v, true, true);
-  }
-  // One dot per tick of the bar: the current one filled; the last one ringed when the change comes after it
-  if (beatsEl.childElementCount !== dots) {
-    beatsEl.textContent = "";
-    for (let i = 0; i < dots; i++) beatsEl.appendChild(document.createElement("i"));
-  }
-  [...beatsEl.children].forEach((b, i) => {
-    b.classList.toggle("on", i === beat);
-    b.classList.toggle("last", lastBar && i === dots - 1);
-  });
+  if (key === shown) return;
+  shown = key;
+  cards.now.querySelector(".ch-name").textContent = now.name;
+  cards.next.querySelector(".ch-name").textContent = next.name;
+  drawChord(diagrams.now, now.name, now.v, true, true);
+  drawChord(diagrams.next, next.name, next.v, true, true);
 }
-// Progression: its steps in a row, repeats grouped ("A7×4 D7×2 …", one line even for the blues), the one holding
-// step i (-1 none) marked. seq null hides it (two chords)
-let strip = null, groups = [];
-export function drawStrip(seq, i) {
-  chordView.classList.toggle("with-strip", !!seq);
-  stripEl.hidden = !seq;
-  if (!seq) { strip = null; return; }
+// The timeline (SPEC §17.4): every chord of the sequence as a chip, repeats grouped ("A7×4 D7×2 …"); the chip
+// holding step i current, with one dot per tick of the bar inside it: beat filled (-1 none), the last one ringed
+// when the change comes after it (lastBar). One highlight sits behind the current chip; on a change it slides to
+// the next one, taking its size, while the ticks fold in one chip and unfold in the other: the change has a
+// direction. At most 300 ms (less at fast tempos); none faster than 250 ms per tick, or with reduced motion.
+let line = null, groups = [], chips = [], hl = null, current = -1;
+const still = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+function setCurrent(g) { chips.forEach((c, j) => c.classList.toggle("on", j === g)); }
+// Where the highlight goes: the chip's box with every chip already in its new state
+function moveTo(g, animate) {
+  lineEl.classList.add("instant");                      // measure the end state without transitions
+  setCurrent(g);
+  const c = chips[g], box = c && { left: c.offsetLeft, top: c.offsetTop, width: c.offsetWidth, height: c.offsetHeight };
+  if (animate) { setCurrent(current); void lineEl.offsetWidth; }   // back to the start state…
+  else if (box) Object.assign(hl.style, Object.fromEntries(Object.entries(box).map(([k, v]) => [k, v + "px"])));
+  void lineEl.offsetWidth;
+  lineEl.classList.remove("instant");
+  if (!animate) return;
+  void lineEl.offsetWidth;
+  setCurrent(g);                                         // …and from there, everything moves together
+  Object.assign(hl.style, Object.fromEntries(Object.entries(box).map(([k, v]) => [k, v + "px"])));
+}
+export function drawLine(seq, i, beat, dots, lastBar = true) {
   const key = seq.map(c => `${c.name}:${c.v}`).join(" ");
-  if (key !== strip) {
-    strip = key;
+  if (key !== line) {
+    line = key;
     groups = [];
     seq.forEach((c, j) => {
       const g = groups[groups.length - 1];
       if (g && g.name === c.name && g.v === c.v) g.to = j;
       else groups.push({ name: c.name, v: c.v, from: j, to: j });
     });
-    stripEl.textContent = "";
-    for (const g of groups) stripEl.appendChild(document.createElement("span")).textContent = g.to > g.from ? `${g.name}×${g.to - g.from + 1}` : g.name;
+    lineEl.textContent = "";
+    hl = lineEl.appendChild(document.createElement("em"));
+    chips = groups.map(g => {
+      const chip = lineEl.appendChild(document.createElement("span"));
+      chip.append(g.to > g.from ? `${g.name}×${g.to - g.from + 1}` : g.name, document.createElement("b"));
+      return chip;
+    });
+    current = -1;
   }
-  groups.forEach((g, j) => stripEl.children[j].classList.toggle("on", i >= g.from && i <= g.to));
+  chips.forEach(chip => {
+    const ticks = chip.querySelector("b");
+    if (ticks.childElementCount !== dots) ticks.replaceChildren(...Array.from({ length: dots }, () => document.createElement("i")));
+  });
+  const g = groups.findIndex(x => i >= x.from && i <= x.to);
+  if (g !== current) {
+    const tick = 60 / Number(inputs.bpm.value), animate = current >= 0 && g >= 0 && tick >= .25 && !still();
+    lineEl.style.setProperty("--glide", `${Math.round(Math.min(300, tick * 300))}ms`);
+    moveTo(g, animate);
+    current = g;
+  }
+  chips.forEach((chip, j) => [...chip.querySelector("b").children].forEach((d, k) => {
+    d.classList.toggle("now", j === g && k === beat);
+    d.classList.toggle("last", j === g && lastBar && k === dots - 1);
+  }));
 }
+// The highlight follows its chip when the screen changes size
+addEventListener("resize", () => { if (current >= 0 && !lineEl.hidden) moveTo(current, false); });
 export function showChordView(on) {
-  chordView.hidden = !on;
-  if (!on) { shown = strip = null; chordView.classList.remove("with-strip"); }
+  chordView.hidden = lineEl.hidden = !on;
+  if (!on) shown = line = null;
 }

@@ -97,12 +97,6 @@
         <svg class="ch-diagram kt-diagram" aria-hidden="true"></svg><small class="kt-pos"></small>
       </button>
     </div>
-    <div class="kp-place">
-      <span id="beatsLabel" data-i18n="chordBeats"></span>
-      <div id="beatsGrid" class="kp-choice" role="group" aria-labelledby="beatsLabel">
-        <button data-beats="2">2</button><button data-beats="4">4</button><button data-beats="8">8</button>
-      </div>
-    </div>
   </div>
   <!-- Chord picker (SPEC §17.1): replaces the panel's content while choosing chord A or B -->
   <div id="chordPicker" hidden>
@@ -122,10 +116,6 @@
       <div id="placeGrid" role="group" data-i18n-aria="variant"></div>
     </div>
     <p id="openHint" class="kp-hint" data-i18n="openHint" hidden></p>
-    <div class="kp-switch">
-      <span id="neckLabel" data-i18n="neckWalk"></span>
-      <button id="neckSwitch" class="switch" role="switch" aria-checked="false" aria-labelledby="neckLabel"></button>
-    </div>
   </div>
 </div>
 <div class="corner right">
@@ -212,12 +202,10 @@
     <div id="phase"></div>
     <svg id="board" role="img" hidden></svg>
     <div id="chordView" class="ch-view" hidden>
-      <div id="chordStrip" class="ch-strip" aria-hidden="true" hidden></div>
       <div class="ch-card ch-now">
         <div class="ch-label" data-i18n="chordNow"></div>
         <div class="ch-name"></div>
         <svg class="ch-diagram" aria-hidden="true"></svg>
-        <div id="chordBeatsShown" class="ch-beats" aria-hidden="true"></div>
       </div>
       <div class="ch-card ch-next">
         <div class="ch-label" data-i18n="chordNext"></div>
@@ -228,6 +216,7 @@
   </section>
 
   <div id="track" aria-hidden="true"></div>
+  <div id="chordLine" class="ch-line" aria-hidden="true" hidden></div>
 
   <section class="controls">
     <div class="field bpm">
@@ -253,6 +242,16 @@
         <input id="wait" type="number" inputmode="numeric" min="0" max="16" value="4">
         <button data-target="wait" data-delta="1" data-i18n-aria="waitMore">+</button>
       </div>
+    </div>
+    <div id="beatsField" class="field" hidden>
+      <span id="beatsLabel" class="label" data-i18n="chordBeats"></span>
+      <div id="beatsGrid" class="seg" role="group" aria-labelledby="beatsLabel">
+        <button data-beats="2">2</button><button data-beats="4">4</button><button data-beats="8">8</button>
+      </div>
+    </div>
+    <div id="neckField" class="field" hidden>
+      <span id="neckLabel" class="label" data-i18n="neckWalk"></span>
+      <button id="neckSwitch" class="switch" role="switch" aria-checked="false" aria-labelledby="neckLabel"></button>
     </div>
     <input id="bpmRange" type="range" min="30" max="300" value="60" data-i18n-aria="bpm">
     <p class="hint" data-i18n="hint"></p>
