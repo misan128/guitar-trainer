@@ -50,6 +50,23 @@ test("the tuner reads a string from the microphone, and closing it stops listeni
   await page.context().close();
 });
 
+test("the reading is measured against the tuning's nearest string", async () => {
+  const page = await app.open();
+  await page.click("#tunerBtn");
+  await page.click('[data-tuning="halfDown"]');
+  const read = () => page.waitForFunction(() => {
+    const c = Number(document.querySelector("#tunerCents").textContent);
+    return document.querySelector("#tunerNote").textContent === "A♭" && c >= 108 && c <= 116 && c;
+  }, null, { timeout: 5000 });
+  await read();                          // A +12 is a half step above the A♭ string: A♭ +112, needle at its end
+  assert.equal(await page.textContent("#tunerOct"), "2");
+  assert.equal(await page.$eval("#tunerNeedle", n => n.style.left), "100%", "the needle stops at the end");
+  assert.equal(await page.getAttribute("#tunerRef [data-midi='44']", "class"), "near", "the target string is marked");
+  await page.click('[data-tuning="dropD"]');
+  await page.waitForFunction(() => document.querySelector("#tunerNote").textContent === "A");
+  await page.click("#tunerDone");
+});
+
 test("reference buttons follow the tuning, play without the microphone, and the tuner is off while practising", async () => {
   const page = await app.open();
   await page.click("#tunerBtn");
