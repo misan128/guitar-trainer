@@ -12,6 +12,7 @@ const octEl = $("tunerOct"), centsEl = $("tunerCents"), needle = $("tunerNeedle"
 const READ_MS = 50;                    // about 20 readings a second
 const KEEP = 5;                        // the needle follows the median of the last readings
 const IN_TUNE = 5;                     // cents
+const TARGET = 1.5;                    // semitones: within this of a string of the tuning, that string is the target
 
 const SETTLE = 3;                      // readings before a note shows: the first ones after a silence are off
 const HOLD_MS = 1500;                  // when the string fades, its last reading stays this long, dimmed…
@@ -49,10 +50,18 @@ tuningRow.addEventListener("click", e => {
   renderTuning();
   save();
 });
-// A note that is one of the tuning's strings is named as the string (E♭, not D♯)
-function nameIn(n) {
-  const t = TUNINGS[settings.tuning], st = t.midi.indexOf(n.midi);
-  return st < 0 ? n.name : t.names[st].replace(/^./, c => c.toUpperCase());
+// What the reading is measured against: the tuning's string nearest to it when one is within TARGET semitones
+// (so a string on its way to E♭ reads "E♭ +60", not "E −40"), else the nearest note. m: fractional MIDI number
+function aim(m) {
+  const t = TUNINGS[settings.tuning];
+  let st = 0;
+  t.midi.forEach((midi, i) => { if (Math.abs(m - midi) < Math.abs(m - t.midi[st])) st = i; });
+  if (Math.abs(m - t.midi[st]) > TARGET) {
+    const n = noteOf(440 * Math.pow(2, (m - 69) / 12));
+    return { name: n.name, octave: n.octave, midi: n.midi, cents: n.cents };
+  }
+  const midi = t.midi[st];
+  return { name: t.names[st].replace(/^./, c => c.toUpperCase()), octave: Math.floor(midi / 12) - 1, midi, cents: (m - midi) * 100 };
 }
 refRow.addEventListener("click", e => {
   const b = e.target.closest("button");
@@ -92,13 +101,13 @@ function show(m) {
     readEl.setAttribute("aria-label", T.tuner);
     return;
   }
-  const n = noteOf(440 * Math.pow(2, (m - 69) / 12)), c = Math.round(n.cents), tuned = Math.abs(c) <= IN_TUNE;
-  noteEl.textContent = nameIn(n);
+  const n = aim(m), c = Math.round(n.cents), tuned = Math.abs(c) <= IN_TUNE;
+  noteEl.textContent = n.name;
   octEl.textContent = n.octave;
   centsEl.textContent = tuned ? T.tunerInTune : `${c > 0 ? "+" : ""}${c}`;
-  needle.style.left = `${50 + n.cents}%`;
+  needle.style.left = `${50 + Math.max(-50, Math.min(50, n.cents))}%`;
   readEl.classList.toggle("tuned", tuned);
-  readEl.setAttribute("aria-label", `${nameIn(n)}${n.octave}: ${tuned ? T.tunerInTune : c < 0 ? T.tunerFlat(-c) : T.tunerSharp(c)}`);
+  readEl.setAttribute("aria-label", `${n.name}${n.octave}: ${tuned ? T.tunerInTune : c < 0 ? T.tunerFlat(-c) : T.tunerSharp(c)}`);
   for (const b of refRow.querySelectorAll(`[data-midi="${n.midi}"]`)) b.classList.add("near");
 }
 
