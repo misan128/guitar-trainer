@@ -55,7 +55,10 @@ export function setBpm(v) {
 
 // − / +: a press steps once; holding repeats until release (mouse and touch).
 // The click that follows a pointer press is ignored, so a tap never counts twice.
+// Steppers that are not an input (the metronome's beats) register their step here: `steppers.mbeat(delta)` returns false at the limit
+export const steppers = {};
 function stepInput(b) {
+  if (b.dataset.mbeat) return steppers.mbeat(Number(b.dataset.mbeat));
   const el = inputs[b.dataset.target], before = el.value;
   if (el.disabled) return false;
   el.value = Number(el.value) + Number(b.dataset.delta);
@@ -77,7 +80,7 @@ function stopRepeat() {
   }
   repeatTimer = heldBtn = null;
 }
-document.querySelectorAll(".stepper button").forEach(b => {
+document.querySelectorAll(".stepper button[data-target], .stepper button[data-mbeat]").forEach(b => {
   b.addEventListener("pointerdown", e => {
     if (e.button !== 0) return;
     e.preventDefault();                  // no text selection or long-press menu

@@ -1,31 +1,35 @@
-// Metronome's setup (no exercise active): beats per bar, clicks per beat and the accent on beat 1.
-// The top button names the bar: "Metronome · 4 × 2"
+// Metronome (no exercise active): its settings live on the main screen (SPEC §22), under the BPM: beats per bar,
+// the accent on beat 1 and clicks per beat. They take effect at the next beat, so they can change while it plays.
 import { $ } from "../dom.js";
-import { settings, T } from "../state.js";
-import { changed } from "../panels.js";
-import { setBpm } from "../controls.js";
+import { settings, play, save, T } from "../state.js";
+import { renderKeys, changed } from "../panels.js";
+import { setBpm, steppers } from "../controls.js";
 
-const beatsGrid = $("metroBeatsGrid"), subGrid = $("metroSubGrid"), accentGrid = $("metroAccentGrid"), tapBtn = $("tapBtn");
+const beatsIn = $("metroBeatsIn"), accentSwitch = $("accentSwitch"), subGrid = $("metroSubGrid"), tapBtn = $("tapBtn");
 
-export const metroLabel = () => T.metroLabel(settings.metroBeats, settings.metroSub);
+export const metroLabel = () => T.exMetro;
 
 export function renderMetroSetup() {
-  for (const b of beatsGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.mb) === settings.metroBeats));
+  beatsIn.value = settings.metroBeats;
+  accentSwitch.setAttribute("aria-checked", String(settings.metroAccent));
   for (const b of subGrid.children) b.setAttribute("aria-pressed", String(Number(b.dataset.sub) === settings.metroSub));
-  for (const b of accentGrid.children) b.setAttribute("aria-pressed", String((b.dataset.acc === "1") === settings.metroAccent));
 }
-beatsGrid.addEventListener("click", e => {
-  const b = e.target.closest("[data-mb]");
-  if (b) { settings.metroBeats = Number(b.dataset.mb); changed(); }
-});
+// While it plays the view is left alone: the scheduler picks the change up at the next beat (liveMetro in player.js)
+const apply = () => play.running ? (renderKeys(), save()) : changed();
+
+// Held down, the beats step and repeat like the BPM (the generic stepper in controls.js calls this)
+steppers.mbeat = delta => {
+  const n = Math.min(8, Math.max(2, settings.metroBeats + delta));
+  if (n === settings.metroBeats) return false;
+  settings.metroBeats = n;
+  apply();
+  return true;
+};
 subGrid.addEventListener("click", e => {
   const b = e.target.closest("[data-sub]");
-  if (b) { settings.metroSub = Number(b.dataset.sub); changed(); }
+  if (b) { settings.metroSub = Number(b.dataset.sub); apply(); }
 });
-accentGrid.addEventListener("click", e => {
-  const b = e.target.closest("[data-acc]");
-  if (b) { settings.metroAccent = b.dataset.acc === "1"; changed(); }
-});
+accentSwitch.addEventListener("click", () => { settings.metroAccent = !settings.metroAccent; apply(); });
 
 // Tap tempo: the average of the last taps; a pause of two seconds starts again
 let taps = [];

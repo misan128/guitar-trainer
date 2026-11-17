@@ -9,7 +9,7 @@ import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
 import { closeMenu } from "./menu.js";
 import { drawChords, drawLine, showChordView } from "./chords.js";
-import { drawMetro, showMetro } from "./metro.js";
+import { drawMetro, showMetro, swingTo, restPendulum } from "./metro.js";
 const { PENTA_SHAPES, createStartPicker, pentaNeckOrder, createNeckWalk, chordNotes, chordAt } = Theory;
 
 const LOOKAHEAD_MS = 25;
@@ -49,9 +49,21 @@ export function playTick(r, st, time, beat) {
   }
 }
 
+// The metronome's settings take effect at the next beat, not at the next bar: the bar gets longer or shorter, or its
+// clicks per beat or accent change, from the beat that comes (SPEC §22). A bar already past its new length ends.
+function liveMetro() {
+  const r = play.round, beat = play.step / r.sub;
+  const { metroBeats: beats, metroSub: sub, metroAccent: accent } = settings;
+  if (beats === r.beats && sub === r.sub && accent === r.accent) return;
+  if (beat >= beats) { play.step = 0; play.round = newRound(); return; }
+  play.round = { ...r, beats, sub, accent, total: beats * sub };   // a new object: the ticks already queued keep theirs
+  play.step = beat * sub;
+}
+
 function scheduler() {
   while (play.nextTime < audio.ctx.currentTime + SCHEDULE_AHEAD) {
     if (play.step === 0) play.round = newRound();
+    else if (play.round.metro && play.step % play.round.sub === 0) liveMetro();
     // A step is a beat, or in the metronome a click: a beat split into `sub`
     const beat = 60 / Number(inputs.bpm.value) / (play.round.metro ? play.round.sub : 1);
     playTick(play.round, play.step, play.nextTime, beat);
@@ -127,7 +139,9 @@ export function render(tick) {
 // Metronome: the beat of the bar lit, and the bar's number on the phase line
 function renderMetro({ step, round }) {
   shownRound = round;
-  drawMetro(round.beats, Math.floor(step % (round.beats * round.sub) / round.sub));
+  const i = step % (round.beats * round.sub), beat = Math.floor(i / round.sub);
+  drawMetro(round.beats, beat);
+  if (i % round.sub === 0) swingTo(60 / Number(inputs.bpm.value));   // once per beat, not per click
   phaseEl.textContent = T.metroBar(round.bar);
 }
 
@@ -165,7 +179,7 @@ function buildTrack(prep, wait, len = WALK, peak = WALK_PEAK) {
 export function drawTrack(step) {
   if (step < 0) {
     const n = PENTA_SHAPES[settings.shapeNo].length;  // Pentatonic: the shape up and back down
-    if (settings.exercise === "metro") drawMetro(settings.metroBeats, -1);
+    if (settings.exercise === "metro") { drawMetro(settings.metroBeats, -1); restPendulum(); }
     else if (settings.exercise === "penta") buildTrack(Number(inputs.prep.value), 0, 2 * n - 1, n - 1);
     else buildTrack(Number(inputs.prep.value), Number(inputs.wait.value));
   }

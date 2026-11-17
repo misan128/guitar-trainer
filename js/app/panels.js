@@ -22,7 +22,7 @@ export function renderKeys() {
   walkSetup.hidden = ex !== "walk";
   pentaSetup.hidden = !penta;
   chordSetup.hidden = !chords;
-  $("metroSetup").hidden = !metro;
+  for (const id of ["metroBeatsField", "metroAccentField", "metroSubField"]) $(id).hidden = !metro;
   boardBtn.hidden = ex !== "walk";     // in Pentatonic the fretboard is the exercise, in Chords there is none
   showAllEl.hidden = chords || metro;           // Chords: the diagrams are always shown in full (SPEC §17.4)
   // The main screen's second slot (SPEC §20): each exercise's own timing setting next to Ticks before. Scale walk:
@@ -67,8 +67,8 @@ export function closePanel(refocus) {
 keyBtn.addEventListener("click", () => keyPanel.hidden ? openPanel() : closePanel(true));
 keyPanel.querySelector(".kp-exercise").addEventListener("click", e => {
   const b = e.target.closest("[data-ex]");
-  if (!b) return;
-  settings.exercise = b.dataset.ex === settings.exercise ? "metro" : b.dataset.ex;   // tapping the active one goes back to the metronome
+  if (!b || b.dataset.ex === settings.exercise) return;
+  settings.exercise = b.dataset.ex;
   changed();
   tips(setupTours());
 });
