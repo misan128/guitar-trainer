@@ -3,9 +3,9 @@
 import { $ } from "../dom.js";
 import { settings, play, save, T } from "../state.js";
 import { renderKeys, changed } from "../panels.js";
-import { setBpm, steppers } from "../controls.js";
+import { steppers } from "../controls.js";
 
-const beatsIn = $("metroBeatsIn"), accentSwitch = $("accentSwitch"), subGrid = $("metroSubGrid"), tapBtn = $("tapBtn");
+const beatsIn = $("metroBeatsIn"), accentSwitch = $("accentSwitch"), subGrid = $("metroSubGrid");
 
 export const metroLabel = () => T.exMetro;
 
@@ -30,12 +30,3 @@ subGrid.addEventListener("click", e => {
   if (b) { settings.metroSub = Number(b.dataset.sub); apply(); }
 });
 accentSwitch.addEventListener("click", () => { settings.metroAccent = !settings.metroAccent; apply(); });
-
-// Tap tempo: the average of the last taps; a pause of two seconds starts again
-let taps = [];
-tapBtn.addEventListener("click", () => {
-  const now = performance.now();
-  if (taps.length && now - taps[taps.length - 1] > 2000) taps = [];
-  taps = [...taps, now].slice(-5);
-  if (taps.length >= 2) setBpm(Math.round(60000 / ((taps[taps.length - 1] - taps[0]) / (taps.length - 1))));
-});
