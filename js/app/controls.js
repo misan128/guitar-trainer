@@ -1,5 +1,5 @@
 // Shared controls: BPM and ticks (steppers and slider), the eye (aid level) and applying the language
-import { inputs, bpmRange, showAllEl, toggleBtn } from "./dom.js";
+import { $, inputs, bpmRange, showAllEl, toggleBtn } from "./dom.js";
 import { settings, play, T, setLang, save, clampInput } from "./state.js";
 import { renderKeys } from "./panels.js";
 import { render, showIdle, drawTrack } from "./player.js";
@@ -52,6 +52,16 @@ export function setBpm(v) {
   syncRange();
   save();
 }
+
+// Tap tempo, in every exercise: the average of the last taps; a pause of two seconds starts again. The scheduler
+// reads the BPM at every step, so it takes effect while practising too.
+let taps = [];
+$("tapBtn").addEventListener("click", () => {
+  const now = performance.now();
+  if (taps.length && now - taps[taps.length - 1] > 2000) taps = [];
+  taps = [...taps, now].slice(-5);
+  if (taps.length >= 2) setBpm(Math.round(60000 / ((taps[taps.length - 1] - taps[0]) / (taps.length - 1))));
+});
 
 // − / +: a press steps once; holding repeats until release (mouse and touch).
 // The click that follows a pointer press is ignored, so a tap never counts twice.

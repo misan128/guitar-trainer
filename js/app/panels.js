@@ -33,7 +33,6 @@ export function renderKeys() {
   for (const b of document.querySelectorAll('.stepper [data-target="wait"]')) b.disabled = noWait;
   inputs.wait.closest(".field").hidden = noWait;
   inputs.prep.closest(".field").hidden = metro;   // the plain metronome starts at once
-  $("tapBtn").hidden = !metro;
   $("beatsField").hidden = !chords;
   $("neckField").hidden = !penta;
   renderWalkSetup();
