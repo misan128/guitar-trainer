@@ -951,3 +951,34 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 /* Touch screens have no keyboard shortcuts */
 @media (hover: none) and (pointer: coarse) { .hint { display: none; } }
+
+/* Metronome: the beats of the bar take the place of the note; the bars below are the beats too */
+main.with-metro { padding-top: 3.25rem; }
+main.with-metro .display { display: none; }
+main.with-metro #phase { margin-top: 0; }
+.mt-view { display: flex; justify-content: center; width: 100%; max-width: 30rem; margin-top: 1.5rem; }
+.mt-view[hidden] { display: none; }
+.mt-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: .9rem; }
+.mt-dots span {
+  display: flex; align-items: center; justify-content: center;
+  width: 3.4rem; height: 3.4rem; border-radius: 50%;
+  background: var(--dot); border: 1px solid var(--wire); color: var(--muted);
+  font: 600 1.2rem "Instrument Sans", system-ui, sans-serif;
+  transition: transform .08s;
+}
+.mt-dots span.first { border-color: var(--brass); }
+.mt-dots span.on { background: var(--brass); color: var(--wood); transform: scale(1.15); box-shadow: 0 0 0 6px var(--brass-glow-2); }
+/* The metronome's setup: each choice a row of buttons under its heading */
+#metroSetup .seg { margin-bottom: .9rem; }
+#metroSetup .seg button { font-size: 1.05rem; }
+/* Tap tempo: a small button on the BPM label's line */
+.field.bpm { position: relative; }
+.tap {
+  position: absolute; right: 0; top: -.2rem;
+  padding: .25rem .9rem; border: 1px solid var(--brass); border-radius: 999px;
+  background: transparent; color: var(--brass);
+  font: 600 .8rem "Instrument Sans", system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase;
+  cursor: pointer;
+}
+.tap[hidden] { display: none; }
+.tap:active { background: var(--brass-soft); }

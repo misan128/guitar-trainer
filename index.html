@@ -65,6 +65,20 @@
     <button data-ex="walk" data-i18n="exWalk"></button>
     <button data-ex="penta" data-i18n="exPenta"></button>
   </div>
+  <div id="metroSetup" hidden>
+    <div class="bp-title mp-first" data-i18n="metroBeats"></div>
+    <div id="metroBeatsGrid" class="seg" role="group" data-i18n-aria="metroBeats">
+      <button data-mb="2">2</button><button data-mb="3">3</button><button data-mb="4">4</button><button data-mb="5">5</button><button data-mb="6">6</button><button data-mb="7">7</button><button data-mb="8">8</button>
+    </div>
+    <div class="bp-title" data-i18n="metroSub"></div>
+    <div id="metroSubGrid" class="seg" role="group" data-i18n-aria="metroSub">
+      <button data-sub="1" data-i18n-aria="sub1">♩</button><button data-sub="2" data-i18n-aria="sub2">♫</button><button data-sub="3" data-i18n-aria="sub3">♪♪♪</button><button data-sub="4" data-i18n-aria="sub4">♬</button>
+    </div>
+    <div class="bp-title" data-i18n="metroAccent"></div>
+    <div id="metroAccentGrid" class="seg" role="group" data-i18n-aria="metroAccent">
+      <button data-acc="1" data-i18n="switchOn"></button><button data-acc="0" data-i18n="switchOff"></button>
+    </div>
+  </div>
   <div id="walkSetup">
     <div class="kp-head"><span data-i18n="keysTitle"></span><span id="keyCount"></span></div>
     <div id="keyGrid"></div>
@@ -223,11 +237,13 @@
   </section>
 
   <div id="track" aria-hidden="true"></div>
+  <div id="metroView" class="mt-view" aria-hidden="true" hidden><div id="metroDots" class="mt-dots"></div></div>
   <div id="chordLine" class="ch-line" aria-hidden="true" hidden></div>
 
   <section class="controls">
     <div class="field bpm">
       <label for="bpm" data-i18n="bpm"></label>
+      <button id="tapBtn" class="tap" data-i18n="tap" hidden></button>
       <div class="stepper">
         <button data-target="bpm" data-delta="-1" data-i18n-aria="bpmDown">−</button>
         <input id="bpm" type="number" inputmode="numeric" min="30" max="300" value="60">

@@ -8,21 +8,23 @@ import { tips } from "./guide.js";
 import { walkLabel, renderWalkSetup } from "./setup/walk.js";
 import { pentaLabel, renderPentaSetup } from "./setup/penta.js";
 import { chordsLabel, renderChordSetup, showPicker } from "./setup/chords.js";
+import { metroLabel, renderMetroSetup } from "./setup/metro.js";
 
 const chordSetup = $("chordSetup");
 
 // Everything the setup shows, after any change: the top button, the exercise's section, and what the other
 // controls do in this exercise
 export function renderKeys() {
-  const ex = settings.exercise, penta = ex === "penta", chords = ex === "chords";
-  keyBtn.textContent = chords ? chordsLabel() : penta ? pentaLabel() : walkLabel();
-  keyBtn.setAttribute("aria-label", `${chords ? T.exChords : penta ? T.shape : T.key}: ${keyBtn.textContent}`);
+  const ex = settings.exercise, penta = ex === "penta", chords = ex === "chords", metro = ex === "metro";
+  keyBtn.textContent = metro ? metroLabel() : chords ? chordsLabel() : penta ? pentaLabel() : walkLabel();
+  keyBtn.setAttribute("aria-label", `${metro ? T.exMetro : chords ? T.exChords : penta ? T.shape : T.key}: ${keyBtn.textContent}`);
   for (const b of keyPanel.querySelectorAll("[data-ex]")) b.setAttribute("aria-pressed", String(b.dataset.ex === ex));
   walkSetup.hidden = ex !== "walk";
   pentaSetup.hidden = !penta;
   chordSetup.hidden = !chords;
+  $("metroSetup").hidden = !metro;
   boardBtn.hidden = ex !== "walk";     // in Pentatonic the fretboard is the exercise, in Chords there is none
-  showAllEl.hidden = chords;           // Chords: the diagrams are always shown in full (SPEC §17.4)
+  showAllEl.hidden = chords || metro;           // Chords: the diagrams are always shown in full (SPEC §17.4)
   // The main screen's second slot (SPEC §20): each exercise's own timing setting next to Ticks before. Scale walk:
   // Ticks after; Chords: ticks per chord or bar; Pentatonic: along the neck. (Pentatonic and Chords have no wait
   // between rounds, so Ticks after only applies to Scale walk.)
@@ -30,11 +32,14 @@ export function renderKeys() {
   inputs.wait.disabled = noWait;
   for (const b of document.querySelectorAll('.stepper [data-target="wait"]')) b.disabled = noWait;
   inputs.wait.closest(".field").hidden = noWait;
+  inputs.prep.closest(".field").hidden = metro;   // the plain metronome starts at once
+  $("tapBtn").hidden = !metro;
   $("beatsField").hidden = !chords;
   $("neckField").hidden = !penta;
   renderWalkSetup();
   renderPentaSetup();
   renderChordSetup();
+  renderMetroSetup();
 }
 // After a choice that changes what is played: redraw the setup and the idle view, and save
 export function changed() {
@@ -62,8 +67,8 @@ export function closePanel(refocus) {
 keyBtn.addEventListener("click", () => keyPanel.hidden ? openPanel() : closePanel(true));
 keyPanel.querySelector(".kp-exercise").addEventListener("click", e => {
   const b = e.target.closest("[data-ex]");
-  if (!b || b.dataset.ex === settings.exercise) return;
-  settings.exercise = b.dataset.ex;
+  if (!b) return;
+  settings.exercise = b.dataset.ex === settings.exercise ? "metro" : b.dataset.ex;   // tapping the active one goes back to the metronome
   changed();
   tips(setupTours());
 });

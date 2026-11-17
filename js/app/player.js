@@ -9,6 +9,7 @@ import { closePanel, closeBoard } from "./panels.js";
 import { closeTuner } from "./tuner.js";
 import { closeMenu } from "./menu.js";
 import { drawChords, drawLine, showChordView } from "./chords.js";
+import { drawMetro, showMetro } from "./metro.js";
 const { PENTA_SHAPES, createStartPicker, pentaNeckOrder, createNeckWalk, chordNotes, chordAt } = Theory;
 
 const LOOKAHEAD_MS = 25;
@@ -20,6 +21,10 @@ export const queue = [];
 
 // The sound of tick `st` of round `r` at `time`: reference note on announce, then clicks and walk notes
 export function playTick(r, st, time, beat) {
+  if (r.metro) {                             // beat 1 accented, the other beats normal, the clicks between them soft
+    const i = st % (r.beats * r.sub);
+    return click(time, r.accent && i === 0, i % r.sub !== 0);
+  }
   if (r.chords) {                            // a click every tick; on each change, accented, with the new chord
     const w = st - r.prep;
     if (w < 0) return click(time, false, false);
@@ -46,8 +51,9 @@ export function playTick(r, st, time, beat) {
 
 function scheduler() {
   while (play.nextTime < audio.ctx.currentTime + SCHEDULE_AHEAD) {
-    const beat = 60 / Number(inputs.bpm.value);
     if (play.step === 0) play.round = newRound();
+    // A step is a beat, or in the metronome a click: a beat split into `sub`
+    const beat = 60 / Number(inputs.bpm.value) / (play.round.metro ? play.round.sub : 1);
     playTick(play.round, play.step, play.nextTime, beat);
     queue.push({ time: play.nextTime, step: play.step, round: play.round });
     play.nextTime += beat;
@@ -73,6 +79,7 @@ export function startScheduler() { scheduler(); rafId = requestAnimationFrame(dr
 export function render(tick) {
   const { step, round } = tick;
   play.lastShown = tick;
+  if (round.metro) return renderMetro(tick);
   if (round.chords) return renderChords(tick);
   if (round !== shownRound) {
     shownRound = round;
@@ -117,6 +124,13 @@ export function render(tick) {
   drawTrack(step);
 }
 
+// Metronome: the beat of the bar lit, and the bar's number on the phase line
+function renderMetro({ step, round }) {
+  shownRound = round;
+  drawMetro(round.beats, Math.floor(step % (round.beats * round.sub) / round.sub));
+  phaseEl.textContent = T.metroBar(round.bar);
+}
+
 // Chord changes: during prep the first chord waits as "now"; then the sequence, tick by tick. The phase line only
 // counts the prep down: the chords are already named in the top button, the diagrams and the strip
 function renderChords({ step, round }) {
@@ -137,6 +151,7 @@ function renderChords({ step, round }) {
 // Bars: flat for prep and wait; rise and fall during the walk, peaking at its top note
 function buildTrack(prep, wait, len = WALK, peak = WALK_PEAK) {
   trackEl.innerHTML = "";
+  trackEl.dataset.kind = "";
   const add = (h, walk) => {
     const s = document.createElement("span");
     s.style.height = h + "%";
@@ -150,7 +165,8 @@ function buildTrack(prep, wait, len = WALK, peak = WALK_PEAK) {
 export function drawTrack(step) {
   if (step < 0) {
     const n = PENTA_SHAPES[settings.shapeNo].length;  // Pentatonic: the shape up and back down
-    if (settings.exercise === "penta") buildTrack(Number(inputs.prep.value), 0, 2 * n - 1, n - 1);
+    if (settings.exercise === "metro") drawMetro(settings.metroBeats, -1);
+    else if (settings.exercise === "penta") buildTrack(Number(inputs.prep.value), 0, 2 * n - 1, n - 1);
     else buildTrack(Number(inputs.prep.value), Number(inputs.wait.value));
   }
   [...trackEl.children].forEach((s, i) => s.classList.toggle("on", i === step));
@@ -181,7 +197,14 @@ export function showIdle() {
   const chords = settings.exercise === "chords";
   mainEl.classList.toggle("with-chords", chords);
   showChordView(chords);
-  if (chords) {                        // at rest: the first chord now and the second next, to study them
+  const metro = settings.exercise === "metro";
+  mainEl.classList.toggle("with-metro", metro);
+  showMetro(metro);
+  if (metro) {
+    hideBoard();
+    pickEl.setAttribute("hidden", "");
+    phaseEl.textContent = T.metroIdle;
+  } else if (chords) {                        // at rest: the first chord now and the second next, to study them
     hideBoard();
     pickEl.setAttribute("hidden", "");
     const plan = chordPlan();
@@ -219,7 +242,7 @@ export async function start() {
   const s = settings, { pentaKey, shapeNo } = s;
   play.session = { keys: s.keys.slice(), order: s.order, names: {}, bag: [], pos: 0, last: null, upcoming: null,
                    board: s.board ? { from: s.fretFrom, to: s.fretTo } : null, pickStart: createStartPicker(),
-                   exercise: s.exercise, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo),
+                   exercise: s.exercise, bar: 0, shape: shapeNo, pentaKey, pentaAt: placeAt(pentaKey, shapeNo),
                    neck: s.exercise === "penta" && s.neckWalk ? createNeckWalk(pentaNeckOrder(pentaKey, n => placeAt(pentaKey, n)), shapeNo) : null,
                    neckNext: null,
                    ...(({ seq, label, perBar, prog }) => ({ seq, chordLabel: label, perBar, prog }))(chordPlan()) };
