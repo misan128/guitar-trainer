@@ -354,7 +354,7 @@ select:disabled { opacity: .5; cursor: not-allowed; }
 /* Exercise row, first in the setup panel (SPEC §15.1) */
 /* What to practise comes first, then how: a heading over the exercises, and a clear break before their setup */
 .kp-ex-title { margin-bottom: .45rem; color: var(--muted); font-size: .7rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
-.kp-exercise { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; margin-bottom: 1.1rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--wire); }
+.kp-exercise { display: grid; grid-template-columns: repeat(2, 1fr); gap: .4rem; margin-bottom: 1.1rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--wire); }
 .kp-exercise button, .tn-tunings button {
   min-height: 2.5rem;
   padding: .3rem .5rem;
@@ -918,7 +918,7 @@ main.with-chords #phase { margin-top: 0; }
   background: linear-gradient(transparent, var(--wood) .5rem);
 }
 #toggle {
-  width: 100%;
+  flex: 1;
   height: 3.6rem;
   border: 0;
   border-radius: 14px;
@@ -951,3 +951,44 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 /* Touch screens have no keyboard shortcuts */
 @media (hover: none) and (pointer: coarse) { .hint { display: none; } }
+
+/* Metronome: the beats of the bar take the place of the note; the bars below are the beats too */
+main.with-metro { padding-top: 3.25rem; }
+main.with-metro .display, main.with-metro #track { display: none; }   /* the dots are the beats */
+main.with-metro #phase { margin-top: 1rem; }
+.mt-view { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; width: 100%; max-width: 30rem; }
+.mt-view[hidden] { display: none; }
+.mt-dots { display: flex; flex-wrap: wrap; justify-content: center; gap: .7rem; }
+.mt-dots span {
+  display: flex; align-items: center; justify-content: center;
+  width: 1.4rem; height: 1.4rem; border-radius: 50%;
+  background: var(--dot); border: 1.5px solid var(--wire); color: var(--muted);
+  font: 0/0  "Instrument Sans", system-ui, sans-serif;
+  transition: transform .08s;
+}
+.mt-dots span.first { border-color: var(--brass); opacity: 1; }
+.mt-dots span.on { background: var(--brass); color: var(--wood); transform: scale(1.2); box-shadow: 0 0 0 4px var(--brass-glow-2); }
+/* The metronome's settings on the main screen: the subdivision takes a whole row */
+.field.wide { grid-column: 1 / -1; }
+#metroBeatsIn { pointer-events: none; }
+/* The pendulum: the arm reaches one side exactly on each beat (swung from metro.js) */
+.mt-pendulum { width: min(20rem, 82vw); height: auto; overflow: visible; }
+.mt-arc { fill: none; stroke: var(--wire); stroke-width: 2; opacity: .6; }
+.mt-end { fill: none; stroke: var(--brass); stroke-width: 3; stroke-linecap: round; opacity: .4; }
+.mt-base { fill: var(--dot); stroke: none; }
+.mt-lip { stroke: var(--wire); stroke-width: 3; stroke-linecap: round; }
+#mtArm { transform-origin: 140px 127px; }
+#mtArm line { stroke: var(--brass); stroke-width: 8; stroke-linecap: round; }
+.mt-pivot { fill: var(--brass); }
+@media (prefers-reduced-motion: reduce) { #mtArm { transition: none !important; } }
+/* Tap tempo: beside Start, on the main screen, in the metronome */
+.actions { display: flex; gap: .75rem; }
+.tap {
+  flex: 0 0 28%; height: 3.6rem; padding: 0 .5rem;
+  border: 1px solid var(--brass); border-radius: 14px;
+  background: transparent; color: var(--brass);
+  font: 600 1rem "Instrument Sans", system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase;
+  cursor: pointer;
+}
+.tap[hidden] { display: none; }
+.tap:active { background: var(--brass-soft); }

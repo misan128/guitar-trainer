@@ -97,8 +97,17 @@ export function chordRound(seq, prep, label, perBar, prog) {
   return { chords: true, seq, prep, wait: 0, total, announce: false, perBar, prog, key: { name: label } };
 }
 
+// Metronome: one round is one bar, in steps of one click each (beats × clicks per beat); no count-in
+export function metroRound() {
+  const { metroBeats: beats, metroSub: sub, metroAccent: accent } = settings;
+  return { metro: true, beats, sub, accent, prep: 0, wait: 0, total: beats * sub, announce: false, bar: ++play.session.bar, key: { name: "" }, walk: [] };
+}
+
 export function newRound() {
   const { session } = play;
+  if (session.exercise === "metro") {
+    return metroRound();
+  }
   if (session.exercise === "chords") {
     const first = !session.started;
     session.started = true;
