@@ -495,7 +495,7 @@ In `strings.js` for every language: the exercise name, Chord A, Chord B, Ticks p
 | Exercise | Second slot |
 | --- | --- |
 | Scale walk | *Ticks after* (the wait between rounds) |
-| Pentatonic | *Move along the neck*, a switch |
+| Pentatonic | *Move along the neck*, a switch as wide as its slot, with both words (Off · On) always shown and a brass thumb that slides to the chosen one |
 | Chords | *Ticks per chord* (*per bar* for a progression): 2 · 4 · 8 |
 
 - **Why:** hiding *Ticks after* where it does nothing left an empty half row that looked like something was missing; *ticks per chord* and *along the neck* are practice settings used often, so they belong next to the tempo rather than inside the setup panel.

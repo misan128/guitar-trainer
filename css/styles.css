@@ -386,11 +386,42 @@ select:disabled { opacity: .5; cursor: not-allowed; }
   cursor: pointer;
 }
 #placeGrid button[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--brass); color: var(--wood); }
-/* The main screen's second slot (SPEC §20): a 2·4·8 choice or a switch, under a label like the steppers' */
+/* The main screen's second slot (SPEC §20): a 2·4·8 choice or a switch in the stepper's box, under a label like the steppers' */
 .field .label { display: block; color: var(--muted); font-size: .9rem; margin-bottom: .4rem; }
 .field .seg button { min-height: 2.9rem; font-size: 1.05rem; }
-.seg button:disabled, .field .switch:disabled { opacity: .45; cursor: not-allowed; }
-#neckField .switch { margin-top: .45rem; }
+.seg button:disabled, .toggle:disabled { opacity: .45; cursor: not-allowed; }
+/* A switch as wide as the slot: both words always shown, in a bordered box the height of the steppers, and a brass
+   thumb as big as half of it slides to the chosen one */
+.toggle {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  width: 100%;
+  height: 2.8rem;
+  padding: 0;
+  border: 1.5px solid var(--wire);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--bone);
+  font: 600 1.1rem "Instrument Sans", system-ui, sans-serif;
+  cursor: pointer;
+}
+.toggle::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: 9px;
+  background: var(--wire);
+  transition: transform .2s, background-color .2s;
+}
+.toggle[aria-checked="true"]::before { background: var(--brass); transform: translateX(100%); }
+.toggle span { position: relative; text-align: center; transition: color .2s; }
+.toggle[aria-checked="true"] .on { color: var(--wood); }
+@media (prefers-reduced-motion: reduce) { .toggle::before, .toggle span { transition: none; } }
 /* Chords setup (SPEC §17.1): the two chords as tiles (name, a small diagram, the position); then the ticks */
 .kp-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-bottom: .9rem; }
 .kp-tile {
@@ -522,7 +553,7 @@ select:disabled { opacity: .5; cursor: not-allowed; }
 /* Fretboard panel */
 .bp-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: .9rem; border-bottom: 1px solid var(--wire); }
 .bp-head span { font-weight: 600; font-size: 1.05rem; }
-#boardSwitch, .switch {
+#boardSwitch {
   position: relative;
   width: 3.1rem;
   height: 1.8rem;
@@ -532,7 +563,7 @@ select:disabled { opacity: .5; cursor: not-allowed; }
   cursor: pointer;
   transition: background-color .2s;
 }
-#boardSwitch::after, .switch::after {
+#boardSwitch::after {
   content: "";
   position: absolute;
   top: .2rem;
@@ -543,8 +574,8 @@ select:disabled { opacity: .5; cursor: not-allowed; }
   background: var(--bone);
   transition: transform .2s;
 }
-#boardSwitch[aria-checked="true"], .switch[aria-checked="true"] { background: var(--brass); }
-#boardSwitch[aria-checked="true"]::after, .switch[aria-checked="true"]::after { transform: translateX(1.3rem); }
+#boardSwitch[aria-checked="true"] { background: var(--brass); }
+#boardSwitch[aria-checked="true"]::after { transform: translateX(1.3rem); }
 .bp-title { margin: .9rem 0 .6rem; font-weight: 600; }
 .bp-frets { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
 .bp-frets select { background-color: var(--tile); }
@@ -914,7 +945,7 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   #bpmRange { order: -1; margin: -10px 0 -8px; }
   .actions { padding-bottom: calc(.75rem + env(safe-area-inset-bottom, 0px)); }
   .field.bpm { grid-column: 1 / -1; }
-  .stepper, select { height: 3rem; }
+  .stepper, select, .toggle { height: 3rem; }
   .field.bpm .stepper input { font-size: 1.7rem; }
   .hint { display: none; }
 }
