@@ -258,7 +258,9 @@
     </div>
     <div id="neckField" class="field" hidden>
       <span id="neckLabel" class="label" data-i18n="neckWalk"></span>
-      <button id="neckSwitch" class="switch" role="switch" aria-checked="false" aria-labelledby="neckLabel"></button>
+      <button id="neckSwitch" class="toggle" role="switch" aria-checked="false" aria-labelledby="neckLabel">
+        <span class="off" data-i18n="switchOff"></span><span class="on" data-i18n="switchOn"></span>
+      </button>
     </div>
     <input id="bpmRange" type="range" min="30" max="300" value="60" data-i18n-aria="bpm">
     <p class="hint" data-i18n="hint"></p>
