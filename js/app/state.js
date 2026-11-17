@@ -31,7 +31,7 @@ export const settings = {
   keys: [DEFAULT_KEY],                 // selected key indices, circle-of-fifths order; never empty
   order: "random",                     // "random" | "sequential"
   // Exercise (SPEC §15.1): BPM, ticks, eye, language and guide are shared; keys and fretboard belong to Scale walk
-  exercise: "walk",                    // "walk" | "penta" | "chords"
+  exercise: "metro",                   // "metro" (no exercise: a plain metronome) | "walk" | "penta" | "chords"
   shapeNo: 1,                          // Pentatonic shape, 1–5
   pentaKey: 0,                         // Pentatonic minor key: index into MINOR_KEYS (A minor)
   pentaPlace: {},                      // chosen placement per "key:shape" (its first fret), when there are two
@@ -41,6 +41,8 @@ export const settings = {
   chordPos: {},                        // the chosen position (voicing index) per chord, when there are several
   chordMode: "pair",                   // "pair" (two chords) | "prog" (a progression, SPEC §17.5)
   progId: "pop", progKey: 0,           // the progression and its key (pitch class of the root; C)
+  // Metronome (no exercise): the bar. Beats 2–8, clicks per beat 1–4, whether beat 1 is accented
+  metroBeats: 4, metroSub: 1, metroAccent: true,
   guideSeen: false,
   tipsSeen: {},                        // the panels whose tips have been shown (SPEC §19), by tour id
   theme: "sepia",                      // SPEC §18: sepia | maple | steel
@@ -88,7 +90,7 @@ export function save() {
   const s = settings;
   try {
     localStorage.setItem("scaleWalkLight", JSON.stringify({
-      bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value,
+      bpm: inputs.bpm.value, prep: inputs.prep.value, wait: inputs.wait.value, metroBeats: s.metroBeats, metroSub: s.metroSub, metroAccent: s.metroAccent,
       keys: s.keys, order: s.order, key: s.keys[0], aid: s.aid, showAll: s.showAll, lang: s.lang,
       board: s.board, fretFrom: s.fretFrom, fretTo: s.fretTo, guideSeen: s.guideSeen, tipsSeen: s.tipsSeen, exercise: s.exercise,
       pentaShape: s.shapeNo, pentaKey: s.pentaKey, pentaPlace: s.pentaPlace, pentaNeck: s.neckWalk, tuning: s.tuning, theme: s.theme,
@@ -113,8 +115,11 @@ export function load() {
       if (typeof s.board === "boolean") settings.board = s.board;   // older settings get the default
       settings.guideSeen = s.guideSeen === true;
       if (s.tipsSeen && typeof s.tipsSeen === "object") for (const k in s.tipsSeen) if (s.tipsSeen[k] === true) settings.tipsSeen[k] = true;
-      if (s.exercise === "penta" || s.exercise === "chords") settings.exercise = s.exercise;
+      if (["walk", "penta", "chords", "metro"].includes(s.exercise)) settings.exercise = s.exercise;
       if (CHORDS[s.chordA] && CHORDS[s.chordB] && s.chordA !== s.chordB) { settings.chordA = s.chordA; settings.chordB = s.chordB; }
+      if (Number.isInteger(s.metroBeats) && s.metroBeats >= 2 && s.metroBeats <= 8) settings.metroBeats = s.metroBeats;
+      if ([1, 2, 3, 4].includes(s.metroSub)) settings.metroSub = s.metroSub;
+      if (typeof s.metroAccent === "boolean") settings.metroAccent = s.metroAccent;
       if ([2, 4, 8].includes(s.chordBeats)) settings.chordBeats = s.chordBeats;
       if (s.chordMode === "prog") settings.chordMode = "prog";
       if (Theory.PROGRESSIONS.some(p => p.id === s.progId)) settings.progId = s.progId;

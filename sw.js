@@ -1,5 +1,5 @@
 // Bump the version on every published change so clients drop the old cache.
-const CACHE = "guitar-trainer-v34";
+const CACHE = "guitar-trainer-v38";
 const PRECACHE = [
   "./",
   "index.html",
@@ -21,6 +21,8 @@ const PRECACHE = [
   "js/app/setup/walk.js",
   "js/app/setup/penta.js",
   "js/app/setup/chords.js",
+  "js/app/setup/metro.js",
+  "js/app/metro.js",
   "js/strings.js",
   "js/theory.js",
   "js/pitch.js",

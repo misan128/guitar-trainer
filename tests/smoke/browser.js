@@ -22,7 +22,7 @@ async function launch(args = []) {
         localStorage.setItem("scaleWalkLight", JSON.stringify(s));
         sessionStorage.setItem("seeded", "1");
       }
-    }, { guideSeen: true, tipsSeen: ALL_TIPS, lang: "en", ...settings });
+    }, { guideSeen: true, tipsSeen: ALL_TIPS, lang: "en", exercise: "walk", ...settings });
     const page = await context.newPage();
     page.errors = [];
     page.on("pageerror", e => page.errors.push(e.message));
